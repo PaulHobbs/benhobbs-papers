@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 import base64
+import datetime
+import json
 import os
+from pathlib import Path
 import re
 import sys
+import json
+import datetime
 from typing import Optional
 from google import genai  # type: ignore
 from google.genai import types  # type: ignore
@@ -16,7 +22,9 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
 **Requirements:**
 
 1.  **Libraries:**
-    * Use **Plotly.js** for interactive charts (line, scatter, etc.).
+    * Use simulation when appropriate. Stuff that moves is almost always preferred over static charts.
+    * Prioritize **interactive Javascript visualizations** to build intuition *before* introducing complex equations.
+    * If you must make a chart, use Chart.js or D3.js.
     * Use **MathJax** to render ALL mathematical notation. Ensure LaTeX delimiters (`$...$` for inline, `$$...$$` for display) are used correctly in the output HTML.
     * Use **Bootstrap** (via CDN link preferably, or minimal inline CSS) for overall styling, layout (containers, rows, columns), and standard components (buttons, cards).
     * For any custom diagrams or simple simulations needed beyond standard charts, use **plain Javascript** or **p5.js** if appropriate.
@@ -24,8 +32,6 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
 2.  **Content Flow & Explanation:**
     * Start with a clear, high-level introduction to the problem the paper addresses.
     * Gradually build up the necessary concepts. **Define terms of art clearly** and provide Wikipedia links where helpful (e.g., `<a href="WIKI_URL" target="_blank">Term</a>`).
-    * Prioritize **interactive Javascript visualizations** to build intuition *before* introducing complex equations.
-    * Use simulation when appropriate. Stuff that moves is almost always preferred over static charts.
     * Focus on the **core mathematical model or central idea** of the paper. Don't try to cover everything; aim for depth on the key concept.
 
 3.  **Handling Mathematical Models:**
@@ -43,6 +49,54 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
 
 Please generate the HTML file based on the provided paper content and these instructions.
 """.strip()
+
+
+def main():
+    for paper in sys.argv[1:]:
+      html = _parse_html(generate(paper))
+
+      try:
+          # Get input PDF path (assuming this is defined earlier)
+          pdf_path = Path(paper)
+          
+          # Construct output path
+          output_dir = Path(__file__).parent.parent / "static" / "sites"
+          output_dir.mkdir(parents=True, exist_ok=True)
+          
+          # Sanitize filename
+          papername = pdf_path.stem.replace(" ", "_")
+          output_path = output_dir / f"{papername}.html"
+          
+          # Write content
+          with open(output_path, "w", encoding="utf-8") as f:
+              f.write(html)
+
+          # Update sites index
+          index_path = output_dir.parent.parent / "src" / "lib" / "sites.json"
+          try:
+              with open(index_path, "r", encoding="utf-8") as f:
+                  sites = json.load(f)
+          except (FileNotFoundError, json.JSONDecodeError):
+              sites = []
+
+          # Add new entry if not exists
+          new_entry = {
+              "paper": papername,
+              "path": f"/static/sites/{papername}.html",
+              "generated": datetime.datetime.now().isoformat()
+          }
+          
+          if not any(entry["paper"] == papername for entry in sites):
+              sites.append(new_entry)
+              with open(index_path, "w", encoding="utf-8") as f:
+                  json.dump(sites, f, indent=2)
+
+          print(f"Successfully wrote to {output_path}")
+
+      except Exception as e:
+          print(f"Error generating HTML file: {str(e)}", file=sys.stderr)
+          sys.exit(1)
+
 
 def generate(pdf: str):
     client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -136,31 +190,4 @@ This will be a simplified representation, not a full simulation, but designed to
 """
 
 if __name__ == "__main__":
-
-    for paper in sys.argv[1:]:
-      html = _parse_html(generate(paper))
-      from pathlib import Path
-      import sys
-
-      try:
-          # Get input PDF path (assuming this is defined earlier)
-          pdf_path = Path(paper)
-          
-          # Construct output path
-          output_dir = Path(__file__).parent.parent / "static" / "sites"
-          output_dir.mkdir(parents=True, exist_ok=True)
-          
-          # Sanitize filename
-          papername = pdf_path.stem.replace(" ", "_")
-          output_path = output_dir / f"{papername}.html"
-          
-          # Write content
-          with open(output_path, "w", encoding="utf-8") as f:
-              f.write(html)
-          
-          print(f"Successfully wrote to {output_path}")
-
-      except Exception as e:
-          print(f"Error generating HTML file: {str(e)}", file=sys.stderr)
-          sys.exit(1)
-
+    main()
