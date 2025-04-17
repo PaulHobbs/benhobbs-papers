@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Risk of Bad Data: Why Sampling and Averaging Weather Data Can Hurt Power Grid Planning</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+      </script>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; }
+        .container { max-width: 900px; margin: auto; padding: 20px; }
+        h1, h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; color: #333; }
+        h1 { text-align: center; margin-bottom: 1em; color: #0d6efd; }
+        p, li { color: #555; }
+        code { background-color: #f0f0f0; padding: 2px 5px; border-radius: 3px; }
+        .interactive-section { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 20px; margin-top: 20px; margin-bottom: 20px; }
+        label { margin-right: 10px; font-weight: bold; }
+        input[type=range] { vertical-align: middle; margin-left: 5px; margin-right: 5px;}
+        .output-value { font-weight: bold; color: #0d6efd; margin-left: 5px; }
+        .chart-container { position: relative; height: 300px; width:100%; margin-top: 15px; }
+        .small-chart-container { position: relative; height: 200px; width:100%; margin-top: 10px; }
+        .legend-dot {
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .bg-load { background-color: rgba(255, 99, 132, 1); }
+        .bg-solar { background-color: rgba(255, 206, 86, 1); }
+        .bg-wind { background-color: rgba(54, 162, 235, 1); }
+        .bg-netload { background-color: rgba(75, 192, 192, 1); }
+        .bg-avg { background-color: rgba(153, 102, 255, 1); }
+        .bg-gas-cc { background-color: rgba(100, 100, 100, 0.8); }
+        .bg-gas-ct { background-color: rgba(150, 150, 150, 0.8); }
+        .bg-coal { background-color: rgba(50, 50, 50, 0.8); }
+        .cost-increase { color: red; font-weight: bold; }
+        .eue-increase { color: darkorange; font-weight: bold; }
+        .paper-citation { font-size: 0.9em; color: #666; margin-top: 2em; border-top: 1px solid #ccc; padding-top: 1em;}
+        .term-link { color: #0d6efd; text-decoration: none; border-bottom: 1px dotted #0d6efd;}
+        .term-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>The Risk of Bad Data: Why Sampling and Averaging Weather Data Can Hurt Power Grid Planning</h1>
+        <p class="lead text-center">Inspired by the paper: "How Sampling and Averaging Historical Solar and Wind Data Can Distort Resource Adequacy" by C. D. Bothwell and B. F. Hobbs, IEEE Transactions on Sustainable Energy, 2023.</p>
+
+        <hr>
+
+        <h2>The Challenge: Planning for a Weather-Powered Future</h2>
+        <p>
+            Our electricity grids are rapidly changing. Wind turbines and solar panels are becoming major sources of power. This is great for sustainability, but it introduces a challenge for grid planners. Unlike traditional power plants (like coal or natural gas) that we can turn on or off predictably, wind and solar generation depend entirely on the weather. How much sun is shining? How hard is the wind blowing?
+        </p>
+        <p>
+            At the same time, electricity demand (the "load" on the grid) also varies with weather (think air conditioning on hot days) and time (factories running during the day, people cooking dinner in the evening).
+        </p>
+        <p>
+            To keep the lights on reliably, grid planners need to ensure there's always enough generation available to meet the demand, even considering unexpected power plant outages. This is called <a href="https://en.wikipedia.org/wiki/Resource_adequacy" target="_blank" class="term-link">Resource Adequacy</a>. With weather-dependent renewables, accurately predicting the *coincidence* – how load, wind, and solar vary *together* – becomes crucial. Will we have enough wind power exactly when demand is highest on a calm summer evening?
+        </p>
+
+        <h2>Why Timing is Everything: The Concept of Net Load</h2>
+        <p>
+            What really matters for reliability isn't just the total wind or solar power produced over a year, but how much is available when we need it most. We can visualize this using the concept of "Net Load".
+        </p>
+        <p>
+            <strong>Net Load = Total Electricity Demand (Load) - Renewable Generation (Wind + Solar)</strong>
+        </p>
+        <p>
+            This "Net Load" is the demand that traditional, dispatchable power plants (like natural gas) must cover. When Net Load is high, the system is stressed. When it's low (or even negative, meaning renewables generate more than the load), the system is relaxed.
+        </p>
+        <div class="interactive-section">
+            <h3>Visualize Coincidence: A Few Days on the Grid</h3>
+            <p>See how load, wind, solar, and the resulting net load fluctuate together over a simulated 3-day period. Notice how peaks and valleys don't always align.</p>
+            <div class="chart-container">
+                <canvas id="coincidenceChart"></canvas>
+            </div>
+            <div class="mt-2 text-center">
+                <button id="prevDayBtn" class="btn btn-sm btn-secondary">Previous 3 Days</button>
+                <span id="dayRange" class="mx-2 align-middle">Days 1-3</span>
+                <button id="nextDayBtn" class="btn btn-sm btn-secondary">Next 3 Days</button>
+            </div>
+            <div class="mt-2 text-center small">
+                <span class="legend-dot bg-load"></span> Load &nbsp;
+                <span class="legend-dot bg-solar"></span> Solar &nbsp;
+                <span class="legend-dot bg-wind"></span> Wind &nbsp;
+                <span class="legend-dot bg-netload"></span> Net Load
+            </div>
+        </div>
+        <p>
+            Planners need to build enough dispatchable capacity to cover the *peaks* in Net Load. Getting the timing wrong in their analysis can lead to building too little capacity, risking blackouts, or building the wrong *type* of capacity, increasing costs.
+        </p>
+
+        <h2>The Pitfall of Averaging: Hiding the Extremes</h2>
+        <p>
+            To simplify planning, especially when dealing with many years of data, a common technique is to average historical data to create a "typical" year or "typical" day profiles. While well-intentioned, the paper shows this can be dangerously misleading. Averaging smooths out the sharp peaks and deep valleys that are critical for adequacy assessments. It also destroys the real-world correlations between load, wind, and solar.
+        </p>
+        <div class="interactive-section">
+            <h3>Averaging vs. Reality</h3>
+            <p>Compare the actual hourly load for a sample week with the load profile created by averaging data from many similar weeks. Notice how the average profile misses the true peak demand.</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Actual Hourly Load (Sample Week)</h5>
+                    <div class="small-chart-container">
+                        <canvas id="actualLoadChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h5>Averaged Hourly Load ("Typical" Week)</h5>
+                    <div class="small-chart-container">
+                        <canvas id="averagedLoadChart"></canvas>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-2 text-center small">
+                <span class="legend-dot bg-load"></span> Actual &nbsp;
+                <span class="legend-dot bg-avg"></span> Average
+            </div>
+            <p class="mt-3">
+                The paper found that using averaged data led to planning outcomes with significantly higher costs (up to 16% increase) and drastically worse reliability (a <strong>38-fold increase</strong> in expected unserved energy, or EUE) compared to using a full 10-year dataset. Averaging hides the true stress on the system.
+            </p>
+        </div>
+
+        <h2>The Pitfall of Short Samples: Gambling on the Weather</h2>
+        <p>
+            Another common simplification is to use only one or a few years of historical data for planning. The problem? Weather varies significantly year to year. A single year might be unusually windy, unusually calm, have extreme heatwaves, or be relatively mild. Planning based on an unrepresentative year can lead to poor investment decisions.
+        </p>
+        <div class="interactive-section">
+            <h3>How Much Does a Year Matter?</h3>
+            <p>Select different historical years from the paper's dataset (represented here qualitatively) and see how their characteristics might differ from the long-term average. A planner using only one year might get a skewed view.</p>
+            <label for="yearSelect">Select Planning Year:</label>
+            <select id="yearSelect" class="form-select d-inline-block w-auto">
+                <option value="Y1">Year 1 (Avg Load, Low Wind)</option>
+                <option value="Y3">Year 3 (Low Peaks, Avg Renewables)</option>
+                <option value="Y4">Year 4 (High Wind)</option>
+                <option value="Y7">Year 7 (High Wind, Avg Load)</option>
+                <option value="Y10">Year 10 (High Peaks, Low Renewables)</option>
+                <option value="AVG">"Typical" Average Year</option>
+                <option value="BASE">Full 10 Years (Ideal)</option>
+            </select>
+            <div id="yearStats" class="mt-3 alert alert-info">
+                Select a year to see its representative characteristics...
+            </div>
+            <p>
+                The paper showed that choosing the wrong single year could increase system costs by over 4% and lead to a 7-fold increase in unserved energy compared to the optimal plan based on 10 years of data. Worryingly, the "best" single year to use changed depending on the amount of renewables targeted!
+            </p>
+        </div>
+
+        <h2>How Planners Decide: The Optimization Puzzle</h2>
+        <p>
+            So, how do planners make these crucial decisions about what power plants to build? They often use sophisticated <a href="https://en.wikipedia.org/wiki/Mathematical_optimization" target="_blank" class="term-link">optimization models</a>. The goal is usually to minimize the total system cost over the long term, subject to various constraints.
+        </p>
+        <p>
+            The core idea is captured by an objective function like this (simplified):
+        </p>
+        $$ \text{Minimize } \underbrace{\sum_{g \in G} FC_g \cdot x_g}_{\text{Fixed Investment Costs}} + \underbrace{\sum_{h \in H} \sum_{g \in G} VC_g \cdot e_{h,g}}_{\text{Variable Operating Costs}} + \underbrace{\sum_{h \in H} VOLL \cdot \text{eue}_h}_{\text{Unserved Energy Penalty}} $$
+        <p>
+            Where:
+        </p>
+        <ul>
+            <li>$G$ is the set of generator types (coal, gas, wind, solar...).</li>
+            <li>$H$ is the set of hours in the planning period.</li>
+            <li>$FC_g$ is the annualized fixed cost (\$/MW) of building generator type $g$.</li>
+            <li>$x_g$ is the decision variable: installed capacity (MW) of type $g$.</li>
+            <li>$VC_g$ is the variable operating cost (\$/MWh) of type $g$ (fuel, etc.).</li>
+            <li>$e_{h,g}$ is the decision variable: energy (MWh) produced by type $g$ in hour $h$.</li>
+            <li>$VOLL$ is the <a href="https://en.wikipedia.org/wiki/Value_of_lost_load" target="_blank" class="term-link">Value of Lost Load</a> (\$/MWh) – a penalty representing the economic cost of blackouts.</li>
+            <li>$\text{eue}_h$ is the decision variable: energy not served (MWh) in hour $h$.</li>
+        </ul>
+        <p>
+            This minimization is subject to constraints, the most important being:
+        </p>
+        <ul>
+            <li><strong>Energy Balance:</strong> Generation must meet demand in every hour: $\sum_{g \in G} e_{h,g} + \text{eue}_h = \text{Load}_h$ for all $h$.</li>
+            <li><strong>Capacity Limit:</strong> Generation from a unit cannot exceed its available capacity: $e_{h,g} \le \text{AvailableCapacity}_{h,g} \cdot x_g$ (where AvailableCapacity depends on outages and weather for renewables).</li>
+            <li><strong>Renewable Targets (Optional):</strong> Constraints like a <a href="https://en.wikipedia.org/wiki/Renewable_portfolio_standard" target="_blank" class="term-link">Renewable Portfolio Standard</a> (RPS) might require a certain percentage of energy to come from renewables.</li>
+        </ul>
+
+        <div class="interactive-section">
+            <h3>Simplified Planning Simulation</h3>
+            <p>Adjust key cost parameters and see how a simplified optimization might change the recommended mix of generation capacity. (Note: This is a highly simplified representation for intuition, not a full model.)</p>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="windCostSlider">Wind Fixed Cost:</label>
+                    <input type="range" id="windCostSlider" min="800" max="1600" value="1200" step="50"> $<span id="windCostValue">1200</span> /kW
+                </div>
+                <div class="col-md-6">
+                    <label for="solarCostSlider">Solar Fixed Cost:</label>
+                    <input type="range" id="solarCostSlider" min="700" max="1500" value="1100" step="50"> $<span id="solarCostValue">1100</span> /kW
+                </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="gasCostSlider">Gas CC Fixed Cost:</label>
+                    <input type="range" id="gasCostSlider" min="800" max="1400" value="1000" step="50"> $<span id="gasCostValue">1000</span> /kW
+                </div>
+                <div class="col-md-6">
+                     <label for="gasVarCostSlider">Gas Variable Cost:</label>
+                    <input type="range" id="gasVarCostSlider" min="20" max="80" value="40" step="5"> $<span id="gasVarCostValue">40</span> /MWh
+                </div>
+            </div>
+            <div class="row mb-3">
+                 <div class="col-md-6">
+                     <label for="vollSlider">Value of Lost Load (VOLL):</label>
+                    <input type="range" id="vollSlider" min="5000" max="15000" value="10000" step="1000"> $<span id="vollValue">10000</span> /MWh
+                </div>
+                 <div class="col-md-6">
+                     <label for="rpsSlider">Renewable Target (RPS):</label>
+                    <input type="range" id="rpsSlider" min="0" max="60" value="20" step="5"> <span id="rpsValue">20</span> %
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-md-8">
+                    <h5>Resulting Optimal Capacity Mix (Illustrative)</h5>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="capacityMixChart"></canvas>
+                    </div>
+                </div>
+                 <div class="col-md-4 d-flex align-items-center justify-content-center">
+                     <div class="text-center">
+                        <h5>Estimated Total Cost Index:</h5>
+                        <p class="fs-4 fw-bold text-primary"><span id="totalCostIndex">100</span></p>
+                        <small>(Lower is better)</small>
+                     </div>
+                 </div>
+            </div>
+             <div class="mt-2 text-center small">
+                <span class="legend-dot bg-solar"></span> Solar &nbsp;
+                <span class="legend-dot bg-wind"></span> Wind &nbsp;
+                <span class="legend-dot bg-gas-cc"></span> Gas CC &nbsp;
+                <span class="legend-dot bg-gas-ct"></span> Gas CT (Peaker)
+            </div>
+        </div>
+
+        <h2>The Experiment: Quantifying the Distortion from Bad Data</h2>
+        <p>
+            The core contribution of the paper was to quantify the *cost* and *reliability* impacts of using inadequate data. Their methodology involved:
+        </p>
+        <ol>
+            <li><strong>Establish the "Base Case":</strong> Run the capacity expansion optimization model using the full 10 years of hourly, coincident load, wind, and solar data. This gives the theoretically optimal investment plan ($x_g^*$) if planners had perfect foresight over that decade.</li>
+            <li><strong>Develop "Alternative Plans":</strong> Re-run the optimization model using different, inadequate data samples:
+                <ul>
+                    <li>Each single year (Y1, Y2, ..., Y10).</li>
+                    <li>Five-year blocks (Y1-Y5, Y6-Y10).</li>
+                    <li>The averaged "typical" year (AVG).</li>
+                </ul>
+                Each run produces a potentially different, suboptimal investment plan ($\hat{x}_g$).
+            </li>
+            <li><strong>Evaluate Performance:</strong> For each alternative plan $\hat{x}_g$, simulate its operation over the *full 10 years* of data using a production cost model (which minimizes operating costs hour-by-hour given the fixed capacities $\hat{x}_g$). Calculate the total system cost and the total unserved energy (EUE) over the 10 years for each plan.</li>
+            <li><strong>Compare:</strong> Compare the costs and EUE of the alternative plans to the Base Case plan to quantify the distortion caused by the inadequate data sample.</li>
+        </ol>
+
+        <div class="interactive-section">
+            <h3>Simulating the Impact of Data Choice</h3>
+            <p>Select the data sample used for planning. The simulation shows the capacity mix chosen based on that limited data, and then estimates its performance (cost and reliability) when simulated over the full 10-year reality. Compare this to the ideal "Base" plan built using all 10 years.</p>
+
+            <label for="planDataSelect">Plan Based On:</label>
+            <select id="planDataSelect" class="form-select d-inline-block w-auto mb-3">
+                 <option value="BASE">Full 10 Years (Base Case)</option>
+                 <option value="Y3">Single Year 3 (Low Peaks)</option>
+                 <option value="Y7">Single Year 7 (High Wind)</option>
+                 <option value="AVG">Average "Typical" Year</option>
+            </select>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">Capacity Mix Chosen Based on Sample</div>
+                        <div class="card-body">
+                            <div class="small-chart-container">
+                                <canvas id="sampleCapacityMixChart"></canvas>
+                            </div>
+                             <div class="mt-2 text-center small">
+                                <span class="legend-dot bg-solar"></span> Solar <span class="legend-dot bg-wind"></span> Wind <span class="legend-dot bg-gas-cc"></span> Gas CC <span class="legend-dot bg-gas-ct"></span> Gas CT
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                     <div class="card h-100">
+                        <div class="card-header">Actual Performance (Simulated over Full 10 Years)</div>
+                        <div class="card-body text-center">
+                            <h5>Total System Cost:</h5>
+                            <p class="fs-5"><span id="perfCost">--</span> <span id="perfCostCompare" class="small"></span></p>
+                            <h5>Unserved Energy (EUE):</h5>
+                            <p class="fs-5"><span id="perfEUE">--</span> <span id="perfEUECompare" class="small"></span></p>
+                            <small>(Compared to Base Case)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Key Takeaways</h2>
+        <ul>
+            <li><strong>Averaging is Dangerous:</strong> Creating a "typical" year by averaging historical data hides critical variability and correlations, leading to severely underestimated costs and reliability risks (up to 16% cost increase, 38x EUE increase in the paper's case study).</li>
+            <li><strong>Short Samples are Risky:</strong> Using only one or a few years of data is a gamble. The chosen year might not represent long-term conditions, leading to suboptimal investments (e.g., >4% cost increase, 7x EUE increase). The "best" short sample depends on the specific policies (like RPS targets), making it hard to pick correctly.</li>
+            <li><strong>Coincidence Matters:</strong> It's crucial to use long periods of *synchronized* hourly (or sub-hourly) data for load, wind, and solar to capture their real-world interactions accurately.</li>
+            <li><strong>More Renewables = Higher Stakes:</strong> The distortions caused by poor data handling become *more severe* as the penetration of weather-dependent renewables increases. Getting the data right is increasingly important.</li>
+        </ul>
+
+        <h2>Conclusion</h2>
+        <p>
+            Planning a reliable and affordable power grid with high levels of wind and solar power requires careful consideration of the data used. This paper convincingly demonstrates that common shortcuts like averaging data or using short historical samples can lead to significantly flawed investment decisions, ultimately resulting in higher costs and a less reliable electricity supply. As we transition to a cleaner energy future, investing in better data and more sophisticated modeling techniques that capture the complex, time-varying nature of weather-dependent resources is not just an academic exercise – it's essential for keeping the lights on.
+        </p>
+
+        <div class="paper-citation">
+            <p>
+                This explanation is based on the findings presented in:
+                <br>
+                C. D. Bothwell and B. F. Hobbs, "How Sampling and Averaging Historical Solar and Wind Data Can Distort Resource Adequacy," in <em>IEEE Transactions on Sustainable Energy</em>, vol. 14, no. 3, pp. 1337-1345, July 2023, doi: 10.1109/TSTE.2022.3156869.
+            </p>
+             <p><small>Disclaimer: The interactive elements are simplified representations for educational purposes and do not replicate the full complexity or precise numerical results of the original paper's models.</small></p>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- Global Chart Variables ---
+        let coincidenceChartInstance = null;
+        let actualLoadChartInstance = null;
+        let averagedLoadChartInstance = null;
+        let capacityMixChartInstance = null;
+        let sampleCapacityMixChartInstance = null;
+
+        // --- Data Simulation (Simplified) ---
+        // Coincidence Data (Simulated - 10 days = 240 hours)
+        const timeSteps = 240;
+        const baseLoad = Array.from({length: timeSteps}, (_, i) =>
+            40 + 15 * Math.sin(i * Math.PI / 12) // Daily cycle
+               + 5 * Math.sin(i * Math.PI / (12 * 7)) // Weekly cycle
+               + 10 * Math.random() // Noise
+        );
+        const solarGeneration = Array.from({length: timeSteps}, (_, i) => {
+            const hourOfDay = i % 24;
+            const dayFactor = Math.max(0, Math.sin(i * Math.PI / (12 * 1.5)) + 0.2); // Seasonal-like variation
+            if (hourOfDay > 6 && hourOfDay < 19) {
+                 return Math.max(0, 30 * Math.sin((hourOfDay - 6) * Math.PI / 13) * dayFactor * (0.7 + 0.6 * Math.random()));
+            }
+            return 0;
+        });
+         const windGeneration = Array.from({length: timeSteps}, (_, i) =>
+            Math.max(0, 15 + 10 * Math.sin(i * Math.PI / 48 + Math.random()*2) // Slower variation
+                           + 15 * Math.random() - 5)
+        );
+        const netLoad = baseLoad.map((l, i) => Math.max(0, l - solarGeneration[i] - windGeneration[i]));
+
+        let currentDayIndex = 0; // Starting day index for coincidence chart
+
+        // Averaging Data (Simulated - 1 week = 168 hours)
+        const actualWeekLoad = Array.from({length: 168}, (_, i) =>
+            45 + 20 * Math.sin(i * Math.PI / 12 + Math.random()*0.5)
+               + 5 * (i % 24 > 8 && i % 24 < 17 ? Math.random() : -Math.random()) // Weekday noise
+               + (i % (24*7) > 24*5 ? -10 : 0) // Weekend dip
+        );
+         const averagedWeekLoad = Array.from({length: 168}, (_, i) =>
+            45 + 20 * Math.sin(i * Math.PI / 12) // Smooth daily cycle
+               + (i % (24*7) > 24*5 ? -10 : 0) // Smooth weekend dip
+         );
+
+
+        // --- Chart Drawing Functions ---
+
+        function drawCoincidenceChart(dayIndex) {
+            const hoursPerPlot = 72; // 3 days
+            const startHour = dayIndex * 24;
+            const endHour = startHour + hoursPerPlot;
+
+            const labels = Array.from({length: hoursPerPlot}, (_, i) => `H${startHour + i + 1}`);
+            const loadData = baseLoad.slice(startHour, endHour);
+            const solarData = solarGeneration.slice(startHour, endHour);
+            const windData = windGeneration.slice(startHour, endHour);
+            const netLoadData = netLoad.slice(startHour, endHour);
+
+            document.getElementById('dayRange').textContent = `Days ${dayIndex + 1}-${dayIndex + 3}`;
+
+            const ctx = document.getElementById('coincidenceChart').getContext('2d');
+            if (coincidenceChartInstance) {
+                coincidenceChartInstance.destroy();
+            }
+            coincidenceChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Load', data: loadData, borderColor: 'rgba(255, 99, 132, 1)', backgroundColor: 'rgba(255, 99, 132, 0.2)', tension: 0.1, pointRadius: 0 },
+                        { label: 'Solar', data: solarData, borderColor: 'rgba(255, 206, 86, 1)', backgroundColor: 'rgba(255, 206, 86, 0.2)', tension: 0.1, pointRadius: 0 },
+                        { label: 'Wind', data: windData, borderColor: 'rgba(54, 162, 235, 1)', backgroundColor: 'rgba(54, 162, 235, 0.2)', tension: 0.1, pointRadius: 0 },
+                        { label: 'Net Load', data: netLoadData, borderColor: 'rgba(75, 192, 192, 1)', backgroundColor: 'rgba(75, 192, 192, 0.2)', tension: 0.1, pointRadius: 0, borderDash: [5, 5] }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'MW (Illustrative)'} } },
+                    plugins: { legend: { display: false } } // Use custom legend
+                }
+            });
+        }
+
+        function drawAveragingCharts() {
+             const labels = Array.from({length: 168}, (_, i) => `H${i + 1}`);
+             const ctxActual = document.getElementById('actualLoadChart').getContext('2d');
+             const ctxAveraged = document.getElementById('averagedLoadChart').getContext('2d');
+
+             if (actualLoadChartInstance) actualLoadChartInstance.destroy();
+             actualLoadChartInstance = new Chart(ctxActual, {
+                 type: 'line',
+                 data: { labels: labels, datasets: [{ label: 'Actual Load', data: actualWeekLoad, borderColor: 'rgba(255, 99, 132, 1)', tension: 0.1, pointRadius: 0 }] },
+                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: Math.max(...actualWeekLoad)*1.1 } }, plugins: { legend: { display: false } } }
+             });
+
+             if (averagedLoadChartInstance) averagedLoadChartInstance.destroy();
+             averagedLoadChartInstance = new Chart(ctxAveraged, {
+                 type: 'line',
+                 data: { labels: labels, datasets: [{ label: 'Averaged Load', data: averagedWeekLoad, borderColor: 'rgba(153, 102, 255, 1)', tension: 0.1, pointRadius: 0 }] },
+                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: Math.max(...actualWeekLoad)*1.1 } }, plugins: { legend: { display: false } } }
+             });
+        }
+
+         function updateYearStats() {
+            const selectedYear = document.getElementById('yearSelect').value;
+            let statsHtml = '';
+            // These are qualitative descriptions inspired by the paper's figures/text
+            switch(selectedYear) {
+                case 'Y1': statsHtml = '<strong>Year 1:</strong> Close to average load factor, but relatively low wind production during peak hours. Might underestimate wind value.'; break;
+                case 'Y3': statsHtml = '<strong>Year 3:</strong> Fewer extreme peak load hours compared to average. Planning based on this might lead to insufficient peaking capacity.'; break;
+                case 'Y4': statsHtml = '<strong>Year 4:</strong> Higher than average wind capacity factor. Might overestimate wind value and lead to underbuilding other resources.'; break;
+                case 'Y7': statsHtml = '<strong>Year 7:</strong> Similar high wind conditions to Year 4. Risk of over-reliance on wind.'; break;
+                case 'Y10': statsHtml = '<strong>Year 10:</strong> Higher peak loads, lower renewable output during peaks. Might lead to overbuilding expensive peakers if used alone.'; break;
+                case 'AVG': statsHtml = '<strong>Average Year:</strong> Smooths out peaks and correlations. Hides the true system stress and the variability of renewables.'; break;
+                case 'BASE': statsHtml = '<strong>Full 10 Years:</strong> Captures a wide range of conditions and correlations. The ideal dataset for planning (according to the study).'; break;
+                default: statsHtml = 'Select a year to see its representative characteristics...';
+            }
+            document.getElementById('yearStats').innerHTML = statsHtml;
+        }
+
+        function updateCapacityMixChart() {
+            // --- Simplified Optimization Logic ---
+            // This is heuristic, NOT a real optimization. It aims to show trends.
+            const windCost = parseFloat(document.getElementById('windCostSlider').value);
+            const solarCost = parseFloat(document.getElementById('solarCostSlider').value);
+            const gasCost = parseFloat(document.getElementById('gasCostSlider').value);
+            const gasVarCost = parseFloat(document.getElementById('gasVarCostSlider').value);
+            const voll = parseFloat(document.getElementById('vollSlider').value);
+            const rps = parseFloat(document.getElementById('rpsSlider').value);
+
+            // Base capacities (arbitrary units)
+            let solarCap = 50;
+            let windCap = 60;
+            let gasCCC Cap = 70;
+            let gasCTCap = 30; // Peaker
+
+            // Adjust based on costs (lower cost -> more capacity)
+            solarCap *= 1100 / solarCost;
+            windCap *= 1200 / windCost;
+            gasCCC Cap *= 1000 / gasCost;
+
+            // Adjust gas based on variable cost (higher var cost -> less base load CC, maybe more peaker CT)
+            gasCCC Cap *= 40 / gasVarCost;
+            gasCTCap += (gasVarCost - 40) * 0.2; // If gas is expensive, need more cheap peaker
+
+             // Adjust based on VOLL (higher VOLL -> more reliable capacity, likely gas)
+            gasCCC Cap += (voll - 10000) / 500;
+            gasCTCap += (voll - 10000) / 300;
+
+             // Adjust based on RPS (force more renewables, potentially displacing gas CC first)
+            const currentRenewableRatio = (solarCap + windCap) / (solarCap + windCap + gasCCC Cap + gasCTCap) * 100;
+            const rpsDeficit = Math.max(0, rps - currentRenewableRatio);
+            // Add renewables somewhat cost-effectively, reduce gas CC
+            const solarAdd = rpsDeficit * (windCost / (solarCost + windCost)) * 1.5; // Add proportionally more of cheaper renewable
+            const windAdd = rpsDeficit * (solarCost / (solarCost + windCost)) * 1.5;
+            solarCap += solarAdd;
+            windCap += windAdd;
+            gasCCC Cap = Math.max(10, gasCCC Cap - (solarAdd + windAdd) * 0.8); // Reduce gas CC, but keep some
+
+            // Normalize roughly
+            const totalCap = solarCap + windCap + gasCCC Cap + gasCTCap;
+            solarCap = Math.max(5, solarCap / totalCap * 200);
+            windCap = Math.max(5, windCap / totalCap * 200);
+            gasCCC Cap = Math.max(10, gasCCC Cap / totalCap * 200);
+            gasCTCap = Math.max(5, gasCTCap / totalCap * 200);
+
+            // --- Update Chart ---
+            const ctx = document.getElementById('capacityMixChart').getContext('2d');
+            const labels = ['Solar', 'Wind', 'Gas CC', 'Gas CT'];
+            const data = [solarCap, windCap, gasCCC Cap, gasCTCap];
+
+            if (capacityMixChartInstance) {
+                capacityMixChartInstance.data.datasets[0].data = data;
+                capacityMixChartInstance.update();
+            } else {
+                capacityMixChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Installed Capacity (Illustrative Units)',
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 206, 86, 0.8)', // Solar
+                                'rgba(54, 162, 235, 0.8)', // Wind
+                                'rgba(100, 100, 100, 0.8)', // Gas CC
+                                'rgba(150, 150, 150, 0.8)' // Gas CT
+                            ]
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { beginAtZero: true, title: { display: true, text: 'Capacity (Illustrative Units)' } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // --- Update Cost Index (very rough heuristic) ---
+             const costIndex = (solarCap * solarCost/10 + windCap * windCost/10 + gasCCC Cap * (gasCost/10 + gasVarCost*2) + gasCTCap * (800/10 + 100*1)) / 300 ; // Normalize roughly
+            document.getElementById('totalCostIndex').textContent = costIndex.toFixed(0);
+        }
+
+
+        function updatePerformanceSimulation() {
+            const selection = document.getElementById('planDataSelect').value;
+
+            let capacityMix = {};
+            let costFactor = 1.0;
+            let eueFactor = 1.0;
+            let costCompareText = '(Base)';
+            let eueCompareText = '(Base)';
+
+            // Define Base Case performance (index)
+            const baseCost = 100;
+            const baseEUE = 10; // Arbitrary units
+            const baseCapacity = { solar: 35, wind: 45, gas_cc: 80, gas_ct: 25 };
+
+            // Define characteristics of plans based on limited data (Qualitative from paper)
+            switch(selection) {
+                case 'BASE':
+                    capacityMix = baseCapacity;
+                    costFactor = 1.0;
+                    eueFactor = 1.0;
+                    break;
+                case 'Y3': // Low peaks -> underbuilds peakers? Less overall capacity?
+                    capacityMix = { solar: 30, wind: 40, gas_cc: 70, gas_ct: 15 }; // Less CT
+                    costFactor = 1.04; // Paper: ~4% cost increase
+                    eueFactor = 7.0;  // Paper: ~7x EUE increase
+                    costCompareText = `<span class="cost-increase">(+${((costFactor-1)*100).toFixed(0)}% vs Base)</span>`;
+                    eueCompareText = `<span class="eue-increase">(${eueFactor.toFixed(0)}x Base EUE)</span>`;
+                    break;
+                case 'Y7': // High wind -> overbuilds wind, underbuilds thermal?
+                     capacityMix = { solar: 30, wind: 65, gas_cc: 65, gas_ct: 20 }; // More wind, less Gas
+                    costFactor = 1.02; // Less extreme than Y3 or AVG in paper's cost examples
+                    eueFactor = 3.0; // Reliability impact depends complexly on timing
+                     costCompareText = `<span class="cost-increase">(+${((costFactor-1)*100).toFixed(0)}% vs Base)</span>`;
+                    eueCompareText = `<span class="eue-increase">(${eueFactor.toFixed(0)}x Base EUE)</span>`;
+                    break;
+                case 'AVG': // Average -> underbuilds overall due to smoothed peaks
+                    capacityMix = { solar: 25, wind: 35, gas_cc: 60, gas_ct: 15 }; // Less of everything
+                    costFactor = 1.16; // Paper: up to 16% cost increase
+                    eueFactor = 38.0; // Paper: up to 38x EUE increase
+                    costCompareText = `<span class="cost-increase">(+${((costFactor-1)*100).toFixed(0)}% vs Base)</span>`;
+                    eueCompareText = `<span class="eue-increase">(${eueFactor.toFixed(0)}x Base EUE)</span>`;
+                    break;
+            }
+
+            // Update Performance Display
+            document.getElementById('perfCost').textContent = (baseCost * costFactor).toFixed(0);
+            document.getElementById('perfEUE').textContent = (baseEUE * eueFactor).toFixed(0);
+            document.getElementById('perfCostCompare').innerHTML = costCompareText;
+            document.getElementById('perfEUECompare').innerHTML = eueCompareText;
+
+
+            // Update Capacity Mix Chart for the selected sample
+            const ctx = document.getElementById('sampleCapacityMixChart').getContext('2d');
+            const labels = ['Solar', 'Wind', 'Gas CC', 'Gas CT'];
+            const data = [capacityMix.solar, capacityMix.wind, capacityMix.gas_cc, capacityMix.gas_ct];
+
+             if (sampleCapacityMixChartInstance) {
+                 sampleCapacityMixChartInstance.data.datasets[0].data = data;
+                 sampleCapacityMixChartInstance.update();
+            } else {
+                 sampleCapacityMixChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Installed Capacity (Illustrative Units)',
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 206, 86, 0.8)', // Solar
+                                'rgba(54, 162, 235, 0.8)', // Wind
+                                'rgba(100, 100, 100, 0.8)', // Gas CC
+                                'rgba(150, 150, 150, 0.8)' // Gas CT
+                            ]
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { x: { beginAtZero: true, max: Math.max(...Object.values(baseCapacity))*1.2 } }, // Consistent scale based on base
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial Draws
+            drawCoincidenceChart(currentDayIndex);
+            drawAveragingCharts();
+            updateYearStats();
+            updateCapacityMixChart(); // Also initializes sliders
+            updatePerformanceSimulation(); // Also initializes selector
+
+
+            // Coincidence Chart Navigation
+            document.getElementById('nextDayBtn').addEventListener('click', () => {
+                if ((currentDayIndex + 3) * 24 < timeSteps) {
+                    currentDayIndex += 3;
+                    drawCoincidenceChart(currentDayIndex);
+                }
+            });
+            document.getElementById('prevDayBtn').addEventListener('click', () => {
+                 if (currentDayIndex > 0) {
+                    currentDayIndex -= 3;
+                    drawCoincidenceChart(currentDayIndex);
+                }
+            });
+
+            // Year Selection
+            document.getElementById('yearSelect').addEventListener('change', updateYearStats);
+
+             // Capacity Mix Sliders
+            const sliders = ['windCost', 'solarCost', 'gasCost', 'gasVarCost', 'voll', 'rps'];
+            sliders.forEach(id => {
+                const slider = document.getElementById(id + 'Slider');
+                const valueSpan = document.getElementById(id + 'Value');
+                slider.addEventListener('input', () => {
+                    valueSpan.textContent = slider.value;
+                    updateCapacityMixChart();
+                });
+                // Initialize value display
+                valueSpan.textContent = slider.value;
+            });
+
+             // Performance Simulation Selector
+            document.getElementById('planDataSelect').addEventListener('change', updatePerformanceSimulation);
+
+        });
+
+    </script>
+
+</body>
+</html>

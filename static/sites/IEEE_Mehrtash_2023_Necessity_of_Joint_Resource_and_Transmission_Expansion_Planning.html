@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration: Joint Power System Expansion Planning</title>
+
+    <!-- Bootstrap CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- MathJax Configuration -->
+    <script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+    </script>
+    <!-- MathJax Library -->
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
+    <!-- Chart.js Library (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS (Minimal) -->
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.7;
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        h1, h2, h3 {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 300;
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+        }
+        .container {
+            max-width: 900px; /* Increased width for better layout */
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+        .explanation {
+            margin-bottom: 15px;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            /* height: 40vh; */
+            /* width: 80vw; */
+            max-width: 100%; /* Ensure chart responsiveness */
+        }
+        .term {
+            font-style: italic;
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary color */
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #6c757d; /* Bootstrap secondary text color */
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Style for sliders if added later */
+        /* input[type=range] { ... } */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Untangling the Grid: Why Planning Power Systems Together Matters</h1>
+        <p class="lead text-center">An interactive exploration inspired by the paper "Necessity of Joint Resource and Transmission Expansion Planning in Presence of System and Policy Uncertainties" by Mehrtash et al.</p>
+        <hr>
+
+        <h2>The Ever-Growing Challenge: Powering Our Future</h2>
+        <p>Imagine the electric grid as the circulatory system of our modern world. It needs to constantly adapt and grow to meet increasing energy demands, incorporate new energy sources like wind and solar, handle the rise of electric vehicles, and comply with environmental regulations. Planning these upgrades – deciding where to build new <a href="https://en.wikipedia.org/wiki/Power_station" target="_blank" class="term">power plants</a> (Generation Expansion Planning or GEP) and where to add new high-voltage <a href="https://en.wikipedia.org/wiki/Electric_power_transmission" target="_blank" class="term">transmission lines</a> (Transmission Expansion Planning or TEP) – is a monumental task.</p>
+        <p>These decisions involve billions of dollars and shape our energy landscape for decades. Traditionally, generation (who *makes* the power) and transmission (who *moves* the power) have often been planned separately. Furthermore, academic researchers tend to use complex optimization models to find the "best" plan, while industry often relies on simpler, step-by-step screening methods. Does this separation and simplification cost us? And how do we plan effectively when the future is uncertain?</p>
+
+        <h2>Study 1: Finding the Best Paths – Screening vs. Optimization</h2>
+        <p>Let's first look at building transmission lines (TEP). How do planners decide which new lines offer the most benefit?</p>
+
+        <div class="interactive-section">
+            <h3>The "Screening" Approach: One Step at a Time</h3>
+            <div class="explanation">
+                <p>One common method in practice is <span class="term">project-by-project screening</span>. Imagine you have a list of potential new lines you *could* build. With screening, you evaluate each potential line *individually*.</p>
+                <ol>
+                    <li>Calculate the system's operating cost (fuel, etc.) *without* the new line.</li>
+                    <li>For *each* potential line: Temporarily add it to the system and recalculate the operating cost.</li>
+                    <li>Rank the lines based on how much they individually reduce costs (or provide other benefits like reducing congestion).</li>
+                    <li>Pick the top-ranked lines, perhaps the best 10, 20, or 50.</li>
+                </ol>
+                <p>This seems logical – pick the lines that look best on their own. But does it capture the whole picture?</p>
+            </div>
+
+            <h3>The Catch: Why Adding "Good" Lines Can Be Bad (The Braess Paradox Echo)</h3>
+            <div class="explanation">
+                <p>Adding new infrastructure doesn't always improve flow. Sometimes, counter-intuitively, adding a new road can worsen traffic congestion (<a href="https://en.wikipedia.org/wiki/Braess%27s_paradox" target="_blank">Braess's Paradox</a>). A similar effect can occur in power grids. A new line might reroute power in unexpected ways, potentially increasing costs or congestion elsewhere.</p>
+                <p>The paper simulated adding 10,000 *random* potential lines one-by-one to a large test system (based on Texas's ERCOT grid). The chart below conceptually illustrates their findings (based on Fig 2 & 3): evaluating lines individually reveals that many potential additions might actually *increase* the system's operating cost if built in isolation!</p>
+            </div>
+            <div class="chart-container" style="height: 300px;">
+                <canvas id="braessEffectChart"></canvas>
+            </div>
+            <p class="caption">Conceptual illustration: Each bar represents a potential new line. Many lines, when evaluated individually, show a *positive* change in cost (worse), while others show a negative change (better). Screening focuses only on the best individual performers on the left.</p>
+
+            <h3>The "Optimization" Approach: Seeing the Big Picture</h3>
+            <div class="explanation">
+                <p>Instead of looking at lines one by one, <span class="term">optimization-based TEP</span> uses mathematical models to consider *all* candidate lines *simultaneously*. It aims to find the specific *combination* of lines that minimizes the total system cost (investment in new lines + operating costs) while respecting all physical grid constraints (like line capacities and power balance).</p>
+                <p>Mathematically, this is often framed as:</p>
+                $$ \min_{\mathbf{x}} f(\mathbf{x}) $$
+                $$ \text{subject to } \mathbf{g}(\mathbf{x}) = 0 $$
+                $$ \mathbf{h}(\mathbf{x}) \le 0 $$
+                <p>Where:</p>
+                <ul>
+                    <li>$\mathbf{x}$ represents the decisions (e.g., which lines to build).</li>
+                    <li>$f(\mathbf{x})$ is the total cost (investment + operation) we want to minimize.</li>
+                    <li>$\mathbf{g}(\mathbf{x}) = 0$ represents physical laws that *must* be met (like Kirchhoff's laws ensuring power balance at each node).</li>
+                    <li>$\mathbf{h}(\mathbf{x}) \le 0$ represents operational limits (like maximum power flow on lines, generator output limits).</li>
+                </ul>
+            </div>
+
+            <h3>The Verdict: Optimization Wins (Significantly!)</h3>
+            <div class="explanation">
+                <p>The paper compared the two approaches on the ERCOT-like system. They first screened 10,000 candidate lines and identified the top 50 individual performers. Then:</p>
+                <ul>
+                    <li><strong>Screening Solution:</strong> Assumed the top 27 lines from the screening list were built.</li>
+                    <li><strong>Optimization Solution:</strong> Used an optimization model (JHSMINE) to select the best subset from those same top 50 candidates.</li>
+                </ul>
+                <p>The results (based on Table I in the paper) were striking:</p>
+            </div>
+            <div class="chart-container" style="height: 350px;">
+                 <canvas id="screeningVsOptimizationChart"></canvas>
+            </div>
+             <p class="caption">Comparison of Screening vs. Optimization TEP results (data conceptually based on Paper Table I). Optimization delivers much lower operating costs and dramatically less load shedding (unmet demand).</p>
+            <div class="explanation mt-3">
+                <p><strong>Key Takeaway:</strong> Simply picking lines that look good individually (screening) leads to a much less efficient and less reliable grid compared to using optimization to find the best *combination* of lines. The benefits of the optimized portfolio were more than double those of the screened portfolio.</p>
+            </div>
+        </div>
+
+        <h2>Study 2: Planning Together – Generation + Transmission (GEP vs. GTEP)</h2>
+        <p>Okay, optimization helps pick the best transmission lines. But power plants (generation) and transmission lines are deeply connected. Building a giant solar farm in a remote area is useless without transmission lines to carry the power to cities. Conversely, building strong transmission lines might enable cheaper generation sources to be built further away.</p>
+        <p>This suggests that planning generation (GEP) and transmission (TEP) *together* – a process called <span class="term">co-optimization</span> or Joint Generation and Transmission Expansion Planning (GTEP) – should be better than planning them separately. The paper investigates this, especially considering future uncertainties.</p>
+
+        <div class="interactive-section">
+            <h3>The Uncertainty Factor: Four Possible Futures</h3>
+            <div class="explanation">
+                <p>The future is cloudy. Will electricity demand soar due to EVs? Will there be strict carbon taxes? Will old power plants retire faster than expected? Planners need to make robust decisions that work reasonably well across different possibilities. The paper considered four scenarios for the year 2030:</p>
+                <ul>
+                    <li><strong>S1: Reference:</strong> Business-as-usual projections.</li>
+                    <li><strong>S2: Environmental Regs:</strong> A significant carbon tax is imposed.</li>
+                    <li><strong>S3: Aggressive Retirement:</strong> More old coal and gas plants retire early.</li>
+                    <li><strong>S4: High Load Growth:</strong> Electricity demand grows much faster than expected.</li>
+                </ul>
+            </div>
+
+            <h3>Comparing Approaches: GEP vs. GTEP</h3>
+            <div class="explanation">
+                <p>For each scenario, the researchers compared two planning approaches:</p>
+                <ol>
+                    <li><strong>GEP Only:</strong> Assume the transmission network is fixed (or only undergoes minimal pre-planned upgrades). The model only decides which *new power plants and energy storage* to build to minimize costs.</li>
+                    <li><strong>GTEP (Co-optimization):</strong> The model decides which *new power plants, energy storage, AND transmission lines* to build simultaneously to minimize total system costs (generation investment + transmission investment + operation cost).</li>
+                </ol>
+                <p>Let's explore the results (based on Figs 4, 5, 6 in the paper).</p>
+            </div>
+
+            <h4>Result 1: Operating Costs and Reliability</h4>
+            <div class="explanation">
+                <p>How do the annual operating costs (fuel, maintenance) and reliability (measured by unmet demand, or "load shedding" during peak hours) compare?</p>
+            </div>
+            <div class="chart-container" style="height: 400px;">
+                 <canvas id="gepVsGtepOpCostChart"></canvas>
+            </div>
+             <p class="caption">Annual Operating Cost and Peak Load Shedding Comparison (conceptual data based on Paper Fig 4). GTEP consistently results in lower operating costs and significantly less load shedding across all scenarios compared to GEP alone.</p>
+
+            <h4>Result 2: Investment Costs</h4>
+            <div class="explanation">
+                <p>Where does the money go? GTEP allows trading off investments. Investing more in transmission might allow building cheaper generation further away or avoid building expensive local generation just to ease congestion.</p>
+            </div>
+            <div class="chart-container" style="height: 400px;">
+                 <canvas id="gepVsGtepInvCostChart"></canvas>
+            </div>
+             <p class="caption">Annual Investment Cost Breakdown (conceptual data based on Paper Fig 5). GTEP invests in transmission lines, which often allows for *lower* investment in new generation and storage compared to GEP, especially in challenging scenarios (S2, S3, S4).</p>
+
+            <h4>Result 3: Total Costs</h4>
+            <div class="explanation">
+                <p>What's the bottom line? Considering both investment and operating costs, which approach is truly cheaper and more reliable overall?</p>
+            </div>
+            <div class="chart-container" style="height: 400px;">
+                 <canvas id="gepVsGtepTotalCostChart"></canvas>
+            </div>
+            <p class="caption">Total Annual Cost (Investment + Operation) and Peak Load Shedding (conceptual data based on Paper Fig 6). GTEP achieves a lower total system cost *and* better reliability (less load shedding) in every single future scenario tested.</p>
+
+            <div class="explanation mt-3">
+                 <p><strong>Key Takeaway:</strong> Planning generation and transmission together (GTEP) consistently leads to cheaper, more reliable power systems across a range of possible futures compared to planning generation alone (GEP). Investing strategically in transmission enables a more efficient overall system design.</p>
+                 <p>Interestingly, the paper also noted (Table VII) that the specific *transmission lines and storage* chosen by GTEP were more consistent across the different future scenarios than the chosen *generation plants*. This suggests that transmission investments might be more robust decisions in the face of uncertainty.</p>
+            </div>
+        </div>
+
+        <h2>Conclusion: Plan Together, Plan Smart</h2>
+        <p>This exploration, based on the findings of Mehrtash et al., highlights two critical points for modern power system planning:</p>
+        <ol>
+            <li><strong>Optimization beats simple screening:</strong> Relying on step-by-step evaluation of individual projects can lead to significantly suboptimal and less reliable grid expansions compared to using optimization methods that consider the system as a whole. The interactions between components matter.</li>
+            <li><strong>Joint planning (GTEP) is essential:</strong> Planning generation and transmission in isolation misses crucial synergies. Co-optimizing these investments leads to lower overall costs, improved reliability, and potentially more robust plans that perform well across various uncertain futures.</li>
+        </ol>
+        <p>As our energy system undergoes rapid transformation, embracing these more sophisticated, integrated planning approaches is not just an academic exercise – it's a necessity for building an affordable, reliable, and sustainable energy future.</p>
+
+        <hr>
+        <p class="text-muted small">Disclaimer: This interactive page is an interpretation of the core concepts presented in the paper "Necessity of Joint Resource and Transmission Expansion Planning in Presence of System and Policy Uncertainties" by Mehrtash et al. (TPEC 2023). Data shown in charts is conceptually representative of the paper's findings but may not be exact numerical replicas. For precise details, please refer to the original publication.</p>
+    </div>
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Javascript for Charts -->
+    <script>
+        // Helper function for Chart.js tooltips
+        const getOrCreateTooltip = (chart) => {
+          let tooltipEl = chart.canvas.parentNode.querySelector('div');
+
+          if (!tooltipEl) {
+            tooltipEl = document.createElement('div');
+            tooltipEl.style.background = 'rgba(0, 0, 0, 0.7)';
+            tooltipEl.style.borderRadius = '3px';
+            tooltipEl.style.color = 'white';
+            tooltipEl.style.opacity = 1;
+            tooltipEl.style.pointerEvents = 'none';
+            tooltipEl.style.position = 'absolute';
+            tooltipEl.style.transform = 'translate(-50%, 0)';
+            tooltipEl.style.transition = 'all .1s ease';
+
+            const table = document.createElement('table');
+            table.style.margin = '0px';
+
+            tooltipEl.appendChild(table);
+            chart.canvas.parentNode.appendChild(tooltipEl);
+          }
+
+          return tooltipEl;
+        };
+
+        const externalTooltipHandler = (context) => {
+          // Tooltip Element
+          const {chart, tooltip} = context;
+          const tooltipEl = getOrCreateTooltip(chart);
+
+          // Hide if no tooltip
+          if (tooltip.opacity === 0) {
+            tooltipEl.style.opacity = 0;
+            return;
+          }
+
+          // Set Text
+          if (tooltip.body) {
+            const titleLines = tooltip.title || [];
+            const bodyLines = tooltip.body.map(b => b.lines);
+
+            const tableHead = document.createElement('thead');
+
+            titleLines.forEach(title => {
+              const tr = document.createElement('tr');
+              tr.style.borderWidth = 0;
+
+              const th = document.createElement('th');
+              th.style.borderWidth = 0;
+              const text = document.createTextNode(title);
+
+              th.appendChild(text);
+              tr.appendChild(th);
+              tableHead.appendChild(tr);
+            });
+
+            const tableBody = document.createElement('tbody');
+            bodyLines.forEach((body, i) => {
+              const colors = tooltip.labelColors[i];
+
+              const span = document.createElement('span');
+              span.style.background = colors.backgroundColor;
+              span.style.borderColor = colors.borderColor;
+              span.style.borderWidth = '2px';
+              span.style.marginRight = '10px';
+              span.style.height = '10px';
+              span.style.width = '10px';
+              span.style.display = 'inline-block';
+
+              const tr = document.createElement('tr');
+              tr.style.backgroundColor = 'inherit';
+              tr.style.borderWidth = 0;
+
+              const td = document.createElement('td');
+              td.style.borderWidth = 0;
+
+              // Use the dataset label and formatted value
+              const datasetLabel = chart.data.datasets[tooltip.dataPoints[i].datasetIndex].label || '';
+              const value = chart.data.datasets[tooltip.dataPoints[i].datasetIndex].data[tooltip.dataPoints[i].index];
+              const formattedValue = value.toLocaleString(undefined, { maximumFractionDigits: 2 }); // Format number
+
+              const text = document.createTextNode(`${datasetLabel}: ${formattedValue}`);
+
+
+              td.appendChild(span);
+              td.appendChild(text);
+              tr.appendChild(td);
+              tableBody.appendChild(tr);
+            });
+
+            const tableRoot = tooltipEl.querySelector('table');
+
+            // Remove old children
+            while (tableRoot.firstChild) {
+              tableRoot.firstChild.remove();
+            }
+
+            // Add new children
+            tableRoot.appendChild(tableHead);
+            tableRoot.appendChild(tableBody);
+          }
+
+          const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
+
+          // Display, position, and set styles for font
+          tooltipEl.style.opacity = 1;
+          tooltipEl.style.left = positionX + tooltip.caretX + 'px';
+          tooltipEl.style.top = positionY + tooltip.caretY + 'px';
+          tooltipEl.style.font = tooltip.options.bodyFont.string;
+          tooltipEl.style.padding = tooltip.options.padding + 'px ' + tooltip.options.padding + 'px';
+        };
+
+
+        // Chart 1: Braess Effect Conceptual Chart
+        const ctxBraess = document.getElementById('braessEffectChart').getContext('2d');
+        // Simulate data distribution: many slightly negative, some neutral, many positive
+        const numLines = 50;
+        const braessData = Array.from({ length: numLines }, (_, i) => {
+            const randomFactor = Math.random();
+            if (randomFactor < 0.4) return Math.random() * -50 - 1; // Good lines
+            else if (randomFactor < 0.55) return Math.random() * 10 - 5; // Neutral lines
+            else return Math.random() * 100 + 1; // Bad lines
+        }).sort((a, b) => a - b); // Sort from best (most negative) to worst (most positive)
+
+        new Chart(ctxBraess, {
+            type: 'bar',
+            data: {
+                labels: braessData.map((_, i) => `Line ${i + 1}`), // Generic labels
+                datasets: [{
+                    label: 'Change in System Cost (Conceptual)',
+                    data: braessData,
+                    backgroundColor: braessData.map(val => val <= 0 ? 'rgba(40, 167, 69, 0.6)' : 'rgba(220, 53, 69, 0.6)'), // Green for good, Red for bad
+                    borderColor: braessData.map(val => val <= 0 ? 'rgba(40, 167, 69, 1)' : 'rgba(220, 53, 69, 1)'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false } // Basic tooltip is enough here
+                },
+                scales: {
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Cost Change (Lower is Better)'
+                        }
+                    },
+                    x: {
+                         ticks: { display: false }, // Hide line numbers for clarity
+                         title: {
+                            display: true,
+                            text: 'Potential Lines (Sorted Best to Worst)'
+                         }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Screening vs. Optimization Results (Based on Table I)
+        const ctxScreenVsOpt = document.getElementById('screeningVsOptimizationChart').getContext('2d');
+        // Conceptual data based on Table I: Op Cost (Billion $), Load Shedding (MW)
+        // Original: 7.57, 3093
+        // Screening (Benefit 0.5): 6.99, 1558
+        // Optimization (Benefit 1.3): 6.19, 366
+        const opCostData = {
+            original: 7.57,
+            screening: 6.99,
+            optimization: 6.19
+        };
+        const loadShedData = {
+            original: 3093,
+            screening: 1558,
+            optimization: 366
+        };
+        new Chart(ctxScreenVsOpt, {
+            type: 'bar',
+            data: {
+                labels: ['Original System', 'Screening Result', 'Optimization Result'],
+                datasets: [
+                    {
+                        label: 'Annual Operation Cost (Billion $)',
+                        data: [opCostData.original, opCostData.screening, opCostData.optimization],
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1,
+                        yAxisID: 'yCost' // Assign to the left axis
+                    },
+                    {
+                        label: 'Peak Load Shedding (MW)',
+                        data: [loadShedData.original, loadShedData.screening, loadShedData.optimization],
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)', // Red
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1,
+                         yAxisID: 'yLoadShed' // Assign to the right axis
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                 plugins: {
+                    tooltip: {
+                        enabled: false, // Disable default tooltip
+                        external: externalTooltipHandler // Use custom handler
+                    }
+                },
+                scales: {
+                    yCost: { // Left Y Axis for Cost
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Operation Cost (Billion $)'
+                        }
+                    },
+                    yLoadShed: { // Right Y Axis for Load Shedding
+                        type: 'linear',
+                        position: 'right',
+                         beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Load Shedding (MW)'
+                        },
+                        grid: { // Only draw grid lines for the left axis
+                           drawOnChartArea: false,
+                        },
+                    }
+                }
+            }
+        });
+
+
+        // --- Charts for Study 2: GEP vs GTEP ---
+        const scenarios = ['S1: Reference', 'S2: Carbon Tax', 'S3: Retirements', 'S4: High Load'];
+        const colors = {
+            gep_opcost: 'rgba(255, 159, 64, 0.6)', // Orange
+            gtep_opcost: 'rgba(75, 192, 192, 0.6)', // Teal
+            gep_loadshed: 'rgba(255, 99, 132, 0.6)', // Red
+            gtep_loadshed: 'rgba(153, 102, 255, 0.6)', // Purple
+
+            gep_inv_gen: 'rgba(255, 206, 86, 0.6)', // Yellow
+            gtep_inv_gen: 'rgba(255, 206, 86, 0.8)', // Darker Yellow
+            gep_inv_stor: 'rgba(54, 162, 235, 0.6)', // Blue
+            gtep_inv_stor: 'rgba(54, 162, 235, 0.8)', // Darker Blue
+            gtep_inv_trans: 'rgba(40, 167, 69, 0.6)', // Green (Only GTEP has trans inv)
+
+            gep_total: 'rgba(255, 99, 132, 0.6)', // Red (Same as loadshed color for consistency)
+            gtep_total: 'rgba(75, 192, 192, 0.6)', // Teal (Same as GTEP opcost)
+        };
+
+        // Chart 3: GEP vs GTEP - Operation Cost & Load Shedding (Fig 4)
+        const ctxGepGtepOpCost = document.getElementById('gepVsGtepOpCostChart').getContext('2d');
+        // Conceptual data - GEP always higher op cost and load shed than GTEP
+        const opCostGEP = [6.5, 6.2, 6.8, 7.2]; // Billion $
+        const opCostGTEP = [6.1, 5.8, 6.3, 6.5]; // Billion $
+        const loadShedGEP = [500, 450, 600, 700]; // MW
+        const loadShedGTEP = [150, 100, 200, 250]; // MW
+
+        new Chart(ctxGepGtepOpCost, {
+            type: 'bar',
+            data: {
+                labels: scenarios,
+                datasets: [
+                    {
+                        label: 'GEP Op Cost',
+                        data: opCostGEP,
+                        backgroundColor: colors.gep_opcost,
+                        yAxisID: 'yCost'
+                    },
+                    {
+                        label: 'GTEP Op Cost',
+                        data: opCostGTEP,
+                        backgroundColor: colors.gtep_opcost,
+                        yAxisID: 'yCost'
+                    },
+                     {
+                        label: 'GEP Load Shed',
+                        data: loadShedGEP,
+                        backgroundColor: colors.gep_loadshed,
+                        yAxisID: 'yLoadShed'
+                    },
+                    {
+                        label: 'GTEP Load Shed',
+                        data: loadShedGTEP,
+                        backgroundColor: colors.gtep_loadshed,
+                        yAxisID: 'yLoadShed'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: false,
+                        external: externalTooltipHandler,
+                        mode: 'index', // Show tooltips for all datasets at that index
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: { stacked: false }, // Bars side-by-side per category
+                    yCost: {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Operation Cost (Billion $)' }
+                    },
+                    yLoadShed: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Load Shedding (MW)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+        // Chart 4: GEP vs GTEP - Investment Costs (Fig 5)
+        const ctxGepGtepInvCost = document.getElementById('gepVsGtepInvCostChart').getContext('2d');
+        // Conceptual Data (Million $) - GTEP invests in trans, often reducing gen/stor needs
+        const invGenGEP = [600, 750, 700, 800];
+        const invStorGEP = [200, 220, 250, 280];
+        const invGenGTEP = [500, 600, 550, 650];
+        const invStorGTEP = [180, 190, 200, 220];
+        const invTransGTEP = [150, 180, 200, 250]; // Only GTEP
+
+        new Chart(ctxGepGtepInvCost, {
+             type: 'bar',
+            data: {
+                labels: scenarios,
+                datasets: [
+                    // GEP Investments (stacked)
+                    {
+                        label: 'GEP Inv: Generation',
+                        data: invGenGEP,
+                        backgroundColor: colors.gep_inv_gen,
+                        stack: 'GEP' // Stack GEP bars together
+                    },
+                    {
+                        label: 'GEP Inv: Storage',
+                        data: invStorGEP,
+                        backgroundColor: colors.gep_inv_stor,
+                        stack: 'GEP'
+                    },
+                     // GTEP Investments (stacked)
+                     {
+                        label: 'GTEP Inv: Generation',
+                        data: invGenGTEP,
+                        backgroundColor: colors.gtep_inv_gen,
+                        stack: 'GTEP' // Stack GTEP bars together
+                    },
+                     {
+                        label: 'GTEP Inv: Storage',
+                        data: invStorGTEP,
+                        backgroundColor: colors.gtep_inv_stor,
+                        stack: 'GTEP'
+                    },
+                     {
+                        label: 'GTEP Inv: Transmission',
+                        data: invTransGTEP,
+                        backgroundColor: colors.gtep_inv_trans,
+                        stack: 'GTEP'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                 plugins: {
+                     tooltip: {
+                         enabled: false,
+                         external: externalTooltipHandler,
+                         mode: 'index',
+                         intersect: false
+                     }
+                 },
+                scales: {
+                    x: { stacked: false }, // Keep scenario groups separate
+                    y: {
+                        stacked: true, // Stack within GEP/GTEP groups
+                        beginAtZero: true,
+                        title: { display: true, text: 'Investment Cost (Million $)' }
+                    }
+                }
+            }
+        });
+
+
+        // Chart 5: GEP vs GTEP - Total Cost & Load Shedding (Fig 6)
+        const ctxGepGtepTotalCost = document.getElementById('gepVsGtepTotalCostChart').getContext('2d');
+        // Calculate total costs (OpCost in B$, InvCost in M$ - convert Inv to B$)
+        const totalCostGEP = opCostGEP.map((op, i) => op + (invGenGEP[i] + invStorGEP[i]) / 1000);
+        const totalCostGTEP = opCostGTEP.map((op, i) => op + (invGenGTEP[i] + invStorGTEP[i] + invTransGTEP[i]) / 1000);
+        // Load shedding data is the same as in Chart 3
+
+        new Chart(ctxGepGtepTotalCost, {
+            type: 'bar',
+            data: {
+                labels: scenarios,
+                datasets: [
+                    {
+                        label: 'GEP Total Cost',
+                        data: totalCostGEP,
+                        backgroundColor: colors.gep_total, // Use a distinct GEP color
+                        yAxisID: 'yCost'
+                    },
+                    {
+                        label: 'GTEP Total Cost',
+                        data: totalCostGTEP,
+                        backgroundColor: colors.gtep_total, // Use a distinct GTEP color
+                        yAxisID: 'yCost'
+                    },
+                     {
+                        label: 'GEP Load Shed',
+                        data: loadShedGEP, // Same as Fig 4 data
+                        backgroundColor: colors.gep_loadshed, // Keep consistent
+                        yAxisID: 'yLoadShed'
+                    },
+                    {
+                        label: 'GTEP Load Shed',
+                        data: loadShedGTEP, // Same as Fig 4 data
+                        backgroundColor: colors.gtep_loadshed, // Keep consistent
+                        yAxisID: 'yLoadShed'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        enabled: false,
+                        external: externalTooltipHandler,
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: { stacked: false },
+                    yCost: {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Total Annual Cost (Billion $)' }
+                    },
+                    yLoadShed: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        title: { display: true, text: 'Load Shedding (MW)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        });
+
+    </script>
+
+</body>
+</html>

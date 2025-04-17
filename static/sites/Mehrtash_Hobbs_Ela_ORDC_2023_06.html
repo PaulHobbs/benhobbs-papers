@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration: Reserve & Energy Scarcity Pricing</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+      </script>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS (Minimal) -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-top: 60px; /* Adjust for fixed navbar */
+        }
+        .navbar {
+            background-color: #f8f9fa; /* Light gray background */
+            border-bottom: 1px solid #dee2e6;
+        }
+        .container {
+            max-width: 960px; /* Limit content width for readability */
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3em;}
+        h3 { font-size: 1.5rem; }
+        code {
+            background-color: #f1f1f1;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .interactive-section {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .slider-label {
+            font-size: 0.9em;
+            color: #555;
+        }
+        input[type=range] {
+            width: 100%;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px; /* Adjust as needed */
+            width: 100%;
+        }
+        .wikipedia-link {
+            font-size: 0.8em;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .wikipedia-link:hover {
+            text-decoration: underline;
+        }
+        .param-value {
+            font-weight: bold;
+            color: #0056b3;
+        }
+         /* Style inspired by ciechanow.ski */
+        body {
+            background-color: #ffffff;
+            color: #333;
+        }
+        .interactive-section {
+            background-color: #f0f0f0; /* Lighter grey */
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .navbar-brand {
+             font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">Reserve & Energy Scarcity Pricing</a>
+      </div>
+    </nav>
+
+    <div class="container mt-5">
+
+        <h1>Keeping the Lights On: Understanding Scarcity Pricing in Power Markets</h1>
+        <p class="lead">Modern power grids are marvels of engineering, balancing electricity supply and demand in real-time. But what happens when supply gets tight? This exploration delves into "scarcity pricing" – a critical mechanism used in US electricity markets to maintain reliability, especially as renewable energy sources grow.</p>
+        <p>Based on the paper <a href="https://doi.org/10.1016/j.rser.2023.113465" target="_blank">"Reserve and energy scarcity pricing in United States power markets: A comparative review of principles and practices"</a> by Mehrtash, Hobbs, and Ela (Renewable and Sustainable Energy Reviews, 2023).</p>
+
+        <h2>The Balancing Act: Why Reserves Matter</h2>
+        <p>Electricity grids need more than just enough generation to meet the *predicted* demand. Unexpected events happen: power plants can fail, transmission lines can go down, or clouds can suddenly cover a large solar farm. To handle these fluctuations, grid operators maintain <a href="https://en.wikipedia.org/wiki/Operating_reserve" target="_blank" class="wikipedia-link">Operating Reserves</a> – essentially, power sources ready to ramp up or down quickly.</p>
+        <p>Key types include:</p>
+        <ul>
+            <li><strong>Regulation Reserves:</strong> Handle small, second-to-second imbalances.</li>
+            <li><strong>Contingency Reserves (Spinning/Non-Spinning):</strong> Respond within minutes (typically 10) if a major generator or line fails (a "contingency event").</li>
+            <li><strong>Flexiramp (Newer):</strong> Capacity reserved to handle larger, faster ramps in net load (demand minus renewables), often driven by changing wind/solar output.</li>
+        </ul>
+        <p>Procuring enough reserve is crucial for reliability. But what happens when the available reserves start running low?</p>
+
+        <h2>Signaling Scarcity: The Need for Price Signals</h2>
+        <p>In a typical market, scarcity drives prices up. If apples become scarce, apple prices rise, encouraging suppliers to bring more apples and consumers to buy fewer. In electricity, however, most consumers don't see real-time prices. If reserves dwindle, we can't rely on millions of households instantly reducing demand.</p>
+        <p>Instead, grid operators (Independent System Operators or <a href="https://en.wikipedia.org/wiki/Independent_system_operator" target="_blank" class="wikipedia-link">ISOs</a>) use administrative mechanisms to *simulate* scarcity's effect on prices. When reserves are insufficient, they impose higher prices for both reserves and energy. This serves multiple purposes:</p>
+        <ul>
+            <li>Encourages generators with available capacity (even expensive or emergency capacity) to offer it.</li>
+            <li>Motivates large consumers or demand response programs to reduce usage.</li>
+            <li>Provides revenue to resources that are available, supporting investment in reliability.</li>
+        </ul>
+        <p>A key concept here is the <a href="https://en.wikipedia.org/wiki/Value_of_lost_load" target="_blank" class="wikipedia-link">Value of Lost Load (VOLL)</a> – an estimate of the economic cost incurred if electricity supply fails entirely ($/MWh). Scarcity prices often approach, but don't always reach, this very high value.</p>
+
+        <h2>The Operating Reserve Demand Curve (ORDC)</h2>
+        <p>The core tool for implementing scarcity pricing is the **Operating Reserve Demand Curve (ORDC)**. Unlike a typical demand curve derived from consumer preferences, the ORDC is *administratively determined* by the ISO. It defines the price the system is willing to pay for reserves (and implicitly, the premium added to energy prices) as the quantity of available reserves decreases.</p>
+        <p>Ideally, this price should reflect the increasing *marginal reliability value* of reserves – each additional megawatt (MW) of reserves becomes more valuable as the system gets closer to the edge. However, practical ORDCs in US markets often take a simpler, **stepwise** form.</p>
+
+        <div class="interactive-section">
+            <h3>Exploring a Stepwise ORDC</h3>
+            <p>Imagine an ISO needs to maintain a minimum of 3000 MW of contingency reserves. They might define a stepwise ORDC like the one below. Adjust the available reserves and see how the scarcity price changes.</p>
+
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="chart-container">
+                        <canvas id="ordcChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                         <label for="availableReservesSlider" class="form-label slider-label">Available Reserves (MW): <span id="availableReservesValue" class="param-value">4000</span></label>
+                         <input type="range" class="form-range" id="availableReservesSlider" min="0" max="5000" step="50" value="4000">
+                    </div>
+                     <div class="mb-3">
+                         <label for="reserveRequirementSlider" class="form-label slider-label">Minimum Reserve Requirement (MW): <span id="reserveRequirementValue" class="param-value">3000</span></label>
+                         <input type="range" class="form-range" id="reserveRequirementSlider" min="1000" max="4000" step="100" value="3000">
+                     </div>
+                    <div class="mb-3">
+                         <label for="penalty1Slider" class="form-label slider-label">Penalty Level 1 ($/MWh, near requirement): <span id="penalty1Value" class="param-value">300</span></label>
+                         <input type="range" class="form-range" id="penalty1Slider" min="50" max="1000" step="50" value="300">
+                    </div>
+                    <div class="mb-3">
+                         <label for="penalty2Slider" class="form-label slider-label">Penalty Level 2 ($/MWh, severe shortage): <span id="penalty2Value" class="param-value">850</span></label>
+                         <input type="range" class="form-range" id="penalty2Slider" min="500" max="5000" step="100" value="850">
+                     </div>
+                     <p class="mt-3">Current Scarcity Price: <strong id="currentPriceValue" class="param-value">$0</strong> $/MWh</p>
+                </div>
+            </div>
+            <p><small>This is a simplified example. Real ORDCs can have more steps and complex interactions between different reserve types.</small></p>
+        </div>
+
+        <h2>Diverse Approaches Across the US</h2>
+        <p>The paper highlights that while the goal is similar, the seven major US ISOs implement scarcity pricing quite differently. They fall into roughly three categories:</p>
+
+        <ol>
+            <li><strong>Ex Post Price Adder (ERCOT - Texas):</strong> ERCOT runs its real-time energy market first. Then, *after the fact*, it calculates a price "adder" based on the probability of needing to shed load (<a href="https://en.wikipedia.org/wiki/Loss_of_load_probability" target="_blank" class="wikipedia-link">Loss of Load Probability - LOLP</a>) given the current reserve levels and forecast uncertainty. This adder, scaled by VOLL, is added to the energy price. This tends to create a smoother transition into scarcity, capped at VOLL.
+                $$ \text{Adder} \approx (\text{VOLL} - \lambda_{\text{energy}}) \times \text{LOLP}(\text{Available Reserves}) $$
+                *(Simplified concept)*
+            </li>
+            <li><strong>Co-optimized Stepwise ORDCs with Flexiramp (MISO, SPP, CAISO):</strong> These ISOs clear energy and reserve markets *simultaneously* ("co-optimization"). They use stepwise ORDCs for various reserve types, including flexiramp. Because flexiramp is a non-contingency product often needed even when traditional reserves aren't critically low (e.g., during steep solar ramps), its ORDC can extend the "right tail" of the energy scarcity premium curve – meaning prices start rising sooner, even with moderate reserve shortages.</li>
+            <li><strong>Co-optimized Stepwise ORDCs without Flexiramp (NYISO, PJM, ISO-NE):</strong> Similar to group 2, they co-optimize energy and reserves with stepwise ORDCs, but without a dedicated flexiramp product (or with different rules). This typically results in shorter "right tails" – scarcity prices only kick in significantly when traditional contingency reserves become scarce.</li>
+        </ol>
+
+        <h3>Nesting Matters</h3>
+        <p>In co-optimized markets, reserve types are often "nested." This means higher-quality reserves (like fast-responding regulation or spinning reserves) can also satisfy requirements for lower-quality reserves (like non-spinning or 30-minute reserves). If a lower-quality reserve is short, its penalty price adds to the price of the higher-quality reserves that could substitute for it. This can lead to additive penalties and very high prices for the most flexible resources during deep shortages.</p>
+        <p>Example: If non-spin is short (penalty $P_{NS}$) and spin can substitute, the effective penalty for spin becomes $P_S + P_{NS}$ (where $P_S$ is the base spin penalty).</p>
+
+        <h2>Comparing the Curves: Why Differences Matter</h2>
+        <p>The paper's central analysis compares the *effective energy scarcity premium* resulting from different ISO rules under similar conditions. The results (simplified and interactive below) show significant variation.</p>
+
+        <div class="interactive-section">
+            <h3>Visualizing ISO ORDC Differences</h3>
+            <p>This chart approximates the effective energy price premium curves based on the paper's analysis (see Fig. 11). Select different "ISO Styles" or adjust parameters representing key design choices to see how the scarcity price profile changes. The "Available Reserves" slider simulates the system condition.</p>
+
+             <div class="row">
+                <div class="col-md-8">
+                    <div class="chart-container">
+                        <canvas id="isoCompareChart"></canvas>
+                    </div>
+                     <div class="mt-3">
+                         <label for="isoAvailableReservesSlider" class="form-label slider-label">Available Reserves (GW): <span id="isoAvailableReservesValue" class="param-value">5</span></label>
+                         <input type="range" class="form-range" id="isoAvailableReservesSlider" min="0" max="7" step="0.1" value="5">
+                     </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="isoStyleSelect" class="form-label slider-label">Select ISO Style:</label>
+                        <select class="form-select" id="isoStyleSelect">
+                            <option value="ERCOT">ERCOT (Adder, High VOLL)</option>
+                            <option value="PJM">PJM (Steps, No Flexiramp)</option>
+                            <option value="CAISO">CAISO (Steps, Flexiramp, Lower Cap)</option>
+                            <option value="MISO">MISO (Steps, Flexiramp, Gradual)</option>
+                            <option value="SPP">SPP (Steps, Flexiramp, Mid-Range)</option>
+                            <option value="ISO-NE">ISO-NE (Steps, No Flexiramp, High Penalties)</option>
+                            <option value="NYISO">NYISO (Many Steps, No Flexiramp)</option>
+                        </select>
+                    </div>
+                     <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="showAverageCheck">
+                        <label class="form-check-label slider-label" for="showAverageCheck">Show Average ORDC</label>
+                    </div>
+                     <hr>
+                     <p class="slider-label">Sensitivity Parameters:</p>
+                     <div class="mb-3">
+                         <label for="voalSlider" class="form-label slider-label">"VOLL"/Max Penalty ($/MWh): <span id="voalValue" class="param-value">5000</span></label>
+                         <input type="range" class="form-range" id="voalSlider" min="1000" max="9000" step="500" value="5000">
+                     </div>
+                     <div class="mb-3">
+                         <label for="stepsSlider" class="form-label slider-label">Number of Steps (Approx): <span id="stepsValue" class="param-value">3</span></label>
+                         <input type="range" class="form-range" id="stepsSlider" min="1" max="10" step="1" value="3">
+                     </div>
+                      <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="flexirampCheck" checked>
+                        <label class="form-check-label slider-label" for="flexirampCheck">Include Flexiramp Effect?</label>
+                    </div>
+                     <button id="applyParamsButton" class="btn btn-sm btn-secondary mt-2">Apply Custom Params</button>
+                     <p class="mt-3">Current Scarcity Price (Selected Style): <strong id="isoCurrentPriceValue" class="param-value">$0</strong> $/MWh</p>
+                </div>
+            </div>
+            <p><small>Note: These curves are illustrative approximations based on the paper's findings and assumptions. Actual prices depend on many real-time factors.</small></p>
+        </div>
+
+        <p>Key observations from the paper and the visualization:</p>
+        <ul>
+            <li><strong>High Variation:</strong> Different assumptions lead to vastly different price signals for the same level of physical scarcity.</li>
+            <li><strong>VOLL/Caps Matter Most:</strong> The maximum penalty level (often related to VOLL or offer caps) is the biggest driver of differences during severe shortages (left side of the curve).</li>
+            <li><strong>Steps vs. Smooth:</strong> Stepwise curves can cause abrupt price jumps, potentially leading to volatility. Smoother curves (like ERCOT's adder approach) might be more predictable.</li>
+            <li><strong>Flexiramp Extends the Tail:</strong> Including flexiramp tends to raise prices earlier (further right on the curve) as the system anticipates ramping needs.</li>
+            <li><strong>Incentives Diverge:</strong> These different price signals likely create different incentives for resources to invest, operate, and respond to shortages.</li>
+        </ul>
+
+        <h2>Conclusions and Recommendations</h2>
+        <p>The paper concludes that as renewable energy grows and traditional fuel costs play a smaller role in setting prices, scarcity pricing will become even more crucial for grid reliability and efficient market operation.</p>
+        <p>An effective ORDC design should ideally:</p>
+        <ol>
+            <li>Reflect the **marginal value** of reserves at different shortage levels (higher penalties for deeper shortages).</li>
+            <li>Consider the **magnitude and probability** of potential contingencies (like generator outages or forecast errors).</li>
+            <li>Avoid **abrupt discontinuities** (sharp steps) that can cause excessive price volatility unrelated to fundamental changes.</li>
+        </ol>
+        <p>Furthermore, ensuring proper **co-optimization** of energy and all reserve types, considering **nesting**, and potentially moving towards more **granular (nodal) reserve procurement** are important areas for future market design.</p>
+        <p>Understanding these mechanisms is vital for policymakers, market participants, and anyone interested in the future of reliable, clean electricity grids.</p>
+
+        <footer class="mt-5 pt-4 my-5 text-muted border-top">
+            Exploration based on Mehrtash, Hobbs, & Ela (2023), Renewable and Sustainable Energy Reviews. Inspired by the explanatory style of Bret Victor and Bartosz Ciechanowski. Created using Bootstrap, Chart.js, and MathJax.
+        </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        // --- Simple ORDC Chart ---
+        const ctxORDC = document.getElementById('ordcChart').getContext('2d');
+        const availableReservesSlider = document.getElementById('availableReservesSlider');
+        const availableReservesValue = document.getElementById('availableReservesValue');
+        const reserveRequirementSlider = document.getElementById('reserveRequirementSlider');
+        const reserveRequirementValue = document.getElementById('reserveRequirementValue');
+        const penalty1Slider = document.getElementById('penalty1Slider');
+        const penalty1Value = document.getElementById('penalty1Value');
+        const penalty2Slider = document.getElementById('penalty2Slider');
+        const penalty2Value = document.getElementById('penalty2Value');
+        const currentPriceValue = document.getElementById('currentPriceValue');
+
+        let ordcChart; // Chart instance
+
+        // Function to calculate the ORDC price based on parameters
+        function calculateORDCPrice(available, requirement, p1, p2) {
+            const step1Threshold = requirement; // Price = p1 when reserves <= requirement
+            const step2Threshold = requirement * 0.8; // Example: Price = p2 when reserves <= 80% of requirement
+
+            if (available <= step2Threshold) {
+                return p2;
+            } else if (available <= step1Threshold) {
+                return p1;
+            } else {
+                return 0; // No scarcity
+            }
+        }
+
+        // Function to generate ORDC data points for the chart
+        function generateORDCData(requirement, p1, p2) {
+            const data = [];
+            const maxReserve = 5000; // X-axis limit
+            const step1Threshold = requirement;
+            const step2Threshold = requirement * 0.8;
+
+             // Add points to define the steps clearly
+            data.push({ x: maxReserve, y: 0 }); // Start at zero price
+            data.push({ x: step1Threshold + 1, y: 0 }); // Point just before first step
+            data.push({ x: step1Threshold, y: p1 }); // First step starts
+            data.push({ x: step2Threshold + 1, y: p1 }); // Point just before second step
+            data.push({ x: step2Threshold, y: p2 }); // Second step starts
+            data.push({ x: 0, y: p2 }); // Goes down to zero reserves
+
+            return data.sort((a, b) => a.x - b.x); // Ensure data is sorted by x
+        }
+
+         // Function to generate the vertical line data
+        function generateVerticalLineData(currentReserve, maxPrice) {
+            return [
+                { x: currentReserve, y: 0 },
+                { x: currentReserve, y: maxPrice }
+            ];
+        }
+
+        // Initial chart creation
+        function createORDCChart() {
+            const requirement = parseInt(reserveRequirementSlider.value);
+            const p1 = parseInt(penalty1Slider.value);
+            const p2 = parseInt(penalty2Slider.value);
+            const initialAvailable = parseInt(availableReservesSlider.value);
+            const initialPrice = calculateORDCPrice(initialAvailable, requirement, p1, p2);
+            const maxPrice = Math.max(p1, p2, 50); // Ensure y-axis covers penalties
+
+            currentPriceValue.textContent = `$${initialPrice}`;
+            availableReservesValue.textContent = initialAvailable;
+            reserveRequirementValue.textContent = requirement;
+            penalty1Value.textContent = p1;
+            penalty2Value.textContent = p2;
+
+            ordcChart = new Chart(ctxORDC, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'ORDC Price',
+                            data: generateORDCData(requirement, p1, p2),
+                            borderColor: 'rgb(75, 192, 192)',
+                            borderWidth: 2,
+                            tension: 0, // Use 0 for sharp steps
+                            stepped: 'before', // Makes it look like a step chart
+                            pointRadius: 0, // Hide points
+                            fill: false
+                        },
+                         {
+                            label: 'Current Reserves',
+                            data: generateVerticalLineData(initialAvailable, maxPrice * 1.1),
+                            borderColor: 'rgb(255, 99, 132)',
+                            borderWidth: 2,
+                            borderDash: [5, 5], // Dashed line
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Available Reserves (MW)'
+                            },
+                            min: 0,
+                            max: 5000
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Scarcity Price ($/MWh)'
+                            },
+                            max: maxPrice * 1.1 // Add some padding
+                        }
+                    },
+                    plugins: {
+                        tooltip: { enabled: false }, // Disable tooltips for simplicity
+                        legend: { display: false }
+                    },
+                    animation: {
+                        duration: 0 // Disable animation for faster updates
+                    }
+                }
+            });
+        }
+
+        // Update chart when sliders change
+        function updateORDCChart() {
+            if (!ordcChart) return;
+
+            const requirement = parseInt(reserveRequirementSlider.value);
+            const p1 = parseInt(penalty1Slider.value);
+            const p2 = parseInt(penalty2Slider.value);
+            const available = parseInt(availableReservesSlider.value);
+            const currentPrice = calculateORDCPrice(available, requirement, p1, p2);
+            const maxPrice = Math.max(p1, p2, 50);
+
+            // Update displayed values
+            availableReservesValue.textContent = available;
+            reserveRequirementValue.textContent = requirement;
+            penalty1Value.textContent = p1;
+            penalty2Value.textContent = p2;
+            currentPriceValue.textContent = `$${currentPrice}`;
+
+            // Update chart data
+            ordcChart.data.datasets[0].data = generateORDCData(requirement, p1, p2);
+            ordcChart.data.datasets[1].data = generateVerticalLineData(available, maxPrice * 1.1);
+            ordcChart.options.scales.y.max = maxPrice * 1.1; // Update y-axis max
+            ordcChart.update();
+        }
+
+        // Event listeners for sliders
+        availableReservesSlider.addEventListener('input', updateORDCChart);
+        reserveRequirementSlider.addEventListener('input', updateORDCChart);
+        penalty1Slider.addEventListener('input', updateORDCChart);
+        penalty2Slider.addEventListener('input', updateORDCChart);
+
+        // Create the initial chart
+        createORDCChart();
+
+
+        // --- ISO Comparison Chart ---
+        const ctxISO = document.getElementById('isoCompareChart').getContext('2d');
+        const isoStyleSelect = document.getElementById('isoStyleSelect');
+        const isoAvailableReservesSlider = document.getElementById('isoAvailableReservesSlider');
+        const isoAvailableReservesValue = document.getElementById('isoAvailableReservesValue');
+        const voalSlider = document.getElementById('voalSlider');
+        const voalValue = document.getElementById('voalValue');
+        const stepsSlider = document.getElementById('stepsSlider');
+        const stepsValue = document.getElementById('stepsValue');
+        const flexirampCheck = document.getElementById('flexirampCheck');
+        const applyParamsButton = document.getElementById('applyParamsButton');
+        const isoCurrentPriceValue = document.getElementById('isoCurrentPriceValue');
+        const showAverageCheck = document.getElementById('showAverageCheck');
+
+
+        let isoCompareChart;
+        let isoStylesData = {}; // Store pre-calculated data for each style
+
+        // Simplified function to get scarcity price at a specific reserve level for a given style
+        function getIsoPriceAtPoint(style, reservesGW, allStylesData) {
+             const dataPoints = allStylesData[style];
+             if (!dataPoints) return 0;
+             // Find the price for the given reserve level (interpolation or step finding)
+             let price = 0;
+             for (let i = 0; i < dataPoints.length; i++) {
+                 if (reservesGW >= dataPoints[i].x) {
+                      // For stepped='before', the price is determined by the *next* point's y-value
+                      // when moving left-to-right (or previous point when moving right-to-left)
+                      // Let's find the segment it falls into.
+                      if (i + 1 < dataPoints.length && reservesGW < dataPoints[i+1].x) {
+                           price = dataPoints[i].y; // Price holds until the next step change
+                           break;
+                      } else if (i + 1 === dataPoints.length) {
+                           // Last segment
+                           price = dataPoints[i].y;
+                           break;
+                      } else {
+                           // This handles the case where reservesGW matches a step point exactly
+                           price = dataPoints[i].y;
+                      }
+                 } else if (i === 0 && reservesGW < dataPoints[i].x) {
+                     // Before the first data point (highest reserves)
+                     price = dataPoints[i].y;
+                     break;
+                 }
+             }
+             // Special case for ERCOT-like smooth curve (needs actual function if not pre-calculated)
+             if (style === 'ERCOT') {
+                 // Find closest points and interpolate (or use the pre-calculated point)
+                 let closestPoint = dataPoints[0];
+                 let minDist = Math.abs(dataPoints[0].x - reservesGW);
+                 for(let pt of dataPoints) {
+                      let dist = Math.abs(pt.x - reservesGW);
+                      if (dist < minDist) {
+                           minDist = dist;
+                           closestPoint = pt;
+                      }
+                 }
+                 price = closestPoint.y; // Use the closest pre-calculated value for simplicity
+             }
+
+             return price;
+        }
+
+
+        // Function to generate approximate ORDC data for different ISO styles
+        // These are highly simplified representations based on paper's figures/descriptions
+        function generateIsoStyleData(style, maxPenalty = 5000, numSteps = 3, includeFlexiramp = true, baseRequirement = 3.0) {
+            const data = [];
+            const maxReserve = 7.0; // GW
+            const minReserve = 0.0;
+            const reserveRange = baseRequirement; // Range over which steps occur
+
+            // Flexiramp effect: starts raising prices earlier (shifts curve right)
+            const flexirampOffset = includeFlexiramp ? 0.5 : 0; // Adds 0.5 GW effective requirement
+
+            const effectiveRequirement = baseRequirement + flexirampOffset;
+            const stepSize = reserveRange / numSteps;
+
+            // Generate points for steps
+            let currentReserve = maxReserve;
+            let currentPrice = 0;
+
+            data.push({ x: maxReserve, y: 0 }); // Start at zero
+
+            // ERCOT style: Smoother curve, capped at VOLL
+            if (style === 'ERCOT') {
+                const req = effectiveRequirement; // Use effective requirement
+                 // Simulate a curve: high price below req, decreases exponentially above req
+                for (let r = maxReserve; r >= minReserve; r -= 0.1) {
+                     let price;
+                     if (r <= req * 0.8) { // Deep shortage
+                         price = maxPenalty;
+                     } else if (r <= req) { // Near shortage
+                          // Sharp increase as it approaches req
+                          price = maxPenalty * (1 - Math.pow((r - req*0.8) / (req*0.2), 0.5));
+                     } else { // Above requirement - use LOLP concept approximation
+                          // Exponential decay based on distance from requirement
+                          // Simplified LOLP proxy: decays faster further away
+                          const distance = r - req;
+                          // Adjust exponent for decay rate - smaller means slower decay
+                          price = maxPenalty * Math.exp(-1.5 * distance / (maxReserve - req));
+                     }
+                     data.push({ x: r, y: Math.max(0, Math.min(maxPenalty, price)) }); // Ensure bounds
+                }
+                data.push({ x: minReserve, y: maxPenalty }); // Ensure it hits max penalty at zero
+                return data.sort((a, b) => a.x - b.x); // Sort by x
+            }
+
+            // General Stepwise logic
+             data.push({ x: effectiveRequirement + 0.01, y: 0 }); // Point just before first penalty
+
+             for (let i = 0; i < numSteps; i++) {
+                const stepThreshold = effectiveRequirement - i * stepSize;
+                // Price increases with each step towards lower reserves
+                const stepPrice = (maxPenalty / numSteps) * (i + 1);
+
+                data.push({ x: stepThreshold, y: stepPrice });
+                if (i + 1 < numSteps) {
+                     const nextThreshold = effectiveRequirement - (i + 1) * stepSize;
+                      data.push({ x: nextThreshold + 0.01, y: stepPrice }); // Point just before next step
+                } else {
+                      data.push({ x: minReserve, y: stepPrice }); // Last step goes to zero reserve
+                }
+            }
+
+             // Adjust specific styles based on paper descriptions
+            if (style === 'CAISO') {
+                 // Generally lower cap unless west-wide scarcity
+                 const caisoCap = Math.min(maxPenalty, 2000); // Assume base cap
+                 data.forEach(p => p.y = Math.min(caisoCap, p.y * (caisoCap/maxPenalty))); // Scale down
+                 data.find(p => p.x === minReserve).y = caisoCap; // Ensure cap is hit
+            } else if (style === 'ISO-NE') {
+                 // High penalties, maybe fewer steps effectively
+                  data.forEach(p => p.y = Math.min(maxPenalty, p.y * 1.2)); // Slightly higher penalties
+                  data.find(p => p.x === minReserve).y = maxPenalty;
+            } else if (style === 'MISO') {
+                 // More gradual steps initially?
+                 if (numSteps > 1) {
+                      data.find(p => p.y > 0).y *= 0.5; // Make first step lower
+                 }
+            } else if (style === 'NYISO') {
+                 // Many steps - simulation already handles this via numSteps param
+            }
+
+
+            return data.sort((a, b) => a.x - b.x); // Ensure data is sorted by x
+        }
+
+        // Function to generate all styles data
+        function generateAllIsoData(maxPenalty, numSteps, includeFlexiramp) {
+            const styles = ['ERCOT', 'PJM', 'CAISO', 'MISO', 'SPP', 'ISO-NE', 'NYISO'];
+            const allData = {};
+             // Use specific parameters for preset styles if needed, otherwise use sliders
+            allData['ERCOT'] = generateIsoStyleData('ERCOT', 5000, 1, false, 3.0); // High VOLL, adder style
+            allData['PJM'] = generateIsoStyleData('PJM', 2000 + 850, 2, false, 3.0); // ~2850 cap, 2 main steps
+            allData['CAISO'] = generateIsoStyleData('CAISO', 1000 + 1000, 3, true, 3.0); // Base cap ~2000, flexi
+            allData['MISO'] = generateIsoStyleData('MISO', 3500, 4, true, 4.0); // Higher req, flexi, gradual steps
+            allData['SPP'] = generateIsoStyleData('SPP', 1700, 3, true, 4.0); // Mid cap, flexi
+            allData['ISO-NE'] = generateIsoStyleData('ISO-NE', 2000 + 1500, 2, false, 3.0); // ~3500 cap, fewer steps effectively
+            allData['NYISO'] = generateIsoStyleData('NYISO', 2000 + 775, 5, false, 3.0); // ~2775 cap, many steps potentially
+
+             // Calculate Average ORDC
+            const avgData = [];
+            const reservePoints = allData['ERCOT'].map(p => p.x); // Use ERCOT's points as reference
+            for (const res of reservePoints) {
+                 let sumPrice = 0;
+                 let count = 0;
+                 for (const style of styles) {
+                      sumPrice += getIsoPriceAtPoint(style, res, allData);
+                      count++;
+                 }
+                 avgData.push({x: res, y: sumPrice / count});
+            }
+            allData['Average'] = avgData.sort((a,b) => a.x - b.x);
+
+
+            // Generate custom data based on sliders
+            allData['Custom'] = generateIsoStyleData('Custom', maxPenalty, numSteps, includeFlexiramp, 3.0);
+
+            return allData;
+        }
+
+         // Function to generate the vertical line data for ISO chart
+        function generateIsoVerticalLineData(currentReserve, maxY) {
+            return [
+                { x: currentReserve, y: 0 },
+                { x: currentReserve, y: maxY }
+            ];
+        }
+
+        // Initial ISO chart creation
+        function createIsoCompareChart() {
+            const initialMaxPenalty = parseInt(voalSlider.value);
+            const initialNumSteps = parseInt(stepsSlider.value);
+            const initialFlexiramp = flexirampCheck.checked;
+            const initialAvailable = parseFloat(isoAvailableReservesSlider.value);
+
+            isoStylesData = generateAllIsoData(initialMaxPenalty, initialNumSteps, initialFlexiramp);
+            const initialStyle = isoStyleSelect.value;
+            const initialData = isoStylesData[initialStyle] || [];
+
+            // Determine max Y value across all styles for consistent scaling
+            let maxY = 0;
+            for (const style in isoStylesData) {
+                isoStylesData[style].forEach(p => {
+                    if (p.y > maxY) maxY = p.y;
+                });
+            }
+            maxY = Math.max(maxY, 1000); // Ensure a minimum scale
+
+             const initialPrice = getIsoPriceAtPoint(initialStyle, initialAvailable, isoStylesData);
+             isoCurrentPriceValue.textContent = `$${Math.round(initialPrice)}`;
+             isoAvailableReservesValue.textContent = initialAvailable.toFixed(1);
+             voalValue.textContent = initialMaxPenalty;
+             stepsValue.textContent = initialNumSteps;
+
+
+            isoCompareChart = new Chart(ctxISO, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: initialStyle, // Will be updated
+                            data: initialData,
+                            borderColor: 'rgb(0, 123, 255)', // Blue
+                            borderWidth: 3,
+                            tension: (initialStyle === 'ERCOT' ? 0.1 : 0), // Slight tension for ERCOT
+                            stepped: (initialStyle !== 'ERCOT' && initialStyle !== 'Average'), // Steps unless ERCOT/Avg
+                            pointRadius: 0,
+                            fill: false
+                        },
+                         {
+                            label: 'Current Reserves',
+                            data: generateIsoVerticalLineData(initialAvailable, maxY * 1.1),
+                            borderColor: 'rgb(255, 99, 132)', // Red
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        },
+                         {
+                            label: 'Average ORDC', // Placeholder for Average
+                            data: isoStylesData['Average'] || [],
+                            borderColor: 'rgb(108, 117, 125)', // Gray
+                            borderWidth: 1.5,
+                            tension: 0.1, // Smooth average
+                            stepped: false,
+                            pointRadius: 0,
+                            fill: false,
+                            hidden: !showAverageCheck.checked // Initially hidden based on checkbox
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: 'Available Reserves (GW)' },
+                            min: 0,
+                            max: 7.0
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Energy Scarcity Premium ($/MWh)' },
+                            max: maxY * 1.1
+                        }
+                    },
+                     plugins: {
+                        tooltip: {
+                             enabled: true,
+                             mode: 'index',
+                             intersect: false,
+                         },
+                        legend: { display: false } // Keep it clean
+                    },
+                     animation: {
+                        duration: 0 // Faster updates
+                    }
+                }
+            });
+        }
+
+        // Update ISO chart
+        function updateIsoCompareChart(applyCustom = false) {
+            if (!isoCompareChart) return;
+
+            const selectedStyle = applyCustom ? 'Custom' : isoStyleSelect.value;
+            const availableReserves = parseFloat(isoAvailableReservesSlider.value);
+            const maxPenalty = parseInt(voalSlider.value);
+            const numSteps = parseInt(stepsSlider.value);
+            const includeFlexiramp = flexirampCheck.checked;
+
+             // Regenerate all data if custom params are applied or if it hasn't been generated
+             if (applyCustom || !isoStylesData['Custom']) {
+                 isoStylesData = generateAllIsoData(maxPenalty, numSteps, includeFlexiramp);
+             }
+             // If not applying custom, ensure the selected preset style data is used
+             const currentData = isoStylesData[selectedStyle] || [];
+
+             // Determine max Y for scaling
+            let maxY = 0;
+            for (const style in isoStylesData) {
+                 if (isoStylesData[style]) { // Check if data exists
+                     isoStylesData[style].forEach(p => {
+                         if (p.y > maxY) maxY = p.y;
+                     });
+                 }
+            }
+            maxY = Math.max(maxY, 1000);
+
+            const currentPrice = getIsoPriceAtPoint(selectedStyle, availableReserves, isoStylesData);
+
+            // Update display values
+            isoAvailableReservesValue.textContent = availableReserves.toFixed(1);
+             if (applyCustom) {
+                 isoStyleSelect.value = 'Custom'; // Visually indicate custom is active (though there's no 'Custom' option)
+             }
+            voalValue.textContent = maxPenalty;
+            stepsValue.textContent = numSteps;
+            isoCurrentPriceValue.textContent = `$${Math.round(currentPrice)}`;
+
+
+            // Update chart data
+            isoCompareChart.data.datasets[0].label = selectedStyle;
+            isoCompareChart.data.datasets[0].data = currentData;
+            isoCompareChart.data.datasets[0].tension = (selectedStyle === 'ERCOT' || selectedStyle === 'Average' || (applyCustom && selectedStyle === 'Custom' && numSteps < 2)) ? 0.1 : 0; // Smooth ERCOT/Avg/Custom(smooth)
+            isoCompareChart.data.datasets[0].stepped = !(selectedStyle === 'ERCOT' || selectedStyle === 'Average' || (applyCustom && selectedStyle === 'Custom')); // Step unless ERCOT/Avg/Custom
+
+            isoCompareChart.data.datasets[1].data = generateIsoVerticalLineData(availableReserves, maxY * 1.1); // Update vertical line
+
+            isoCompareChart.data.datasets[2].data = isoStylesData['Average'] || []; // Update average data
+            isoCompareChart.data.datasets[2].hidden = !showAverageCheck.checked; // Update visibility
+
+            isoCompareChart.options.scales.y.max = maxY * 1.1; // Update y-axis max
+            isoCompareChart.update();
+        }
+
+        // Event Listeners for ISO Chart
+        isoStyleSelect.addEventListener('change', () => updateIsoCompareChart(false));
+        isoAvailableReservesSlider.addEventListener('input', () => updateIsoCompareChart(isoStyleSelect.value === 'Custom' || applyParamsButton.dataset.customActive === 'true')); // Update based on current mode
+        showAverageCheck.addEventListener('change', () => updateIsoCompareChart(isoStyleSelect.value === 'Custom' || applyParamsButton.dataset.customActive === 'true'));
+
+        // Button to apply custom parameters
+        applyParamsButton.addEventListener('click', () => {
+            applyParamsButton.dataset.customActive = 'true'; // Mark custom as active
+            updateIsoCompareChart(true)
+         });
+
+         // Reset custom active state if a preset is selected
+         isoStyleSelect.addEventListener('change', () => {
+              applyParamsButton.dataset.customActive = 'false';
+              updateIsoCompareChart(false); // Update with preset
+         });
+
+
+        // Initial ISO chart creation
+        createIsoCompareChart();
+
+    </script>
+
+</body>
+</html>

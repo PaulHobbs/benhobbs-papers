@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import base64
-import datetime
-import json
-import os
-from pathlib import Path
-import re
-import sys
-import json
-import datetime
-from typing import Optional
 from google import genai  # type: ignore
 from google.genai import types  # type: ignore
+from pathlib import Path
+from tqdm import tqdm
+from typing import Optional
+import base64
+import datetime
+import datetime
+import json
+import json
+import os
+import re
+import sys
 
 _MODEL = "gemini-2.5-pro-exp-03-25"
 _PROMPT = f"""
@@ -52,50 +53,53 @@ Please generate the HTML file based on the provided paper content and these inst
 
 
 def main():
-    for paper in sys.argv[1:]:
-      html = _parse_html(generate(paper))
+    index_path = Path(__file__).parent.parent / "src/lib/sites.json"
+    with open(index_path, "r", encoding="utf-8") as f:
+        sites = json.load(f)
 
-      try:
-          # Get input PDF path (assuming this is defined earlier)
-          pdf_path = Path(paper)
+    for paper in tqdm(sys.argv[1:]):
+        # Get input PDF path (assuming this is defined earlier)
+        pdf_path = Path(paper)
+      
+        # Sanitize filename
+        papername = pdf_path.stem.replace(" ", "_")
+        if any(papername == entry['paper'] for entry in sites):
+          print(f'Skipping {papername}')
+          continue
+
+        html = _parse_html(generate(paper))
+
+        try:
+            # Get input PDF path (assuming this is defined earlier)
+            pdf_path = Path(paper)
+        except Exception as e:
+            print(f"Error generating HTML file: {str(e)}", file=sys.stderr)
+            sys.exit(1)
           
-          # Construct output path
-          output_dir = Path(__file__).parent.parent / "static" / "sites"
-          output_dir.mkdir(parents=True, exist_ok=True)
-          
-          # Sanitize filename
-          papername = pdf_path.stem.replace(" ", "_")
-          output_path = output_dir / f"{papername}.html"
-          
-          # Write content
-          with open(output_path, "w", encoding="utf-8") as f:
-              f.write(html)
+        # Write content
+        output_dir = Path(__file__).parent.parent / "static" / "sites"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / f"{papername}.html"
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(html)
 
-          # Update sites index
-          index_path = output_dir.parent.parent / "src" / "lib" / "sites.json"
-          try:
-              with open(index_path, "r", encoding="utf-8") as f:
-                  sites = json.load(f)
-          except (FileNotFoundError, json.JSONDecodeError):
-              sites = []
+        # Update sites index
+        with open(index_path, "r", encoding="utf-8") as f:
+            sites = json.load(f)
 
-          # Add new entry if not exists
-          new_entry = {
-              "paper": papername,
-              "path": f"/static/sites/{papername}.html",
-              "generated": datetime.datetime.now().isoformat()
-          }
-          
-          if not any(entry["paper"] == papername for entry in sites):
-              sites.append(new_entry)
-              with open(index_path, "w", encoding="utf-8") as f:
-                  json.dump(sites, f, indent=2)
+        # Add new entry if not exists
+        new_entry = {
+            "paper": papername,
+            "path": f"/sites/{papername}.html",
+            "generated": datetime.datetime.now().isoformat()
+        }
+      
+        if not any(entry["paper"] == papername for entry in sites):
+            sites.append(new_entry)
+            with open(index_path, "w", encoding="utf-8") as f:
+                json.dump(sites, f, indent=2)
 
-          print(f"Successfully wrote to {output_path}")
-
-      except Exception as e:
-          print(f"Error generating HTML file: {str(e)}", file=sys.stderr)
-          sys.exit(1)
+        print(f"Successfully wrote to {output_path}")
 
 
 def generate(pdf: str):
@@ -126,7 +130,7 @@ def generate(pdf: str):
         contents=contents,
         config=generate_content_config,
     )
-    return "".join(chunk.text for chunk in chunks)
+    return "".join(chunk.text for chunk in tqdm(chunks))
 
 
 _HTML = re.compile(

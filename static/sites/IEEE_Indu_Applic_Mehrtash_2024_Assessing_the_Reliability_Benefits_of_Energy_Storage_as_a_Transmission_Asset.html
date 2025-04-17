@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Storage vs. Transmission Wires: A Reliability Perspective</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer spacing */
+        }
+        .container {
+            max-width: 900px;
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3em;}
+        h3 { font-size: 1.5rem; }
+        code {
+            background-color: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .slider-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input[type=range] {
+            width: 100%;
+        }
+        .output-value {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        #reliabilitySim canvas {
+            display: block;
+            margin: 10px auto;
+            border: 1px solid #ccc;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 300px; /* Adjust as needed */
+            width: 100%;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #6c757d; /* Bootstrap secondary text color */
+            text-align: center;
+            margin-top: 5px;
+        }
+        .wiki-link {
+            color: #0d6efd;
+            text-decoration: none;
+            border-bottom: 1px dotted #0d6efd;
+        }
+        .wiki-link:hover {
+            color: #0a58ca;
+            border-bottom-style: solid;
+        }
+        .math-explanation {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Energy Storage vs. Transmission Wires: A Reliability Perspective</h1>
+        <p class="lead">Exploring how batteries, when used like power lines, compare to traditional transmission upgrades for keeping the lights on.</p>
+        <p>Based on the paper: Sehloff, D., Kwon, J., Mehrtash, M., Levin, T., & Hobbs, B. F. (2024). Assessing the Reliability Benefits of Energy Storage as a Transmission Asset. *IEEE Transactions on Industry Applications*, 1-11.</p>
+
+        <hr>
+
+        <h2>The Grid Modernization Challenge</h2>
+        <p>
+            Our electricity grid is undergoing a massive transformation. We're adding more renewable energy sources like wind and solar, which are great for the environment but introduce new challenges. Their output isn't constant, and they are often built far from where the electricity is needed. Traditionally, we'd build more high-voltage <a href="https://en.wikipedia.org/wiki/Electric_power_transmission" target="_blank" class="wiki-link">transmission lines</a> ("wires") to move this power around and ensure reliability.
+        </p>
+        <p>
+            But building new transmission lines is expensive, takes a long time, and often faces public opposition. Recently, large batteries – <a href="https://en.wikipedia.org/wiki/Battery_storage_power_station" target="_blank" class="wiki-link">energy storage systems</a> – have emerged as a potential alternative or complement. What if we could use batteries strategically to relieve congestion on existing lines or provide power during emergencies, essentially acting *like* transmission?
+        </p>
+        <p>
+            This paper explores a specific concept: **Storage as a Transmission-Only Asset (SATOA)**. Imagine a battery that doesn't play in the daily energy markets to buy low and sell high. Instead, it's operated by the grid planner solely to solve transmission problems – like keeping a specific power line from overloading or providing backup power if a generator fails. The key question is: how do the reliability benefits of SATOA compare to building traditional "wires"? And how can we fairly evaluate them?
+        </p>
+
+        <h2>Why is this Comparison Hard?</h2>
+        <p>
+            Comparing wires and batteries isn't straightforward. Wires can move power continuously (up to their thermal limit), while batteries have finite energy capacity (how much energy they store, measured in MWh) and power capacity (how fast they can charge/discharge, measured in MW). Evaluating their impact requires more than just looking at costs. We need to understand how they perform under stress, especially when things go wrong (like unexpected generator failures).
+        </p>
+        <p>
+            The paper proposes a **two-stage approach** to tackle this:
+        </p>
+        <ol>
+            <li><strong>Expansion Planning:</strong> First, figure out the *cheapest* way to meet basic grid needs, considering potential new wires *and* SATOA options. This often focuses on peak demand conditions.</li>
+            <li><strong>Reliability Assessment:</strong> Then, take the system configuration decided in Stage 1 and simulate its operation over a whole year, hour by hour, under thousands of *random* potential failure scenarios (like generators going offline). This tells us how reliable the system *actually* is.</li>
+        </ol>
+
+        <h2>Stage 1: Finding the Least-Cost Plan (Expansion Planning)</h2>
+        <p>
+            Grid planners use complex optimization models to decide where and what to build. The paper uses a model called **JHSMINE**, which is a type of <a href="https://en.wikipedia.org/wiki/Integer_programming#Mixed_integer_linear_programming" target="_blank" class="wiki-link">Mixed-Integer Linear Program (MILP)</a>. The goal is to minimize the total system cost, which includes:
+        </p>
+        <ul>
+            <li><strong>Investment Costs:</strong> The upfront cost of building new transmission lines or installing SATOA batteries.</li>
+            <li><strong>Operational Costs:</strong> The cost of generating electricity (fuel, maintenance) throughout the year.</li>
+        </ul>
+        <p>
+            This minimization is subject to many constraints, ensuring that physics and operational limits are respected:
+        </p>
+        <ul>
+            <li>Power flow equations (how electricity moves through the network).</li>
+            <li>Generation limits (power plants can't produce more than their capacity).</li>
+            <li>Transmission line limits (wires can't carry too much current).</li>
+            <li>Storage constraints (batteries have energy and power limits, charge/discharge efficiencies).</li>
+            <li>Meeting demand (enough power must reach consumers).</li>
+        </ul>
+
+        <div class="math-explanation">
+            <p>Conceptually, the objective function JHSMINE tries to minimize looks something like this (highly simplified):</p>
+            $$ \min \sum (\text{Investment\_Cost} + \text{Operational\_Cost}) $$
+            <p>Where:</p>
+            <ul>
+                <li>$\text{Investment\_Cost}$ depends on which new lines ($l$) or storage units ($j$) you decide to build (represented by binary variables like $lincexps_{y,l}$ or $eincexps_{y,j}$).</li>
+                <li>$\text{Operational\_Cost}$ includes fuel costs (based on generator output $gopt$), O&M costs, startup costs ($gsups$), and potentially costs for unmet demand ($nload$).</li>
+            </ul>
+            $$ \text{Investment\_Cost} \approx \sum_{l} (\text{LineCost}_l \times \text{BuildLine}_l) + \sum_{j} (\text{StorageCost}_j \times \text{BuildStorage}_j) $$
+            $$ \text{Operational\_Cost} \approx \sum_{k,t} (\text{FuelCost}_k \times gopt_{k,t} + \dots) $$
+            <p>This is solved subject to constraints like power balance at each node $n$:</p>
+            $$ \sum_{k \to n} gopt_{k,t} - \sum_{j \to n} \text{StorageDischarge}_{j,t} + \dots - \text{Demand}_{n,t} = \sum_{l \in \text{Lines}} \text{Flow}_{l,t} $$
+            <p>(This is a vast oversimplification of the detailed constraints in the actual JHSMINE model described in the paper's equations (1)-(8) and supporting material [42]).</p>
+        </div>
+
+        <div class="interactive-section">
+            <h3>Interactive Concept: Investment Trade-off</h3>
+            <p>Imagine a very simple scenario: a congested power line limits power flow to a city. We can either upgrade the line (Wires) or install a SATOA battery near the city to help during peak times. Which is cheaper overall?</p>
+            <p>Adjust the sliders to see how costs influence the decision (this is a conceptual illustration, not a full optimization):</p>
+
+            <label for="lineCostSlider" class="form-label slider-label">Cost to Upgrade Wires (Million $):</label>
+            <input type="range" class="form-range" id="lineCostSlider" min="10" max="200" value="80" step="10">
+            <span class="output-value" id="lineCostValue">80</span> M$
+
+            <label for="storageCostSlider" class="form-label slider-label mt-3">Cost to Install SATOA (Million $):</label>
+            <input type="range" class="form-range" id="storageCostSlider" min="10" max="200" value="100" step="10">
+            <span class="output-value" id="storageCostValue">100</span> M$
+
+            <label for="opSavingSlider" class="form-label slider-label mt-3">Estimated Annual Operational Savings from Wires (M$/year):</label>
+            <input type="range" class="form-range" id="opSavingSlider" min="0" max="15" value="5" step="1">
+            <span class="output-value" id="opSavingValue">5</span> M$/year
+
+            <p class="mt-3"><strong>Simplified Decision Logic:</strong></p>
+            <div id="decisionOutput" class="alert alert-info">Calculating...</div>
+            <p><small>(Note: Real decisions involve complex simulations of operational savings over many years and reliability impacts, not just comparing upfront costs. This demo simplifies the trade-off.)</small></p>
+        </div>
+
+
+        <h2>Stage 2: Will the Lights Stay On? (Reliability Assessment)</h2>
+        <p>
+            The least-cost plan from Stage 1 might look good on paper for typical conditions, but how does it hold up when things go wrong? That's where Stage 2, the **Probabilistic Reliability Assessment**, comes in. The paper uses a model called **A-LEAF**.
+        </p>
+        <p>
+            This stage uses <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method" target="_blank" class="wiki-link">Monte Carlo simulation</a>. Imagine rolling dice thousands of times to simulate random events. Here, instead of dice, the simulation randomly decides which power plants might fail in any given hour, based on their historical failure rates (which can even depend on weather!). For each simulated hour across thousands of possible "futures":
+        </p>
+        <ol>
+            <li>Check which generators are randomly offline.</li>
+            <li>Run an economic dispatch (<a href="https://en.wikipedia.org/wiki/Economic_dispatch" target="_blank" class="wiki-link">Economic Dispatch</a>) to figure out the cheapest way to meet demand with the *available* resources (including SATOA if needed and charged).</li>
+            <li>Respect all network constraints (power flow limits).</li>
+            <li>If demand cannot be fully met, calculate the shortfall (unserved energy).</li>
+        </ol>
+        <p>
+            By running thousands of these year-long simulations, we get statistical measures of reliability:
+        </p>
+        <ul>
+            <li><strong>Expected Unserved Energy (EUE):</strong> The average amount of energy (MWh) that couldn't be delivered to customers over the year across all simulations. Lower is better.</li>
+            <li><strong>Loss of Load Hours (LOLH):</strong> The average number of hours per year where *some* demand couldn't be met. Lower is better.</li>
+        </ul>
+
+        <div class="interactive-section">
+            <h3>Interactive Concept: Reliability Simulation</h3>
+            <p>This simplified simulation shows a small grid with generators (G), a load (L), a transmission line, and an optional SATOA battery. Click "Run Simulation" to see how random generator failures affect the ability to meet the load, with and without the battery helping.</p>
+            <div id="reliabilitySim"></div>
+            <div class="text-center mt-3">
+                <button id="startSimBtn" class="btn btn-primary btn-sm">Run Simulation</button>
+                <button id="resetSimBtn" class="btn btn-secondary btn-sm">Reset</button>
+            </div>
+            <div id="simStats" class="mt-2" style="font-size: 0.9em;">
+                Time: <span id="simTime">0</span> hrs | Load Shed Events: <span id="simShedEvents">0</span> | Total EUE: <span id="simEUE">0</span> MWh
+            </div>
+             <p><small>(Note: This is a highly simplified visual analogy. Real simulations involve complex networks, DC power flow calculations, economic dispatch, and thousands of trials over 8760 hours.)</small></p>
+        </div>
+
+        <h2>Case Study: A Simplified ERCOT System</h2>
+        <p>
+            The paper applied this two-stage framework to a simplified model of the Texas grid (ERCOT), aggregated into 7 zones. They focused on a known congested transmission path between Zone 3 and Zone 7. They considered three main expansion scenarios:
+        </p>
+        <ol>
+            <li><strong>TEP (Transmission Expansion Planning):</strong> Only allow upgrading the Zone 3-7 transmission line.</li>
+            <li><strong>BEP (Battery Expansion Planning):</strong> Only allow adding SATOA batteries (in 400 MW blocks, up to 1200 MW total, 4-hour duration) in any zone.</li>
+            <li><strong>BTEP (Battery and Transmission Expansion Planning):</strong> Allow both line upgrades and SATOA additions.</li>
+        </ol>
+
+        <h3>Expansion Planning Results (Stage 1)</h3>
+        <p>
+            The JHSMINE model found:
+        </p>
+        <ul>
+            <li><strong>TEP:</strong> Upgrading the 3-7 line by 1,495 MW was optimal, costing about $80.5M. This significantly reduced operational costs by allowing cheap renewable energy in Zone 7 to flow out.</li>
+            <li><strong>BEP:</strong> No battery investment was chosen. The operational cost savings from batteries alone weren't enough to justify their investment cost in *this specific* planning scenario focused on peak hours.</li>
+            <li><strong>BTEP:</strong> The result was identical to TEP – upgrade the line, no batteries.</li>
+        </ul>
+        <p>So, from a purely least-cost planning perspective based on the JHSMINE model's assumptions, the transmission line upgrade was the clear winner.</p>
+
+        <h3>Reliability Assessment Results (Stage 2)</h3>
+        <p>
+            But what about actual reliability under random failures? The A-LEAF simulations revealed a more nuanced picture. They tested the TEP solution and various SATOA installations (different sizes and durations placed in Zone 3) against a "Reference" case (no upgrades).
+        </p>
+        <p>
+            The charts below show the annual EUE and LOLH results from the paper's simulations (data from Tables IV & V).
+        </p>
+
+        <div class="chart-container mt-4">
+            <canvas id="eueChart"></canvas>
+            <p class="caption">Fig 1: Annual Expected Unserved Energy (EUE) by Scenario.</p>
+        </div>
+
+        <div class="chart-container mt-4">
+            <canvas id="lolhChart"></canvas>
+            <p class="caption">Fig 2: Annual Loss of Load Hours (LOLH) by Scenario.</p>
+        </div>
+
+        <p>
+            Key observations from the reliability assessment:
+        </p>
+        <ul>
+            <li>The **TEP solution (upgraded line)** provided the largest overall reduction in both EUE (-84.2%) and LOLH (-75.8%) compared to the Reference case. It completely eliminated load shedding in Zone 3.</li>
+            <li>**SATOA batteries** also significantly improved reliability, especially larger ones. The 4-hour, 1500 MW battery reduced EUE by 71.7% and LOLH by 68.8%.</li>
+            <li>While TEP was best overall *in this case*, SATOA clearly provides substantial reliability benefits. The choice wasn't black and white.</li>
+            <li>Interestingly, the TEP solution, while improving overall reliability, actually *increased* EUE/LOLH in some other zones (like Zone 2 and 7) because changing power flows can shift congestion and the impact of outages elsewhere in the network. This highlights the need for system-wide analysis.</li>
+        </ul>
+
+        <h3>Cost vs. Reliability Benefit</h3>
+        <p>
+            The paper also looked at the *cost* per unit of reliability improvement (data derived from Table VI and Fig 8).
+        </p>
+        <div class="chart-container mt-4">
+            <canvas id="costBenefitChart"></canvas>
+            <p class="caption">Fig 3: Annualized Investment Cost per Unit of Reliability Improvement (vs. Reference).</p>
+        </div>
+        <p>
+            This shows:
+        </p>
+        <ul>
+            <li>The **TEP solution offered the lowest cost** for each MWh of EUE reduced or hour of LOLH reduced.</li>
+            <li>However, **smaller SATOA installations** (like 2h, 600MW or 4h, 300MW) offered reliability improvements at costs that were closer to, though still higher than, the TEP solution in this specific case.</li>
+            <li>This suggests that in situations where a large transmission upgrade isn't feasible or is much more expensive, SATOA could be a competitive alternative for achieving significant reliability gains, especially if deployed strategically.</li>
+        </ul>
+
+
+        <h2>Key Takeaways</h2>
+        <ul>
+            <li>Evaluating energy storage as a transmission asset requires a **two-stage approach**, considering both least-cost expansion planning and detailed probabilistic reliability assessment. Relying on planning models alone might miss crucial reliability impacts.</li>
+            <li>In the specific case study (simplified ERCOT, congested 3-7 path), a **traditional transmission line upgrade provided the best economic and overall reliability outcome**.</li>
+            <li>However, **SATOA (batteries acting as transmission)** demonstrated significant reliability benefits, substantially reducing EUE and LOLH, proving they *can* function effectively in this role.</li>
+            <li>While the bulk transmission upgrade was most cost-effective overall in this instance, smaller storage additions offered comparable **cost-effectiveness per unit of reliability improvement**, suggesting they could be valuable for targeted improvements or where large lines face barriers.</li>
+            <li>The choice between "wires" and "batteries" for transmission needs is context-dependent and requires careful, quantitative analysis of both costs and reliability impacts across the entire system.</li>
+        </ul>
+
+        <h2>Limitations and Future Directions</h2>
+        <p>
+            The authors note limitations, such as the aggregated network model potentially underestimating congestion, and the SATOA being strictly transmission-only (not capturing potential value from market participation). Future work could explore more detailed networks, models of transmission line outages, and the complexities of allowing SATOA dual-use participation in markets while preserving its transmission function.
+        </p>
+
+        <hr>
+        <footer class="text-center text-muted small">
+            Interactive explanation created based on the research paper. Visualizations are illustrative. Consult the original paper for full details and methodology.
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- Interactive Concept: Investment Trade-off ---
+        const lineCostSlider = document.getElementById('lineCostSlider');
+        const storageCostSlider = document.getElementById('storageCostSlider');
+        const opSavingSlider = document.getElementById('opSavingSlider');
+        const lineCostValue = document.getElementById('lineCostValue');
+        const storageCostValue = document.getElementById('storageCostValue');
+        const opSavingValue = document.getElementById('opSavingValue');
+        const decisionOutput = document.getElementById('decisionOutput');
+
+        function updateDecision() {
+            const lineCost = parseFloat(lineCostSlider.value);
+            const storageCost = parseFloat(storageCostSlider.value);
+            const opSavings = parseFloat(opSavingSlider.value);
+            const planningHorizonYears = 20; // Assume a planning horizon for comparison
+            const discountRate = 0.05; // Assume a discount rate
+
+            // Very simplified Net Present Value calculation
+            // NPV = -InitialCost + Sum(Savings / (1+rate)^year)
+            // Using annuity formula for savings: PV_Savings = Savings * [1 - (1+rate)^-N] / rate
+            const pvOpSavings = opSavings * (1 - Math.pow(1 + discountRate, -planningHorizonYears)) / discountRate;
+
+            const effectiveLineCost = lineCost - pvOpSavings;
+            const effectiveStorageCost = storageCost; // SATOA assumed no operational savings here
+
+            lineCostValue.textContent = lineCost.toFixed(0);
+            storageCostValue.textContent = storageCost.toFixed(0);
+            opSavingValue.textContent = opSavings.toFixed(0);
+
+            let decisionText = "";
+            if (effectiveLineCost < effectiveStorageCost) {
+                decisionText = `<strong>Upgrade Wires Recommended.</strong> Estimated lifecycle cost advantage (Wires vs SATOA): $${(effectiveStorageCost - effectiveLineCost).toFixed(1)}M. (Based on simplified NPV including operational savings from wires).`;
+                decisionOutput.className = 'alert alert-success';
+            } else if (effectiveStorageCost < effectiveLineCost) {
+                decisionText = `<strong>Install SATOA Recommended.</strong> Estimated lifecycle cost advantage (SATOA vs Wires): $${(effectiveLineCost - effectiveStorageCost).toFixed(1)}M. (Based on simplified NPV).`;
+                 decisionOutput.className = 'alert alert-warning';
+            } else {
+                decisionText = "Costs are roughly equal in this simplified view. More detailed analysis needed!";
+                 decisionOutput.className = 'alert alert-info';
+            }
+            decisionOutput.innerHTML = decisionText;
+        }
+
+        lineCostSlider.addEventListener('input', updateDecision);
+        storageCostSlider.addEventListener('input', updateDecision);
+        opSavingSlider.addEventListener('input', updateDecision);
+        // Initial calculation
+        updateDecision();
+
+
+        // --- Interactive Concept: Reliability Simulation (p5.js) ---
+        let reliabilitySketch = function(p) {
+            let generators = [];
+            let load = { x: 350, y: 150, demand: 100, served: 0 };
+            let battery = { x: 300, y: 50, capacity: 50, soc: 50, maxChargeRate: 25, maxDischargeRate: 25, efficiency: 0.9 };
+            let useBattery = true; // Control via UI later if needed
+            let line = { capacity: 75 };
+            let time = 0;
+            let shedEvents = 0;
+            let totalEUE = 0;
+            let simRunning = false;
+            let simInterval;
+
+            const genCount = 2;
+            const genCapacity = 60;
+            const failureRate = 0.05; // Probability of failure per hour
+            const repairRate = 0.1; // Probability of repair per hour
+
+            p.setup = function() {
+                let canvas = p.createCanvas(400, 200);
+                canvas.parent('reliabilitySim');
+                for (let i = 0; i < genCount; i++) {
+                    generators.push({ x: 50, y: 50 + i * 100, capacity: genCapacity, online: true });
+                }
+                p.noLoop(); // Start paused
+
+                document.getElementById('startSimBtn').onclick = () => {
+                    if (!simRunning) {
+                        simRunning = true;
+                        simInterval = setInterval(runStep, 500); // Run step every 500ms
+                        p.loop();
+                    }
+                };
+                 document.getElementById('resetSimBtn').onclick = () => {
+                    simRunning = false;
+                    clearInterval(simInterval);
+                    time = 0;
+                    shedEvents = 0;
+                    totalEUE = 0;
+                    generators.forEach(g => g.online = true);
+                    battery.soc = battery.capacity;
+                    updateStats();
+                    p.redraw();
+                    p.noLoop();
+                 };
+                 resetSimBtn.click(); // Initial reset state
+            };
+
+            function runStep() {
+                time++;
+
+                // Update generator states (random failures/repairs)
+                generators.forEach(g => {
+                    if (g.online) {
+                        if (p.random() < failureRate) g.online = false;
+                    } else {
+                        if (p.random() < repairRate) g.online = true;
+                    }
+                });
+
+                // Calculate available generation
+                let availableGen = generators.reduce((sum, g) => sum + (g.online ? g.capacity : 0), 0);
+
+                // Calculate power flow (simplified)
+                let flowToLoad = Math.min(availableGen, line.capacity);
+                let neededFromBattery = 0;
+                let chargeToBattery = 0;
+                let loadServed = 0;
+                let loadShed = 0;
+
+                if (flowToLoad >= load.demand) {
+                    // Enough power via line
+                    loadServed = load.demand;
+                    let excessGen = flowToLoad - load.demand;
+                    // Try to charge battery if excess power
+                    if (useBattery && battery.soc < battery.capacity) {
+                       chargeToBattery = Math.min(excessGen, battery.maxChargeRate, (battery.capacity - battery.soc) / battery.efficiency);
+                       battery.soc += chargeToBattery * battery.efficiency;
+                       flowToLoad += chargeToBattery; // Assume charging power also comes over line
+                    }
+                } else {
+                    // Not enough power via line, try battery
+                    loadServed = flowToLoad;
+                    let shortfall = load.demand - loadServed;
+                    if (useBattery && battery.soc > 0) {
+                        neededFromBattery = Math.min(shortfall, battery.maxDischargeRate, battery.soc);
+                        battery.soc -= neededFromBattery;
+                        loadServed += neededFromBattery;
+                    }
+                }
+
+                // Check for load shedding
+                if (loadServed < load.demand) {
+                    loadShed = load.demand - loadServed;
+                    shedEvents++;
+                    totalEUE += loadShed; // Assuming 1 hour step
+                }
+
+                load.served = loadServed; // Store for drawing
+
+                updateStats();
+                if (time >= 100) { // Stop simulation after some time
+                     document.getElementById('startSimBtn').click(); // Toggle to stop
+                }
+            }
+
+             function updateStats() {
+                document.getElementById('simTime').textContent = time;
+                document.getElementById('simShedEvents').textContent = shedEvents;
+                document.getElementById('simEUE').textContent = totalEUE.toFixed(1);
+             }
+
+            p.draw = function() {
+                p.background(245);
+                p.textSize(10);
+                p.textAlign(p.CENTER, p.CENTER);
+
+                // Draw Generators
+                generators.forEach(g => {
+                    p.fill(g.online ? 'lightgreen' : 'red');
+                    p.stroke(0);
+                    p.rect(g.x - 15, g.y - 15, 30, 30);
+                    p.fill(0);
+                    p.noStroke();
+                    p.text(`G (${g.online ? 'ON' : 'OFF'})\n${g.capacity}MW`, g.x, g.y);
+                });
+
+                // Draw Battery
+                if (useBattery) {
+                    p.fill(200, 200, 0);
+                    p.stroke(0);
+                    let battHeight = 40 * (battery.soc / battery.capacity);
+                    p.rect(battery.x - 15, battery.y + 20 - battHeight, 30, battHeight); // Fill level
+                     p.noFill();
+                     p.rect(battery.x - 15, battery.y - 20, 30, 40); // Outline
+                    p.fill(0);
+                    p.noStroke();
+                    p.text(`SATOA\n${battery.soc.toFixed(0)}/${battery.capacity} MWh`, battery.x, battery.y);
+                }
+
+                // Draw Load
+                p.fill(load.served < load.demand ? 'orange' : 'lightblue');
+                p.stroke(0);
+                p.ellipse(load.x, load.y, 40, 40);
+                p.fill(0);
+                p.noStroke();
+                p.text(`Load\n${load.served.toFixed(0)}/${load.demand} MW`, load.x, load.y);
+                if (load.served < load.demand) {
+                    p.fill('red');
+                     p.text(`Shed: ${(load.demand - load.served).toFixed(0)} MW`, load.x, load.y + 25);
+                }
+
+
+                // Draw Lines (simplified)
+                p.strokeWeight(2 + 4 * (Math.min(availableGen, line.capacity) / line.capacity)); // Thicker line for more flow
+                p.stroke('grey');
+                p.line(generators[0].x + 15, generators[0].y, load.x - 20, load.y - 20); // G1 to Load area
+                p.line(generators[1].x + 15, generators[1].y, load.x - 20, load.y + 20); // G2 to Load area
+
+                if (useBattery) {
+                     p.strokeWeight(2);
+                     p.stroke('darkblue');
+                     p.line(battery.x + 15, battery.y, load.x - 25, load.y); // Batt to Load area
+                }
+            };
+        };
+        new p5(reliabilitySketch);
+
+
+        // --- Results Charts (Chart.js) ---
+        const chartLabels = ['Reference', 'TEP', 'SATOA 4h 1500MW', 'SATOA 4h 600MW', 'SATOA 2h 600MW'];
+
+        // EUE Data from Table IV (Systemwide)
+        const eueData = [5864.4, 926.2, 1661.4, 3557.9, 4406.7];
+        const eueCtx = document.getElementById('eueChart').getContext('2d');
+        new Chart(eueCtx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Systemwide EUE (MWh/year)',
+                    data: eueData,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)', // Reference - Red
+                        'rgba(54, 162, 235, 0.6)', // TEP - Blue
+                        'rgba(75, 192, 192, 0.6)', // Storage Large - Green
+                        'rgba(153, 102, 255, 0.6)',// Storage Medium - Purple
+                        'rgba(255, 159, 64, 0.6)' // Storage Small - Orange
+                    ],
+                    borderColor: 'rgba(0, 0, 0, 0.1)' ,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'EUE (MWh/year)' }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // LOLH Data from Table V (Systemwide)
+        const lolhData = [6.16, 1.49, 1.93, 3.97, 4.33];
+        const lolhCtx = document.getElementById('lolhChart').getContext('2d');
+        new Chart(lolhCtx, {
+            type: 'bar',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Systemwide LOLH (hours/year)',
+                    data: lolhData,
+                     backgroundColor: [
+                        'rgba(255, 99, 132, 0.6)', // Reference - Red
+                        'rgba(54, 162, 235, 0.6)', // TEP - Blue
+                        'rgba(75, 192, 192, 0.6)', // Storage Large - Green
+                        'rgba(153, 102, 255, 0.6)',// Storage Medium - Purple
+                        'rgba(255, 159, 64, 0.6)' // Storage Small - Orange
+                    ],
+                    borderColor: 'rgba(0, 0, 0, 0.1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                 responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'LOLH (hours/year)' }
+                    }
+                },
+                 plugins: { legend: { display: false } }
+            }
+        });
+
+        // Cost Benefit Data (Derived from Fig 8 / Table VI)
+        // Annualized Costs (M$/annum) from Table VI
+        const annualCosts = {
+            'TEP': 80.7, // TEP is just given as total 80.7
+            'SATOA 2h 300MW': 19.8,
+            'SATOA 2h 600MW': 39.6,
+            'SATOA 2h 900MW': 59.5,
+            'SATOA 2h 1200MW': 79.3,
+            'SATOA 2h 1500MW': 99.1,
+            'SATOA 4h 300MW': 39.6,
+            'SATOA 4h 600MW': 79.3,
+            'SATOA 4h 900MW': 118.9,
+            'SATOA 4h 1200MW': 158.6,
+            'SATOA 4h 1500MW': 198.2
+        };
+        // EUE/LOLH Reductions (Ref - Scenario)
+        const refEUE = 5864.4;
+        const refLOLH = 6.16;
+        const eueReductions = {
+            'TEP': refEUE - 926.2,
+            'SATOA 2h 600MW': refEUE - 4406.7,
+            'SATOA 4h 600MW': refEUE - 3557.9,
+            'SATOA 4h 1500MW': refEUE - 1661.4
+            // Add others if needed, matching Fig 8's style
+        };
+         const lolhReductions = {
+            'TEP': refLOLH - 1.49,
+            'SATOA 2h 600MW': refLOLH - 4.33,
+            'SATOA 4h 600MW': refLOLH - 3.97,
+            'SATOA 4h 1500MW': refLOLH - 1.93
+        };
+
+        const costBenefitLabels = ['TEP', 'SATOA 4h 1500MW', 'SATOA 4h 600MW', 'SATOA 2h 600MW']; // Subset for clarity
+        const costPerEueReduction = costBenefitLabels.map(l => (annualCosts[l] * 1000) / eueReductions[l]); // k$/MWh
+        const costPerLolhReduction = costBenefitLabels.map(l => annualCosts[l] / lolhReductions[l]); // M$/hour
+
+        const costBenefitCtx = document.getElementById('costBenefitChart').getContext('2d');
+        new Chart(costBenefitCtx, {
+            type: 'bar',
+            data: {
+                labels: costBenefitLabels,
+                datasets: [
+                    {
+                        label: 'Cost per EUE Reduction (k$/MWh)',
+                        data: costPerEueReduction,
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                        yAxisID: 'yCostEUE',
+                    },
+                    {
+                        label: 'Cost per LOLH Reduction (M$/h)',
+                        data: costPerLolhReduction,
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)', // Orange
+                        yAxisID: 'yCostLOLH',
+                    }
+                ]
+            },
+            options: {
+                 responsive: true,
+                maintainAspectRatio: false,
+                 indexAxis: 'x', // Bars vertical
+                scales: {
+                    yCostEUE: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: { display: true, text: 'k$ / MWh EUE Reduced' }
+                    },
+                    yCostLOLH: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        title: { display: true, text: 'M$ / Hour LOLH Reduced' },
+                        grid: { drawOnChartArea: false } // only draw grid for left axis
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(1);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+
+    </script>
+
+</body>
+</html>

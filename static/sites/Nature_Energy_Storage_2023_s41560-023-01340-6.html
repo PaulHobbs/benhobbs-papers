@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration: Energy Storage in Decarbonized Grids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <!-- Custom CSS (Minimal) -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-top: 20px; /* Add padding for static top bar */
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #dee2e6;
+        }
+        .explanation {
+            margin-bottom: 20px;
+        }
+        h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3em;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+        .param-label {
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        .param-value {
+            font-family: monospace;
+            font-size: 0.9em;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        #socCanvasContainer {
+            position: relative;
+            height: 100px; /* Adjust as needed */
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin-top: 15px;
+        }
+        #socLevel {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #198754; /* Bootstrap success green */
+            transition: height 0.1s ease-in-out;
+        }
+        #socText {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        /* Simple static top bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #343a40; /* Dark background */
+            color: white;
+            padding: 5px 20px;
+            font-size: 0.9em;
+            z-index: 1030; /* Ensure it's above content */
+            text-align: center;
+        }
+    </style>
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="top-bar">
+        Inspired by the Nature Energy Review: Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling
+    </div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-10 offset-lg-1">
+
+                <h1 class="mb-4">Powering the Future: The Crucial Role of Energy Storage</h1>
+
+                <div class="alert alert-info" role="alert">
+                    This interactive post explores key concepts from the Nature Energy review article "Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling". We'll use simplified models and visualizations to understand why energy storage is vital for future power grids and how planners decide how much to build.
+                </div>
+
+                <h2>The Decarbonization Challenge</h2>
+                <p>
+                    Globally, there's a push towards <a href="https://en.wikipedia.org/wiki/Carbon_neutrality" target="_blank">net-zero</a> greenhouse gas emissions, largely driven by climate change concerns. The electricity sector is pivotal in this transition. Technologies like solar panels and wind turbines offer clean energy, but they are <a href="https://en.wikipedia.org/wiki/Variable_renewable_energy" target="_blank">Variable Renewable Energy</a> (VRE) sources – their output depends on the weather, not directly on our demand.
+                </p>
+                <p>
+                    Imagine a grid heavily reliant on solar power. What happens at night, or on a cloudy day? How do we ensure electricity is always available when needed? This intermittency is a major hurdle.
+                </p>
+
+                <div class="interactive-section">
+                    <h3>Visualizing the VRE Challenge</h3>
+                    <p class="explanation">
+                        Let's simulate a simplified day with electricity demand (what we need) and solar generation (what a large solar farm produces). Notice the mismatch: surplus power during sunny hours and deficits at other times.
+                    </p>
+                    <canvas id="vreDemandChart"></canvas>
+                    <div class="mt-3 text-center">
+                        <span class="badge bg-primary me-2">Demand</span>
+                        <span class="badge bg-warning text-dark me-2">Solar Generation</span>
+                        <span class="badge bg-danger me-2">Energy Deficit</span>
+                        <span class="badge bg-success me-2">Energy Surplus</span>
+                    </div>
+                </div>
+
+                <h2>Enter Energy Storage (ES)</h2>
+                <p>
+                    <a href="https://en.wikipedia.org/wiki/Energy_storage" target="_blank">Energy Storage</a> (ES), like large batteries, offers a solution. It can absorb excess energy during surplus periods (like midday solar peaks) and release it during deficit periods (like evenings or cloudy spells).
+                </p>
+                <p>
+                    Key characteristics of storage include:
+                    <ul>
+                        <li><strong>Power Capacity ($P_{ES}$):</strong> How much power (in Megawatts, MW) it can charge or discharge at any moment. Like the width of a pipe.</li>
+                        <li><strong>Energy Capacity ($E_{ES}$):</strong> How much total energy (in Megawatt-hours, MWh) it can store. Like the volume of a tank.</li>
+                        <li><strong>Duration:</strong> How long it can sustain its maximum power output ($E_{ES} / P_{ES}$, in hours).</li>
+                        <li><strong>Round-trip Efficiency ($\eta_{RT}$):</strong> The percentage of energy recovered after a charge-discharge cycle (typically 80-90% for batteries). Some energy is always lost.</li>
+                        <li><strong>State of Charge (SOC):</strong> How "full" the storage is at any given time (0% to 100%).</li>
+                    </ul>
+                </p>
+
+                <div class="interactive-section">
+                    <h3>Smoothing the Grid with Storage</h3>
+                    <p class="explanation">
+                        Now, let's add a battery to our previous simulation. Use the sliders to adjust its size (Energy Capacity) and power capability (relative to energy, determining Duration). Observe how the storage charges during surplus, discharges during deficit, and how this affects the final "Net Load" the rest of the grid must handle. Watch the battery's State of Charge (SOC).
+                    </p>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="storageEnergySlider" class="form-label param-label">Storage Energy Capacity ($E_{ES}$): <span id="storageEnergyValue" class="param-value">100</span> MWh</label>
+                            <input type="range" class="form-range" id="storageEnergySlider" min="0" max="500" step="10" value="100">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="storagePowerSlider" class="form-label param-label">Storage Power Capacity ($P_{ES}$): <span id="storagePowerValue" class="param-value">25</span> MW</label>
+                            <input type="range" class="form-range" id="storagePowerSlider" min="0" max="100" step="5" value="25">
+                            <small class="d-block text-muted">Implied Duration: <span id="storageDurationValue">4.0</span> hours</small>
+                        </div>
+                         <div class="col-md-6">
+                            <label for="storageEfficiencySlider" class="form-label param-label">Round-Trip Efficiency ($\eta_{RT}$): <span id="storageEfficiencyValue" class="param-value">85</span>%</label>
+                            <input type="range" class="form-range" id="storageEfficiencySlider" min="70" max="95" step="1" value="85">
+                        </div>
+                    </div>
+                    <canvas id="vreDemandStorageChart"></canvas>
+                     <div class="mt-3 text-center">
+                        <span class="badge bg-primary me-2">Demand</span>
+                        <span class="badge bg-warning text-dark me-2">Solar Generation</span>
+                        <span class="badge" style="background-color: #6f42c1; color: white;">Net Load (after ES)</span>
+                        <span class="badge bg-info text-dark">Storage Charging</span>
+                        <span class="badge bg-secondary">Storage Discharging</span>
+                    </div>
+                    <h4 class="mt-3">Storage State of Charge (SOC)</h4>
+                    <div id="socCanvasContainer">
+                         <div id="socLevel" style="height: 50%;"></div>
+                         <div id="socText">50%</div>
+                    </div>
+                     <canvas id="socLineChart" style="display:none;"></canvas> <!-- Hidden line chart for detailed SOC view if needed later -->
+                </div>
+
+                <h2>Planning the Future Grid: Capacity Expansion Modeling (CEM)</h2>
+                <p>
+                    How much solar, wind, storage, and potentially other resources (like natural gas plants, nuclear, or hydrogen) should we build? This is the core question addressed by <a href="https://en.wikipedia.org/wiki/Capacity_expansion_problem" target="_blank">Capacity Expansion Modeling</a> (CEM).
+                </p>
+                <p>
+                    CEM uses optimization techniques to find the least-cost mix of generation, storage, and transmission assets needed to reliably meet future electricity demand while satisfying policy constraints (like emission reduction targets).
+                </p>
+                <p>
+                    Mathematically, a simplified CEM goal might look like:
+                    $$ \min \sum_{i \in \text{Technologies}} (\text{CapitalCost}_i \times \text{Capacity}_i) + \sum_{t \in \text{Time}} (\text{OperationalCost}_t) $$
+                    Subject to:
+                    <ul>
+                        <li>Meeting demand at all times $t$.</li>
+                        <li>Resource availability constraints (e.g., solar only available during the day).</li>
+                        <li>Storage operational constraints (SOC limits, power limits, efficiency).</li>
+                        <li>Policy constraints (e.g., CO$_2$ limits).</li>
+                    </ul>
+                    Where $\text{Capacity}_i$ represents the amount of technology $i$ (e.g., MW of solar, MW/MWh of storage) to build – these are the key decisions.
+                </p>
+
+                <div class="interactive-section">
+                    <h3>The CEM Balancing Act: VRE vs. Dispatchable vs. Storage</h3>
+                    <p class="explanation">
+                        Let's explore a highly simplified CEM trade-off. We need to meet demand using a mix of Solar (VRE), a flexible but potentially carbon-emitting 'Dispatchable' source (e.g., natural gas), and Batteries (ES). Use the sliders to change the *costs* of these technologies. The visualization simulates a basic optimization to find the lowest-cost capacity mix (how much MW of each to build) to meet our sample demand profile reliably.
+                    </p>
+                    <p class="explanation">
+                        Focus on how changing the <strong>cost of battery energy capacity ($/MWh)</strong> influences the optimal mix. Cheaper long-duration storage often enables higher VRE adoption.
+                    </p>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="solarCostSlider" class="form-label param-label">Solar Capital Cost: $<span id="solarCostValue" class="param-value">1000</span> /kW</label>
+                            <input type="range" class="form-range" id="solarCostSlider" min="600" max="1500" step="50" value="1000">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="dispatchableCostSlider" class="form-label param-label">Dispatchable Capital Cost: $<span id="dispatchableCostValue" class="param-value">1200</span> /kW</label>
+                            <input type="range" class="form-range" id="dispatchableCostSlider" min="800" max="2000" step="50" value="1200">
+                             <small class="d-block text-muted">Op Cost: $<span id="dispatchableOpCostValue">50</span> /MWh</small>
+                             <input type="hidden" id="dispatchableOpCostSlider" value="50"> <!-- Hidden for simplicity, could be a slider -->
+                        </div>
+                         <div class="col-md-4">
+                            <label for="batteryPowerCostSlider" class="form-label param-label">Battery Power Cost: $<span id="batteryPowerCostValue" class="param-value">400</span> /kW</label>
+                            <input type="range" class="form-range" id="batteryPowerCostSlider" min="150" max="800" step="25" value="400">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="batteryEnergyCostSlider" class="form-label param-label">Battery Energy Cost: $<span id="batteryEnergyCostValue" class="param-value">200</span> /kWh</label>
+                            <input type="range" class="form-range" id="batteryEnergyCostSlider" min="50" max="500" step="10" value="200">
+                        </div>
+                         <div class="col-md-4">
+                             <label for="reliabilityTargetSlider" class="form-label param-label">Reliability Target (% Demand Met): <span id="reliabilityTargetValue" class="param-value">99.9</span>%</label>
+                             <input type="range" class="form-range" id="reliabilityTargetSlider" min="98.0" max="100.0" step="0.1" value="99.9">
+                         </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-8">
+                             <h4>Optimal Capacity Mix (Simplified)</h4>
+                             <canvas id="capacityMixChart"></canvas>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center justify-content-center">
+                             <div class="text-center">
+                                 <h4>Estimated Total Annualized System Cost</h4>
+                                 <p style="font-size: 1.5em; font-weight: bold;">$<span id="totalSystemCost">--</span> M / year</p>
+                                  <small class="text-muted">(Relative cost for comparison)</small>
+                             </div>
+                        </div>
+                    </div>
+                     <div class="mt-3 text-center">
+                        <span class="badge bg-warning text-dark me-2">Solar Capacity (MW)</span>
+                        <span class="badge bg-secondary me-2">Dispatchable Capacity (MW)</span>
+                        <span class="badge bg-success me-2">Battery Power Capacity (MW)</span>
+                        <!-- Battery Energy Capacity is implicitly linked via cost and optimization -->
+                    </div>
+                </div>
+
+                <h2>Challenges and the Path Forward</h2>
+                <p>
+                    Our interactive examples are highly simplified. Real-world CEM, as discussed in the Nature Energy review, faces numerous complexities when incorporating energy storage:
+                </p>
+                <ul>
+                    <li><strong>Accurate Technology Representation:</strong> Modeling different storage durations (minutes to seasons), degradation over time, specific operational constraints (like SOC-dependent efficiency), and interactions in hybrid systems (solar+storage).</li>
+                    <li><strong>System Representation:</strong> Capturing sufficient temporal detail (hourly or sub-hourly) and geographic resolution (including transmission constraints) is computationally demanding but crucial for valuing storage accurately. Representing uncertainty (weather variability across years, future costs, policy changes) is vital for robust planning.</li>
+                    <li><strong>Markets, Policy & Society:</strong> How will storage participate in evolving electricity markets? How do specific policies (like tax credits or reliability standards) affect investment? How can CEM incorporate energy equity and justice considerations?</li>
+                </ul>
+                <p>
+                    Addressing these challenges requires ongoing research and development of more sophisticated CEM tools and techniques. Enhanced modeling capabilities are essential to guide investments and policies effectively, ensuring a transition to a clean, reliable, affordable, and equitable energy future.
+                </p>
+
+                <h2>Conclusion</h2>
+                <p>
+                    Energy storage is not just an add-on; it's a fundamental enabler for grids dominated by variable renewables. Capacity Expansion Modeling is the critical tool planners use to determine how much storage, and what kind, is needed. By improving how CEM captures the complex value and operational dynamics of storage, we can make better decisions to accelerate the transition to a decarbonized electricity system. The interactive examples above provide a glimpse into these complex trade-offs, highlighting the sensitivity of optimal system design to the cost and characteristics of energy storage technologies.
+                </p>
+                <hr>
+                 <p class="text-muted small">
+                    Disclaimer: The simulations and optimizations presented here are highly simplified for illustrative purposes and do not represent a full-scale capacity expansion model. Costs and technical parameters are representative examples. Calculations are performed client-side in your browser.
+                    Based on: Levin, T., Bistline, J., Sioshansi, R. et al. Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling. Nat Energy (2023). <a href="https://doi.org/10.1038/s41560-023-01340-6" target="_blank">https://doi.org/10.1038/s41560-023-01340-6</a>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+
+    <!-- Custom Javascript -->
+    <script>
+        // --- Simulation Data (Simplified 24h profiles) ---
+        const hours = Array.from({ length: 24 }, (_, i) => i);
+        // Simple demand profile (peaks morning and evening)
+        const demandProfile = [
+            50, 45, 40, 40, 45, 55, 70, 85, 90, 95, 90, 85,
+            80, 75, 70, 75, 85, 100, 110, 105, 95, 80, 65, 55
+        ].map(v => v * 1.5); // Scaled up demand
+
+        // Simple solar profile (peaks midday) - normalized, will be scaled by capacity
+        const solarAvailability = [
+            0, 0, 0, 0, 0, 0.1, 0.3, 0.5, 0.7, 0.85, 0.95, 1.0,
+            0.95, 0.85, 0.7, 0.5, 0.3, 0.1, 0, 0, 0, 0, 0, 0
+        ];
+
+        // --- Chart Instances ---
+        let vreDemandChart = null;
+        let vreDemandStorageChart = null;
+        let socLineChartInstance = null; // If needed later
+        let capacityMixChart = null;
+
+        // --- DOM Elements ---
+        const storageEnergySlider = document.getElementById('storageEnergySlider');
+        const storagePowerSlider = document.getElementById('storagePowerSlider');
+        const storageEfficiencySlider = document.getElementById('storageEfficiencySlider');
+        const storageEnergyValue = document.getElementById('storageEnergyValue');
+        const storagePowerValue = document.getElementById('storagePowerValue');
+        const storageDurationValue = document.getElementById('storageDurationValue');
+        const storageEfficiencyValue = document.getElementById('storageEfficiencyValue');
+        const socLevelDiv = document.getElementById('socLevel');
+        const socTextDiv = document.getElementById('socText');
+
+        const solarCostSlider = document.getElementById('solarCostSlider');
+        const dispatchableCostSlider = document.getElementById('dispatchableCostSlider');
+        const dispatchableOpCostSlider = document.getElementById('dispatchableOpCostSlider');
+        const batteryPowerCostSlider = document.getElementById('batteryPowerCostSlider');
+        const batteryEnergyCostSlider = document.getElementById('batteryEnergyCostSlider');
+        const reliabilityTargetSlider = document.getElementById('reliabilityTargetSlider');
+
+        const solarCostValue = document.getElementById('solarCostValue');
+        const dispatchableCostValue = document.getElementById('dispatchableCostValue');
+        const dispatchableOpCostValue = document.getElementById('dispatchableOpCostValue');
+        const batteryPowerCostValue = document.getElementById('batteryPowerCostValue');
+        const batteryEnergyValue = document.getElementById('batteryEnergyCostValue');
+        const reliabilityTargetValue = document.getElementById('reliabilityTargetValue');
+        const totalSystemCostSpan = document.getElementById('totalSystemCost');
+
+
+        // --- Helper Functions ---
+        function updateSliderValue(slider, display) {
+            display.textContent = slider.value;
+        }
+
+        function calculateDuration() {
+            const energy = parseFloat(storageEnergySlider.value);
+            const power = parseFloat(storagePowerSlider.value);
+            const duration = (power > 0) ? (energy / power).toFixed(1) : 'N/A';
+            storageDurationValue.textContent = `${duration}`;
+        }
+
+        // --- Visualization 1: VRE Challenge ---
+        function renderVreDemandChart() {
+            const ctx = document.getElementById('vreDemandChart').getContext('2d');
+            const peakSolarGeneration = 120; // Example peak capacity
+            const solarGeneration = solarAvailability.map(a => a * peakSolarGeneration);
+            const surplus = solarGeneration.map((gen, i) => Math.max(0, gen - demandProfile[i]));
+            const deficit = solarGeneration.map((gen, i) => Math.max(0, demandProfile[i] - gen));
+
+            if (vreDemandChart) {
+                vreDemandChart.destroy();
+            }
+
+            vreDemandChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [
+                        {
+                            label: 'Demand',
+                            data: demandProfile,
+                            borderColor: 'rgb(0, 123, 255)', // Bootstrap primary
+                            backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Solar Generation',
+                            data: solarGeneration,
+                            borderColor: 'rgb(255, 193, 7)', // Bootstrap warning
+                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 0,
+                            borderWidth: 2
+                        },
+                         {
+                            label: 'Energy Surplus',
+                            data: surplus,
+                            backgroundColor: 'rgba(25, 135, 84, 0.5)', // Bootstrap success, semi-transparent
+                            type: 'bar',
+                            order: 3, // Draw bars behind lines
+                         },
+                         {
+                             label: 'Energy Deficit',
+                             data: deficit,
+                             backgroundColor: 'rgba(220, 53, 69, 0.5)', // Bootstrap danger, semi-transparent
+                             type: 'bar',
+                             order: 4
+                         }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Power (MW)' }
+                        },
+                        x: {
+                            title: { display: true, text: 'Hour of Day' }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { enabled: true },
+                        legend: { display: false } // Using custom legend below chart
+                    }
+                }
+            });
+        }
+
+        // --- Visualization 2: Smoothing with Storage ---
+        function simulateStorageOperation() {
+            const maxEnergy = parseFloat(storageEnergySlider.value); // MWh
+            const maxPower = parseFloat(storagePowerSlider.value);   // MW
+            const efficiency = parseFloat(storageEfficiencySlider.value) / 100; // decimal
+            const sqrtEfficiency = Math.sqrt(efficiency); // Assume equal charge/discharge loss for simplicity
+
+            let currentSOC_MWh = maxEnergy * 0.5; // Start at 50% SOC
+            const socProfile = [currentSOC_MWh]; // Store SOC history
+            const netLoadProfile = [];
+            const chargeProfile = [];
+            const dischargeProfile = [];
+
+            // Assume fixed solar generation capacity for this simulation
+            const peakSolarGeneration = 150; // Slightly more solar
+            const solarGeneration = solarAvailability.map(a => a * peakSolarGeneration);
+
+            for (let i = 0; i < hours.length; i++) {
+                const demand = demandProfile[i];
+                const generation = solarGeneration[i];
+                const potentialBalance = generation - demand; // Positive = surplus, Negative = deficit
+
+                let chargePower = 0;
+                let dischargePower = 0;
+
+                if (potentialBalance > 0) { // Surplus generation
+                    // Try to charge
+                    const chargePossibleByPower = Math.min(maxPower, potentialBalance);
+                    const chargePossibleBySOC = (maxEnergy - currentSOC_MWh) / sqrtEfficiency; // Account for efficiency loss on charge
+                    chargePower = Math.min(chargePossibleByPower, chargePossibleBySOC);
+                    currentSOC_MWh += chargePower * sqrtEfficiency; // Increase SOC, accounting for loss
+                } else { // Deficit generation
+                    // Try to discharge
+                    const dischargeNeeded = -potentialBalance;
+                    const dischargePossibleByPower = Math.min(maxPower, dischargeNeeded);
+                    const dischargePossibleBySOC = currentSOC_MWh * sqrtEfficiency; // Account for efficiency loss on discharge
+                    dischargePower = Math.min(dischargePossibleByPower, dischargePossibleBySOC);
+                    currentSOC_MWh -= dischargePower / sqrtEfficiency; // Decrease SOC, accounting for loss
+                }
+
+                 // Ensure SOC stays within bounds (0 to maxEnergy)
+                 currentSOC_MWh = Math.max(0, Math.min(maxEnergy, currentSOC_MWh));
+
+                 socProfile.push(currentSOC_MWh);
+                 chargeProfile.push(chargePower); // Power flowing into storage
+                 dischargeProfile.push(dischargePower); // Power flowing out of storage
+                 netLoadProfile.push(demand - generation + chargePower - dischargePower); // What the rest of the grid sees
+            }
+
+            // Update SOC visualization (using the final SOC for the bar)
+            const finalSOC_Percent = maxEnergy > 0 ? (currentSOC_MWh / maxEnergy * 100) : 0;
+            socLevelDiv.style.height = `${finalSOC_Percent}%`;
+            socTextDiv.textContent = `${finalSOC_Percent.toFixed(1)}%`;
+
+            return { netLoadProfile, chargeProfile, dischargeProfile, socProfile }; // Return results
+        }
+
+        function renderVreDemandStorageChart() {
+            const results = simulateStorageOperation();
+            const ctx = document.getElementById('vreDemandStorageChart').getContext('2d');
+
+             // Assume fixed solar generation capacity for this simulation
+            const peakSolarGeneration = 150;
+            const solarGeneration = solarAvailability.map(a => a * peakSolarGeneration);
+
+
+            if (vreDemandStorageChart) {
+                vreDemandStorageChart.destroy();
+            }
+
+             vreDemandStorageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours.map(h => `${h}:00`),
+                    datasets: [
+                        {
+                            label: 'Demand',
+                            data: demandProfile,
+                            borderColor: 'rgb(0, 123, 255)',
+                            fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5
+                        },
+                        {
+                            label: 'Solar Generation',
+                            data: solarGeneration,
+                            borderColor: 'rgb(255, 193, 7)',
+                             fill: false, tension: 0.1, pointRadius: 0, borderWidth: 1.5
+                        },
+                         {
+                            label: 'Net Load (after ES)',
+                            data: results.netLoadProfile,
+                            borderColor: '#6f42c1', // Bootstrap purple
+                            borderWidth: 2.5, // Thicker line for emphasis
+                            fill: false, tension: 0.1, pointRadius: 0
+                        },
+                        {
+                            label: 'Storage Charging',
+                            data: results.chargeProfile,
+                            backgroundColor: 'rgba(13, 202, 240, 0.6)', // Bootstrap info, semi-transparent
+                            type: 'bar',
+                            order: 4
+                         },
+                         {
+                             label: 'Storage Discharging',
+                             // Show discharging as negative values on the same axis for clarity maybe? Or separate bars. Let's use separate bars.
+                             data: results.dischargeProfile.map(d => d), // Keep positive for bar height
+                             backgroundColor: 'rgba(108, 117, 125, 0.6)', // Bootstrap secondary, semi-transparent
+                             type: 'bar',
+                             order: 5
+                         }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allow height adjustment
+                    scales: {
+                        y: { beginAtZero: false, title: { display: true, text: 'Power (MW)' } }, // Allow negative net load display
+                        x: { title: { display: true, text: 'Hour of Day' } }
+                    },
+                    plugins: {
+                        tooltip: { enabled: true },
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        // --- Visualization 3: Simplified CEM ---
+        // VERY Simplified Cost Calculation & Optimization Heuristic
+        function calculateSystemCost(capacities) {
+            const { solarCap, dispatchableCap, batteryPowerCap, batteryEnergyCap } = capacities;
+
+            // --- Capital Costs (Annualized) ---
+            // Assume simple Capital Recovery Factor (CRF) ~ 0.08 (e.g., 20yr life, 5% discount)
+            const crf = 0.08;
+            const solarCost_kW = parseFloat(solarCostSlider.value);
+            const dispatchableCost_kW = parseFloat(dispatchableCostSlider.value);
+            const batteryPowerCost_kW = parseFloat(batteryPowerCostSlider.value);
+            const batteryEnergyCost_kWh = parseFloat(batteryEnergyCostSlider.value);
+
+            const annualCapitalCost = crf * (
+                (solarCap * 1000 * solarCost_kW) + // Convert MW to kW for cost
+                (dispatchableCap * 1000 * dispatchableCost_kW) +
+                (batteryPowerCap * 1000 * batteryPowerCost_kW) +
+                (batteryEnergyCap * 1000 * batteryEnergyCost_kWh) // Convert MWh to kWh for cost
+            );
+
+            // --- Operational Simulation (Simplified Dispatch) ---
+            let totalOperationalCost = 0;
+            let totalDemand = 0;
+            let unmetDemand = 0;
+            const dispatchableOpCost_MWh = parseFloat(dispatchableOpCostSlider.value);
+            const efficiency = 0.85; // Fixed efficiency for this simple CEM
+            const sqrtEfficiency = Math.sqrt(efficiency);
+            let currentSOC_MWh = batteryEnergyCap * 0.5; // Start at 50%
+
+            const solarGeneration = solarAvailability.map(a => a * solarCap);
+
+            for (let i = 0; i < hours.length; i++) {
+                const demand = demandProfile[i];
+                totalDemand += demand;
+                const solarGen = solarGeneration[i];
+                let netDemand = demand - solarGen; // Demand remaining after solar
+
+                let batteryDischarge = 0;
+                let batteryCharge = 0;
+
+                // Try discharging battery first if there's net demand
+                if (netDemand > 0 && currentSOC_MWh > 0) {
+                    const dischargePossibleByPower = Math.min(batteryPowerCap, netDemand);
+                    const dischargePossibleBySOC = currentSOC_MWh * sqrtEfficiency;
+                    batteryDischarge = Math.min(dischargePossibleByPower, dischargePossibleBySOC);
+                    currentSOC_MWh -= batteryDischarge / sqrtEfficiency;
+                    netDemand -= batteryDischarge;
+                }
+
+                // Use dispatchable generation for remaining net demand
+                let dispatchableGen = 0;
+                if (netDemand > 0) {
+                    dispatchableGen = Math.min(dispatchableCap, netDemand);
+                    totalOperationalCost += dispatchableGen * dispatchableOpCost_MWh;
+                    netDemand -= dispatchableGen;
+                }
+
+                // Try charging battery if there's excess solar (netDemand is negative)
+                if (netDemand < 0) {
+                     const surplus = -netDemand;
+                     const chargePossibleByPower = Math.min(batteryPowerCap, surplus);
+                     const chargePossibleBySOC = (batteryEnergyCap - currentSOC_MWh) / sqrtEfficiency;
+                     batteryCharge = Math.min(chargePossibleByPower, chargePossibleBySOC);
+                     currentSOC_MWh += batteryCharge * sqrtEfficiency;
+                     // We assume excess solar beyond charging is curtailed (lost) in this simple model
+                }
+
+                 // Ensure SOC stays within bounds
+                 currentSOC_MWh = Math.max(0, Math.min(batteryEnergyCap, currentSOC_MWh));
+
+                // Track unmet demand
+                if (netDemand > 0) {
+                    unmetDemand += netDemand;
+                }
+            }
+
+            // Add heavy penalty for unmet demand to enforce reliability target
+            const reliabilityTarget = parseFloat(reliabilityTargetSlider.value) / 100;
+            const allowedUnmetDemand = totalDemand * (1 - reliabilityTarget);
+            const reliabilityPenalty = (unmetDemand > allowedUnmetDemand) ? (unmetDemand - allowedUnmetDemand) * 1e6 : 0; // Huge penalty per MWh
+
+            const totalCost = annualCapitalCost + totalOperationalCost + reliabilityPenalty;
+
+            return { totalCost, annualCapitalCost, totalOperationalCost, unmetDemand, totalDemand };
+        }
+
+        // Simple Heuristic Search for "Optimal" Mix (Not a real solver!)
+        function findApproxOptimalMix() {
+            let bestMix = { solarCap: 0, dispatchableCap: 0, batteryPowerCap: 0, batteryEnergyCap: 0 };
+            let minCost = Infinity;
+
+            // Define search space ranges (adjust these based on expected results)
+            const solarRange = [50, 100, 150, 200, 250, 300]; // MW
+            const dispatchableRange = [50, 80, 100, 120, 150]; // MW
+            const batteryPowerRange = [0, 25, 50, 75, 100]; // MW
+            const batteryDurationRange = [2, 4, 6, 8, 10]; // Hours
+
+            // Iterate through combinations (this is coarse and inefficient)
+            for (const solar of solarRange) {
+                for (const disp of dispatchableRange) {
+                    for (const batP of batteryPowerRange) {
+                        for (const duration of batteryDurationRange) {
+                            const batE = batP * duration; // Calculate Energy from Power*Duration
+                            const currentCaps = { solarCap: solar, dispatchableCap: disp, batteryPowerCap: batP, batteryEnergyCap: batE };
+                            const result = calculateSystemCost(currentCaps);
+
+                            if (result.totalCost < minCost) {
+                                minCost = result.totalCost;
+                                bestMix = currentCaps;
+                            }
+                        }
+                    }
+                }
+            }
+             // Add a check for the case where no storage is optimal
+             for (const solar of solarRange) {
+                 for (const disp of dispatchableRange) {
+                     const currentCaps = { solarCap: solar, dispatchableCap: disp, batteryPowerCap: 0, batteryEnergyCap: 0 };
+                     const result = calculateSystemCost(currentCaps);
+                     if (result.totalCost < minCost) {
+                         minCost = result.totalCost;
+                         bestMix = currentCaps;
+                     }
+                 }
+             }
+
+
+            return { bestMix, minCost };
+        }
+
+
+        function renderCapacityMixChart() {
+            const { bestMix, minCost } = findApproxOptimalMix();
+            const ctx = document.getElementById('capacityMixChart').getContext('2d');
+
+            if (capacityMixChart) {
+                capacityMixChart.destroy();
+            }
+
+            capacityMixChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Solar', 'Dispatchable', 'Battery Power'],
+                    datasets: [{
+                        label: 'Optimal Capacity (MW)',
+                        data: [
+                            bestMix.solarCap,
+                            bestMix.dispatchableCap,
+                            bestMix.batteryPowerCap
+                            // Note: Battery Energy (MWh) = Power * Duration is implicit
+                        ],
+                        backgroundColor: [
+                            'rgba(255, 193, 7, 0.7)', // Warning
+                            'rgba(108, 117, 125, 0.7)', // Secondary
+                            'rgba(25, 135, 84, 0.7)' // Success
+                        ],
+                        borderColor: [
+                             'rgb(255, 193, 7)',
+                             'rgb(108, 117, 125)',
+                             'rgb(25, 135, 84)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bars
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Capacity (MW)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: true }
+                    }
+                }
+            });
+
+            // Update total cost display
+            totalSystemCostSpan.textContent = (minCost / 1e6).toFixed(2); // Display in Million $
+        }
+
+
+        // --- Initialization and Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Vis 1
+            renderVreDemandChart();
+
+            // Vis 2 Setup
+            updateSliderValue(storageEnergySlider, storageEnergyValue);
+            updateSliderValue(storagePowerSlider, storagePowerValue);
+            updateSliderValue(storageEfficiencySlider, storageEfficiencyValue);
+            calculateDuration();
+            renderVreDemandStorageChart(); // Initial render
+
+            storageEnergySlider.addEventListener('input', () => {
+                updateSliderValue(storageEnergySlider, storageEnergyValue);
+                calculateDuration();
+                renderVreDemandStorageChart();
+            });
+            storagePowerSlider.addEventListener('input', () => {
+                updateSliderValue(storagePowerSlider, storagePowerValue);
+                calculateDuration();
+                renderVreDemandStorageChart();
+            });
+             storageEfficiencySlider.addEventListener('input', () => {
+                updateSliderValue(storageEfficiencySlider, storageEfficiencyValue);
+                renderVreDemandStorageChart();
+            });
+
+             // Vis 3 Setup
+             updateSliderValue(solarCostSlider, solarCostValue);
+             updateSliderValue(dispatchableCostSlider, dispatchableCostValue);
+             // updateSliderValue(dispatchableOpCostSlider, dispatchableOpCostValue); // If it were a slider
+             updateSliderValue(batteryPowerCostSlider, batteryPowerCostValue);
+             updateSliderValue(batteryEnergyCostSlider, batteryEnergyValue);
+             updateSliderValue(reliabilityTargetSlider, reliabilityTargetValue);
+             renderCapacityMixChart(); // Initial render
+
+             [solarCostSlider, dispatchableCostSlider, batteryPowerCostSlider, batteryEnergyCostSlider, reliabilityTargetSlider].forEach(slider => {
+                 slider.addEventListener('input', () => {
+                     updateSliderValue(solarCostSlider, solarCostValue);
+                     updateSliderValue(dispatchableCostSlider, dispatchableCostValue);
+                     updateSliderValue(batteryPowerCostSlider, batteryPowerCostValue);
+                     updateSliderValue(batteryEnergyCostSlider, batteryEnergyValue);
+                     updateSliderValue(reliabilityTargetSlider, reliabilityTargetValue);
+                     renderCapacityMixChart(); // Re-run optimization and render
+                 });
+             });
+
+        });
+
+    </script>
+
+</body>
+</html>

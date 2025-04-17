@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power System Simplifications: What Matters Most?</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <!-- p5.js (optional, for more complex visuals if needed, here used for scenario reduction) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa; /* Light background */
+        }
+        .container {
+            max-width: 900px; /* Comfortable reading width */
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        h1, h2, h3 {
+            color: #212529; /* Darker headings */
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 1px solid #dee2e6; /* Subtle separator */
+            padding-bottom: 0.3em;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.4rem; }
+        p, li {
+            margin-bottom: 1em;
+        }
+        code {
+            background-color: #e9ecef; /* Light grey background for code */
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.9em;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .card-header {
+            background-color: #e9ecef; /* Light header */
+            font-weight: bold;
+        }
+        .interactive-controls label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .interactive-controls input[type="range"] {
+            width: 100%;
+        }
+        .interactive-controls .value-display {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+            margin-left: 0.5rem;
+        }
+        .wiki-link {
+            color: #0d6efd;
+            text-decoration: none;
+            border-bottom: 1px dotted #0d6efd;
+        }
+        .wiki-link:hover {
+            text-decoration: underline;
+        }
+        .math-display {
+             overflow-x: auto; /* Handle wide equations */
+             padding: 10px 0;
+        }
+        #scenarioCanvas {
+            border: 1px solid #ccc;
+            display: block; /* Center canvas */
+            margin: 1rem auto;
+        }
+        .emphasis {
+            font-style: italic;
+            color: #555;
+        }
+        .finding {
+            background-color: #d1e7dd; /* Light green */
+            border-left: 5px solid #198754; /* Dark green */
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .warning {
+             background-color: #fff3cd; /* Light yellow */
+            border-left: 5px solid #ffc107; /* Dark yellow */
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Making Sense of Power Grids: Why Simplifications Matter</h1>
+        <p class="lead">Modern power systems are incredibly complex beasts. They're growing larger, integrating unpredictable renewables like wind and solar, and facing numerous uncertainties. Analyzing or planning these systems often involves solving massive optimization problems. To make these problems tractable, engineers rely on simplifications. But how much do these shortcuts distort the picture?</p>
+        <p>This post explores the findings of Shayesteh, Hobbs, and Amelin (2016) who investigated three common simplification techniques:</p>
+        <ul>
+            <li><strong>DC Linearization:</strong> A mathematical shortcut for power flow calculations.</li>
+            <li><strong>Scenario Reduction:</strong> Using fewer possible future conditions (like wind output) to represent uncertainty.</li>
+            <li><strong>Network Aggregation:</strong> Grouping parts of the grid together to reduce its size.</li>
+        </ul>
+        <p>The core question is: <span class="emphasis">Which simplifications save the most computation time, and which introduce the most error, especially for key tasks like operational scheduling and investment planning?</span></p>
+
+        <h2>The Challenge: Optimizing Power Flow</h2>
+        <p>A fundamental task is the <a href="https://en.wikipedia.org/wiki/Optimal_power_flow" target="_blank" class="wiki-link">Optimal Power Flow (OPF)</a> problem. In simple terms, it's about deciding how much power each generator should produce to meet demand everywhere in the grid at the minimum possible cost, while respecting physical limits.</p>
+        <p>Mathematically, a simplified OPF might look something like this:</p>
+        <div class="math-display">
+        $$ \min \sum_{j} C_j(P_{Gj}) $$
+        </div>
+        <p>Subject to:</p>
+        <ul>
+            <li>Power Balance: Generation = Demand + Losses</li>
+            <li>Generator Limits: $P_{Gj}^{min} \le P_{Gj} \le P_{Gj}^{max}$</li>
+            <li>Transmission Line Limits: $|P_{line, ki}| \le P_{line, ki}^{max}$</li>
+            <li>Voltage Limits: $V_k^{min} \le |V_k| \le V_k^{max}$</li>
+            <!-- Simplified constraints for illustration -->
+        </ul>
+        <p>Here, $C_j(P_{Gj})$ is the cost of generator $j$ producing power $P_{Gj}$, $V_k$ is the voltage at bus $k$, and $P_{line, ki}$ is the power flow on the line between buses $k$ and $i$. The actual equations governing power flow (especially losses and line limits) are non-linear and depend on voltage magnitudes and angles, making the full "AC OPF" complex to solve.</p>
+
+        <h2>Simplification 1: DC Linearization - The Lossless Shortcut</h2>
+        <p>The full AC power flow equations are complex. <a href="https://en.wikipedia.org/wiki/Power-flow_study#DC_power-flow" target="_blank" class="wiki-link">DC Linearization</a> simplifies them drastically by making key assumptions:</p>
+        <ul>
+            <li>All voltage magnitudes are fixed at 1 per unit (p.u.).</li>
+            <li>Voltage angle differences between connected buses are small.</li>
+            <li>Transmission line resistance is negligible compared to reactance (meaning electrical losses are ignored).</li>
+        </ul>
+        <p>This transforms the complex AC power flow equations into simple linear relationships based only on voltage angles ($\theta$). Power flow on a line between bus $k$ and $i$ becomes approximately proportional to the angle difference:</p>
+        <div class="math-display">
+        $$ P_{line, ki} \approx \frac{1}{X_{ki}} (\theta_k - \theta_i) $$
+        </div>
+        <p>Where $X_{ki}$ is the line reactance.</p>
+
+        <div class="card">
+            <div class="card-header">Interactive: AC vs. DC Power Flow (Simplified 2-Bus System)</div>
+            <div class="card-body">
+                <p>Let's see the impact on a tiny system: one generator (Bus 1), one load (Bus 2), connected by a single line.</p>
+                <div class="row interactive-controls">
+                    <div class="col-md-6 mb-3">
+                        <label for="genPower">Generator Power (MW):</label>
+                        <input type="range" id="genPower" min="50" max="200" value="100" step="1">
+                        <span id="genPowerValue" class="value-display">100</span> MW
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="lineResistance">Line Resistance (p.u.):</label>
+                        <input type="range" id="lineResistance" min="0.01" max="0.1" value="0.05" step="0.005">
+                        <span id="lineResistanceValue" class="value-display">0.05</span> p.u.
+                    </div>
+                     <div class="col-md-6 mb-3">
+                        <label for="lineReactance">Line Reactance (p.u.):</label>
+                        <input type="range" id="lineReactance" min="0.05" max="0.2" value="0.1" step="0.01">
+                        <span id="lineReactanceValue" class="value-display">0.1</span> p.u.
+                    </div>
+                     <div class="col-md-6 mb-3">
+                        <label for="genCost">Generator Cost ($/MWh):</label>
+                        <input type="range" id="genCost" min="10" max="50" value="20" step="1">
+                        <span id="genCostValue" class="value-display">20</span> $/MWh
+                    </div>
+                </div>
+                <hr>
+                <h5>Results:</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>AC Power Flow (Approximate)</h6>
+                        <p>Load Served: <span id="acLoadServed" class="value-display">?</span> MW</p>
+                        <p>Losses: <span id="acLosses" class="value-display">?</span> MW (<span id="acLossesPercent" class="value-display">?</span>%)</p>
+                        <p>Total Cost: $<span id="acCost" class="value-display">?</span>/h</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>DC Power Flow (Linearized)</h6>
+                        <p>Load Served: <span id="dcLoadServed" class="value-display">?</span> MW</p>
+                        <p>Losses: <span id="dcLosses" class="value-display">0</span> MW (0%)</p>
+                        <p>Total Cost: $<span id="dcCost" class="value-display">?</span>/h</p>
+                    </div>
+                </div>
+                <p class="mt-3 text-muted"><small>Note: AC calculations here are simplified approximations for illustration. Real AC OPF is more complex.</small></p>
+            </div>
+        </div>
+
+        <p><strong>Key Takeaway from Paper (OPF):</strong> DC Linearization significantly speeds up calculations but fundamentally ignores transmission losses. As the interactive example shows, this can lead to an <span class="emphasis">underestimation of total generation costs</span> because the cost of generating power to cover losses is missed. The paper found DC OPF underestimated costs by ~1.4% on average in their tests (See Fig 2 & 3 in the paper).</p>
+
+
+        <h2>Simplification 2: Scenario Reduction - Taming Uncertainty</h2>
+        <p>Power systems face uncertainty from sources like fluctuating wind/solar output and changing demand. Planners often model this using many possible future "scenarios," each with a certain probability.</p>
+        <p>Running optimizations for thousands of scenarios is computationally expensive. <a href="https://en.wikipedia.org/wiki/Scenario_analysis#Scenario_reduction" target="_blank" class="wiki-link">Scenario Reduction</a> aims to select a smaller, representative subset of scenarios that capture the essential range and correlations of the uncertainties, while drastically reducing computation time.</p>
+        <p>The paper uses a method called "forward scenario selection," but the core idea is common: pick a few scenarios that best represent the many.</p>
+
+        <div class="card">
+            <div class="card-header">Interactive: Scenario Reduction Impact</div>
+            <div class="card-body">
+                <p>Imagine we have 200 scenarios representing possible wind power output levels. We want to reduce this to a smaller set for faster analysis.</p>
+                 <div class="interactive-controls mb-3">
+                    <label for="numScenarios">Number of Reduced Scenarios:</label>
+                    <input type="range" id="numScenarios" min="1" max="50" value="10" step="1">
+                    <span id="numScenariosValue" class="value-display">10</span> (out of 200 total)
+                </div>
+                <div id="scenarioCanvasContainer" style="width:100%; max-width:400px; margin:auto;">
+                    <div id="scenarioCanvas"></div>
+                </div>
+                <hr>
+                <h5>Impact:</h5>
+                 <p>Original Average Wind Output: <span id="originalAverage" class="value-display">?</span> MW</p>
+                 <p>Reduced Set Average Wind Output: <span id="reducedAverage" class="value-display">?</span> MW</p>
+                 <p>Potential Error (Difference): <span id="averageDifference" class="value-display">?</span> MW</p>
+                 <p>Computational Effort: <span id="computationEffort" class="value-display">Reduced</span></p>
+                 <p class="mt-3 text-muted"><small>Note: This visual uses random sampling for simplicity. Real methods are more sophisticated at selecting representative scenarios.</small></p>
+            </div>
+        </div>
+
+        <p><strong>Key Takeaway from Paper (OPF & SUC):</strong></p>
+        <ul>
+             <li>For OPF, reducing scenarios (e.g., down to 5 from 200 in their tests) had a relatively small impact on expected costs, much less than ignoring losses via DC linearization. Extreme reduction (e.g., to 1 scenario) was highly distorting.</li>
+             <li>For <a href="https://en.wikipedia.org/wiki/Unit_commitment_problem_in_electrical_power_generation#Stochastic_unit_commitment" target="_blank" class="wiki-link">Stochastic Unit Commitment (SUC)</a>, which decides which generators to turn on/off over time under uncertainty, scenario reduction was found to be <span class="emphasis">more problematic</span>. Reducing scenarios significantly affected the commitment decisions and costs, more so than network aggregation did in their tests.</li>
+             <li>Scenario reduction is very effective at cutting computation time, often proportionally to the number of scenarios removed.</li>
+        </ul>
+
+
+        <h2>Simplification 3: Network Aggregation - Zooming Out</h2>
+        <p>Large power grids can have thousands of buses (nodes). <a href="https://ieeexplore.ieee.org/document/7422278" target="_blank" class="wiki-link">Network Aggregation</a> simplifies the grid model by grouping nearby or electrically similar buses into "zones" or aggregate buses. This reduces the number of variables and constraints in the optimization problem.</p>
+        <p>The paper uses a method based on <a href="https://www.oasis-open.org/committees/download.php/11833/wsmbg_atc_v1_0.pdf" target="_blank" class="wiki-link">Available Transfer Capability (ATC)</a> between buses to decide which ones to group – buses with high transfer capability between them are more likely to be aggregated.</p>
+
+        <div class="card">
+             <div class="card-header">Conceptual View: Network Aggregation</div>
+             <div class="card-body">
+                 <p>Imagine a detailed section of the grid (left). Aggregation groups buses into zones (right), simplifying the representation.</p>
+                 <div class="row text-center">
+                     <div class="col-md-6">
+                         <h6>Detailed Network</h6>
+                         <svg width="200" height="150" viewBox="0 0 100 75">
+                             <!-- Simple representation of buses and lines -->
+                             <circle cx="20" cy="20" r="5" fill="#0d6efd"/>
+                             <circle cx="50" cy="20" r="5" fill="#0d6efd"/>
+                             <circle cx="80" cy="20" r="5" fill="#dc3545"/>
+                             <circle cx="35" cy="55" r="5" fill="#0d6efd"/>
+                             <circle cx="65" cy="55" r="5" fill="#dc3545"/>
+                             <line x1="20" y1="20" x2="50" y2="20" stroke="#6c757d" stroke-width="1"/>
+                             <line x1="50" y1="20" x2="80" y2="20" stroke="#6c757d" stroke-width="1"/>
+                             <line x1="20" y1="20" x2="35" y2="55" stroke="#6c757d" stroke-width="1"/>
+                             <line x1="50" y1="20" x2="35" y2="55" stroke="#6c757d" stroke-width="1"/>
+                              <line x1="50" y1="20" x2="65" y2="55" stroke="#6c757d" stroke-width="1"/>
+                             <line x1="80" y1="20" x2="65" y2="55" stroke="#6c757d" stroke-width="1"/>
+                             <line x1="35" y1="55" x2="65" y2="55" stroke="#6c757d" stroke-width="1"/>
+                             <text x="5" y="70" font-size="6">5 Buses</text>
+                         </svg>
+                     </div>
+                     <div class="col-md-6">
+                         <h6>Aggregated Network</h6>
+                          <svg width="200" height="150" viewBox="0 0 100 75">
+                             <!-- Aggregated zones -->
+                             <ellipse cx="35" cy="35" rx="20" ry="15" fill="#0d6efd" opacity="0.7"/>
+                             <ellipse cx="73" cy="37" rx="18" ry="18" fill="#dc3545" opacity="0.7"/>
+                             <line x1="45" y1="35" x2="65" y2="37" stroke="#6c757d" stroke-width="2"/>
+                              <text x="30" y="38" font-size="8" fill="white">Zone A</text>
+                              <text x="65" y="40" font-size="8" fill="white">Zone B</text>
+                             <text x="5" y="70" font-size="6">2 Zones</text>
+                         </svg>
+                     </div>
+                 </div>
+                 <p class="mt-3">This reduces the model size but loses detail about flows and constraints *within* the aggregated zones.</p>
+             </div>
+         </div>
+
+        <p><strong>Key Takeaway from Paper (OPF & SUC):</strong></p>
+        <ul>
+            <li>Network aggregation reduced computation time significantly (more than DC linearization in OPF, less impact than scenario reduction proportionally).</li>
+            <li>The error introduced depended on the level of aggregation. Moderate aggregation caused relatively small errors in total costs for OPF and SUC in their tests, especially when many scenarios were still used.</li>
+            <li>However, aggregation could sometimes distort the output of individual generators (see Fig 4 in the paper) and potentially misrepresent the benefits of new transmission lines in planning studies.</li>
+        </ul>
+
+        <h2>Which Simplifications Matter Most? Summary of Findings</h2>
+        <p>The paper's central contribution is comparing these techniques head-to-head. There's no single "best" simplification; it depends heavily on the specific problem being studied.</p>
+
+        <div class="card">
+            <div class="card-header">Relative Impacts (Qualitative Summary based on Paper)</div>
+            <div class="card-body">
+                <canvas id="comparisonChart"></canvas>
+                <p class="mt-3 text-muted"><small>Error bars represent the potential range of impact (low to high distortion). Time savings are relative effectiveness.</small></p>
+            </div>
+        </div>
+
+        <div class="finding">
+            <strong>Key Finding 1 (OPF):</strong> For expected cost calculations in OPF, DC Linearization's neglect of losses was a consistent source of error (~1.4%). Scenario reduction caused little error if not too extreme (e.g., >= 5 scenarios), but saved significant computation time. Network aggregation offered moderate time savings with moderate error.
+        </div>
+
+        <div class="finding">
+            <strong>Key Finding 2 (SUC):</strong> For Stochastic Unit Commitment, DC Linearization was deemed acceptable and almost essential due to the complexity of AC SUC. Its error in commitment decisions/costs was relatively small compared to AC SUC (where solvable). Scenario reduction, however, was more impactful and potentially distorting for SUC decisions than for OPF. Network aggregation reduced SUC computation time effectively with relatively little error introduced in the commitment schedules.
+        </div>
+
+         <div class="warning">
+            <strong>Key Finding 3 (Planning):</strong> While DC linearization and moderate scenario reduction seemed acceptable for evaluating generation investments (relative profitability of locations), network aggregation could significantly underestimate the benefits (cost savings) of new transmission lines by masking internal congestion.
+        </div>
+
+        <h2>Conclusion: Choose Your Simplification Wisely</h2>
+        <p>Simplifying complex power system models is unavoidable for practical analysis. This exploration, based on Shayesteh et al. (2016), highlights that:</p>
+        <ul>
+            <li><strong>There are trade-offs:</strong> Faster computation almost always comes at the cost of some accuracy.</li>
+            <li><strong>Context matters:</strong> The best simplification depends on whether you're doing short-term operations (OPF, SUC) or long-term planning (GEP, TEP), and which specific outputs (total cost, losses, individual generator output, commitment decisions) are most critical.</li>
+            <li><strong>DC Linearization:</strong> A major shortcut, essential for complex problems like SUC, but be aware of its blindness to losses, which matters for OPF cost accuracy.</li>
+            <li><strong>Scenario Reduction:</strong> Very effective for time saving, especially in OPF, but use with caution in SUC and avoid extreme reduction.</li>
+            <li><strong>Network Aggregation:</strong> A useful tool for reducing model size, but aggressive aggregation can hide important local details, impacting generator dispatch and transmission planning.</li>
+        </ul>
+        <p>Ultimately, modelers need to understand the implications of their chosen simplifications and, where possible, test their sensitivity. There's no magic bullet, only informed choices based on the goals of the study and the acceptable level of error.</p>
+        <hr>
+        <p><small>Based on the paper: Shayesteh, E., Hobbs, B. F., & Amelin, M. (2016). Scenario reduction, network aggregation, and DC linearisation: which simplifications matter most in operations and planning optimisation?. IET Generation, Transmission & Distribution, 10(11), 2748-2755.</small></p>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- Interactive AC vs DC Power Flow ---
+        const genPowerSlider = document.getElementById('genPower');
+        const lineResistanceSlider = document.getElementById('lineResistance');
+        const lineReactanceSlider = document.getElementById('lineReactance');
+        const genCostSlider = document.getElementById('genCost');
+
+        const genPowerValueSpan = document.getElementById('genPowerValue');
+        const lineResistanceValueSpan = document.getElementById('lineResistanceValue');
+        const lineReactanceValueSpan = document.getElementById('lineReactanceValue');
+        const genCostValueSpan = document.getElementById('genCostValue');
+
+        const acLoadServedSpan = document.getElementById('acLoadServed');
+        const acLossesSpan = document.getElementById('acLosses');
+        const acLossesPercentSpan = document.getElementById('acLossesPercent');
+        const acCostSpan = document.getElementById('acCost');
+
+        const dcLoadServedSpan = document.getElementById('dcLoadServed');
+        const dcLossesSpan = document.getElementById('dcLosses');
+        const dcCostSpan = document.getElementById('dcCost');
+
+        function updatePowerFlow() {
+            const Pgen = parseFloat(genPowerSlider.value);
+            const R = parseFloat(lineResistanceSlider.value);
+            const X = parseFloat(lineReactanceSlider.value);
+            const CostPerMWh = parseFloat(genCostSlider.value);
+
+            genPowerValueSpan.textContent = Pgen.toFixed(0);
+            lineResistanceValueSpan.textContent = R.toFixed(3);
+            lineReactanceValueSpan.textContent = X.toFixed(2);
+            genCostValueSpan.textContent = CostPerMWh.toFixed(0);
+
+            // --- Simplified AC Calculation ---
+            // Very rough approximation: Assume V1=1.0, Pload = Pgen - Losses
+            // Losses ~ I^2 * R. I ~ Pgen / V1 (very rough!)
+            // More realistically, losses depend on voltage drop, which depends on flow.
+            // Let's use a simplified iterative approach or a direct formula if possible.
+            // Power Transfer Eq: P = (V1*V2/X) * sin(delta)
+            // Losses = I^2 * R = (P^2 + Q^2)/V^2 * R. Let's approximate Q=0 for simplicity.
+            // Losses ~ (Pgen^2 / V1^2) * R (This is a poor approximation but gives *some* loss)
+            // Let's try P_loss = R * (P_received / V2)^2 -- still needs V2.
+            // Let's use a simpler loss factor approach for illustration: Losses = k * Pgen^2 * R
+            const lossFactor = 0.0001; // Arbitrary scaling factor for demo
+            let acLosses = R * Math.pow(Pgen / 1.0, 2); // Simplified P = V*I approx I = P/V=P
+            // Clamp losses to be less than Pgen
+             acLosses = Math.min(acLosses, Pgen * 0.5); // Don't allow >50% losses
+             acLosses = Math.max(0, acLosses); // Ensure non-negative
+
+
+            const acLoadServed = Pgen - acLosses;
+            const acTotalCost = Pgen * CostPerMWh; // Cost is for generated power
+            const acLossesPercent = Pgen > 0 ? (acLosses / Pgen * 100) : 0;
+
+            acLoadServedSpan.textContent = acLoadServed.toFixed(1);
+            acLossesSpan.textContent = acLosses.toFixed(1);
+            acLossesPercentSpan.textContent = acLossesPercent.toFixed(1);
+            acCostSpan.textContent = acTotalCost.toFixed(0);
+
+            // --- DC Calculation ---
+            const dcLosses = 0;
+            const dcLoadServed = Pgen - dcLosses;
+            // In DC OPF, generation might be slightly different if losses aren't needed,
+            // but here we assume same generation target for comparison baseline.
+            const dcTotalCost = dcLoadServed * CostPerMWh; // Cost is for generated power needed *at load*
+
+            dcLoadServedSpan.textContent = dcLoadServed.toFixed(1);
+            // dcLossesSpan is hardcoded to 0
+            dcCostSpan.textContent = (Pgen * CostPerMWh).toFixed(0); // DC cost based on generation needed to meet load directly
+
+
+        }
+
+        genPowerSlider.addEventListener('input', updatePowerFlow);
+        lineResistanceSlider.addEventListener('input', updatePowerFlow);
+        lineReactanceSlider.addEventListener('input', updatePowerFlow);
+        genCostSlider.addEventListener('input', updatePowerFlow);
+
+        // Initial calculation
+        updatePowerFlow();
+
+
+        // --- Scenario Reduction Visualization (p5.js) ---
+        let scenarios = [];
+        const totalScenarios = 200;
+        const scenarioCanvasWidth = 400;
+        const scenarioCanvasHeight = 150;
+        let scenarioSketch;
+
+        const numScenariosSlider = document.getElementById('numScenarios');
+        const numScenariosValueSpan = document.getElementById('numScenariosValue');
+        const originalAverageSpan = document.getElementById('originalAverage');
+        const reducedAverageSpan = document.getElementById('reducedAverage');
+        const averageDifferenceSpan = document.getElementById('averageDifference');
+        const computationEffortSpan = document.getElementById('computationEffort');
+
+        // p5.js sketch setup
+        const setupScenarioSketch = (p) => {
+            p.setup = () => {
+                let canvas = p.createCanvas(scenarioCanvasWidth, scenarioCanvasHeight);
+                canvas.parent('scenarioCanvas'); // Attach canvas to div
+                p.noLoop(); // Draw only when updated
+
+                // Generate initial scenarios (e.g., normally distributed wind power)
+                scenarios = [];
+                let meanWind = 60;
+                let stdDevWind = 20;
+                for (let i = 0; i < totalScenarios; i++) {
+                    scenarios.push(p.randomGaussian(meanWind, stdDevWind));
+                }
+                // Clamp values to be somewhat realistic (e.g., 0-150 MW)
+                scenarios = scenarios.map(s => p.max(0, p.min(150, s)));
+
+                updateScenarioVisualization(); // Initial draw
+            };
+
+            p.draw = () => {
+                p.background(250);
+                p.strokeWeight(3);
+
+                let numReduced = parseInt(numScenariosSlider.value);
+                let reducedIndices = getReducedScenarioIndices(numReduced); // Get indices of selected scenarios
+
+                // Draw all scenarios faintly
+                p.stroke(200, 200, 200, 150); // Light grey, semi-transparent
+                 for (let i = 0; i < scenarios.length; i++) {
+                    let x = p.map(i, 0, scenarios.length -1, 20, p.width - 20); // Spread horizontally
+                    let y = p.map(scenarios[i], 0, 150, p.height - 10, 10); // Map wind value to y-axis
+                    p.point(x, y);
+                }
+
+                 // Highlight reduced scenarios
+                p.stroke(0, 123, 255, 200); // Blue, semi-transparent
+                 reducedIndices.forEach(index => {
+                    let x = p.map(index, 0, scenarios.length -1, 20, p.width - 20);
+                    let y = p.map(scenarios[index], 0, 150, p.height - 10, 10);
+                    p.point(x, y);
+                 });
+
+                 // Draw average lines
+                let avgOriginal = calculateAverage(scenarios);
+                let reducedSet = reducedIndices.map(i => scenarios[i]);
+                let avgReduced = calculateAverage(reducedSet);
+
+                let yAvgOriginal = p.map(avgOriginal, 0, 150, p.height - 10, 10);
+                let yAvgReduced = p.map(avgReduced, 0, 150, p.height - 10, 10);
+
+                p.strokeWeight(1);
+                p.stroke(108, 117, 125); // Grey for original average
+                p.line(10, yAvgOriginal, p.width - 10, yAvgOriginal);
+                p.fill(108, 117, 125);
+                p.noStroke();
+                p.text(`Avg (All ${totalScenarios})`, 15, yAvgOriginal - 5);
+
+
+                p.stroke(0, 123, 255); // Blue for reduced average
+                p.line(10, yAvgReduced, p.width - 10, yAvgReduced);
+                 p.fill(0, 123, 255);
+                 p.noStroke();
+                p.text(`Avg (Reduced ${numReduced})`, 15, yAvgReduced + 15);
+            };
+        };
+
+        // Function to select reduced scenarios (simple random sampling here)
+        function getReducedScenarioIndices(numReduced) {
+            let indices = Array.from(Array(totalScenarios).keys());
+            // Shuffle indices
+             for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            return indices.slice(0, numReduced).sort((a, b) => a - b); // Return sorted subset
+        }
+
+        // Calculate average
+        function calculateAverage(arr) {
+            if (arr.length === 0) return 0;
+            let sum = arr.reduce((a, b) => a + b, 0);
+            return sum / arr.length;
+        }
+
+        // Update visualization and text
+        function updateScenarioVisualization() {
+            let numReduced = parseInt(numScenariosSlider.value);
+            numScenariosValueSpan.textContent = numReduced;
+
+            let reducedIndices = getReducedScenarioIndices(numReduced);
+            let reducedSet = reducedIndices.map(i => scenarios[i]);
+
+            let avgOriginal = calculateAverage(scenarios);
+            let avgReduced = calculateAverage(reducedSet);
+            let difference = Math.abs(avgOriginal - avgReduced);
+
+            originalAverageSpan.textContent = avgOriginal.toFixed(1);
+            reducedAverageSpan.textContent = avgReduced.toFixed(1);
+            averageDifferenceSpan.textContent = difference.toFixed(1);
+
+            // Update computational effort text (qualitative)
+            if (numReduced > 100) computationEffortSpan.textContent = "Slightly Reduced";
+            else if (numReduced > 20) computationEffortSpan.textContent = "Moderately Reduced";
+            else if (numReduced > 5) computationEffortSpan.textContent = "Significantly Reduced";
+            else computationEffortSpan.textContent = "Drastically Reduced";
+
+
+            if (scenarioSketch && scenarioSketch.redraw) {
+                scenarioSketch.redraw(); // Trigger p5 redraw
+            }
+        }
+
+
+        numScenariosSlider.addEventListener('input', updateScenarioVisualization);
+
+        // Initialize p5 sketch
+        scenarioSketch = new p5(setupScenarioSketch);
+
+
+         // --- Comparison Chart ---
+        const ctxComparison = document.getElementById('comparisonChart').getContext('2d');
+        const comparisonChart = new Chart(ctxComparison, {
+            type: 'bar',
+            data: {
+                labels: ['DC Linearization', 'Scenario Reduction', 'Network Aggregation'],
+                datasets: [{
+                    label: 'Computational Time Saving',
+                    data: [1, 3, 2], // Relative scale: 1=Low, 2=Medium, 3=High
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }, {
+                    label: 'Potential Error/Distortion (OPF Focus)',
+                     // Using negative values to show error on a different axis conceptually
+                     // Scale: -1=Low, -2=Medium, -3=High. High NEGATIVE means high error.
+                    data: [-2, -1.5, -1.5], // DC: High (losses). ScenRed: Low if >5. NetAgg: Low/Med.
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)', // Red
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                },
+                 {
+                    label: 'Potential Error/Distortion (SUC Focus)',
+                     // Scale: -1=Low, -2=Medium, -3=High.
+                    data: [-1, -2.5, -1.5], // DC: Low. ScenRed: High. NetAgg: Low/Med.
+                    backgroundColor: 'rgba(255, 159, 64, 0.6)', // Orange
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }
+                ]
+            },
+            options: {
+                indexAxis: 'y', // Horizontal bars
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Relative Impact (Qualitative Scale)'
+                        },
+                         ticks: {
+                             callback: function(value, index, values) {
+                                 if (value === 3) return 'High Saving';
+                                 if (value === 2) return 'Medium Saving';
+                                 if (value === 1) return 'Low Saving';
+                                 if (value === -1) return 'Low Error';
+                                 if (value === -2) return 'Medium Error';
+                                 if (value === -3) return 'High Error';
+                                 return ''; // Or value for 0 if needed
+                             }
+                         }
+                    },
+                    y: {
+                         beginAtZero: true
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                let value = context.raw;
+                                if (label.includes('Saving')) {
+                                     if (value === 3) return label + ': High';
+                                     if (value === 2) return label + ': Medium';
+                                     if (value === 1) return label + ': Low';
+                                } else if (label.includes('Error')) {
+                                     if (Math.abs(value) >= 2.5) return label + ': High';
+                                     if (Math.abs(value) >= 1.8) return label + ': Medium'; // Adjusted threshold
+                                     if (Math.abs(value) >= 1) return label + ': Low/Medium'; // Adjusted threshold
+                                     return label + ': Low';
+                                }
+                                return label + ': ' + value; // Fallback
+                            }
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Simplification Trade-offs (Qualitative)'
+                    }
+                },
+                 responsive: true,
+                 maintainAspectRatio: false // Allow chart to resize height
+            }
+        });
+
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration: Market Design & Clean Energy Investments</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- MathJax Library -->
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer spacing */
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+        h3 { font-size: 1.5rem; }
+        .container {
+            max-width: 900px; /* Limit width for readability */
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        .output-value {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        .term {
+             font-style: italic;
+             border-bottom: 1px dotted #ccc;
+             cursor: help;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #6c757d; /* Bootstrap secondary text color */
+            text-align: center;
+            margin-top: 10px;
+        }
+        /* Custom styles for better visual separation */
+        hr {
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+        }
+        .btn-group .btn {
+            margin-right: 5px; /* Spacing between buttons */
+        }
+         /* Style for scenario descriptions */
+        .scenario-desc {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">How Market Rules Shape Our Clean Energy Future</h1>
+        <p class="lead text-center">An interactive exploration of electricity market design and its impact on generator investments and system reliability, based on the paper by Kwon et al. (2023).</p>
+        <p class="text-center"><small><em>Inspired by the explanatory styles of Bret Victor and Bartosz Ciechanowski.</em></small></p>
+        <hr>
+
+        <h2>The Challenge: Powering a Changing World</h2>
+        <p>Modern society depends critically on a reliable supply of electricity. This challenge is intensifying as we electrify transportation and industry, while simultaneously transitioning to cleaner energy sources like wind and solar. These <a href="https://en.wikipedia.org/wiki/Variable_renewable_energy" target="_blank" class="term">Variable Renewable Energy (VRE)</a> sources introduce new complexities due to their intermittent nature. Furthermore, climate change brings more extreme weather events, straining the grid.</p>
+        <p>How do we ensure the lights stay on, the power is clean, and electricity remains affordable? A key piece of the puzzle lies in how we design our <a href="https://en.wikipedia.org/wiki/Electricity_market" target="_blank" class="term">electricity markets</a>. These markets provide signals that guide companies on where, when, and what type of power plants to build or retire.</p>
+        <p>This article explores how different market designs and clean energy policies influence these crucial investment decisions, ultimately affecting the reliability and composition of our future power grid.</p>
+
+        <hr>
+
+        <h2>Planning the Grid: Two Perspectives</h2>
+        <p>Traditionally, grid planning often involves a "central planner" perspective. This approach aims to find the cheapest way to build and operate the power system while meeting demand and reliability targets.</p>
+
+        <h3>Perspective 1: The Central Planner (Least-Cost GEP)</h3>
+        <p>Imagine you are a system operator tasked with minimizing the total cost of the electricity system. You need to decide how much capacity of different technologies (coal, gas, solar, wind, storage) to build to meet projected demand reliably, usually defined by a <a href="https://en.wikipedia.org/wiki/Resource_adequacy" target="_blank" class="term">Planning Reserve Margin (PRM)</a> target.</p>
+        <p>This is often formulated as a <a href="https://en.wikipedia.org/wiki/Mathematical_optimization" target="_blank" class="term">constrained optimization</a> problem:</p>
+        $$ \min_{\text{Investments}} (\text{Investment Costs} + \text{Operating Costs}) $$
+        Subject to:
+        <ul>
+            <li>Power Balance: Generation + Imports = Demand + Exports</li>
+            <li>Reliability: Total Capacity $\ge$ Peak Demand $\times$ (1 + Target PRM)</li>
+            <li>Resource Limits, Transmission Constraints, etc.</li>
+        </ul>
+
+        <div class="interactive-section">
+            <h4>Simplified Least-Cost Planning</h4>
+            <p>Let's simplify dramatically. Suppose we only need to decide between building Gas plants (reliable but emitting) and Solar plants (clean but variable and needing backup). We have a target capacity and a budget.</p>
+            <div class="slider-container">
+                <label for="lcBudget">Budget ($ Billion):</label>
+                <input type="range" id="lcBudget" min="5" max="20" value="12" step="0.5" class="form-range">
+                <span class="output-value" id="lcBudgetValue">12</span> B$
+            </div>
+            <div class="slider-container">
+                <label for="lcTargetCapacity">Target Capacity (GW):</label>
+                <input type="range" id="lcTargetCapacity" min="5" max="20" value="10" step="0.5" class="form-range">
+                <span class="output-value" id="lcTargetCapacityValue">10</span> GW
+            </div>
+             <p><small>Assume Gas costs $1B/GW and Solar costs $0.8B/GW (simplified CAPEX).</small></p>
+            <div>
+                <strong>Resulting Mix (Simplified):</strong>
+                <p>Gas Capacity: <span class="output-value" id="lcGasOutput">X</span> GW</p>
+                <p>Solar Capacity: <span class="output-value" id="lcSolarOutput">Y</span> GW</p>
+                <p>Total Cost: <span class="output-value" id="lcCostOutput">Z</span> B$</p>
+                <p><small>(Note: This is highly simplified. Real LC-GEP models are complex, considering operating costs, VRE profiles, storage, etc. The goal here is just to illustrate the cost-minimization objective under constraints.)</small></p>
+            </div>
+        </div>
+
+        <h3>Perspective 2: The Real World (Profit-Seeking Investors)</h3>
+        <p>In many parts of the world, including large areas of the U.S. operated by <a href="https://en.wikipedia.org/wiki/Regional_transmission_organization_(North_America)" target="_blank" class="term">Independent System Operators (ISOs) / Regional Transmission Organizations (RTOs)</a>, there isn't a single central planner building everything. Instead, independent <a href="https://en.wikipedia.org/wiki/Generation_company" target="_blank" class="term">Generation Companies (GenCos)</a> make investment and retirement decisions based on maximizing their own expected profits.</p>
+        <p>These GenCos earn revenue by participating in various wholesale markets:</p>
+        <ul>
+            <li><strong>Energy Market:</strong> Selling electricity produced, often on an hourly or sub-hourly basis. Prices fluctuate based on supply and demand.</li>
+            <li><strong>Ancillary Services Market:</strong> Providing services needed for grid stability, like frequency regulation or operating reserves.</li>
+            <li><strong>Capacity Market (in some regions):</strong> Getting paid for the *commitment* to be available to generate power in the future, ensuring long-term resource adequacy.</li>
+            <li><strong>Clean Energy Market (emerging concept):</strong> Selling attributes associated with clean generation (like Renewable Energy Credits or similar).</li>
+        </ul>
+        <p>GenCos strategically decide their portfolio (what to build, what to retire) anticipating the revenues they can earn from these markets. Their goal isn't system cost minimization, but profit maximization:</p>
+        $$ \max_{\text{Investments}} (\text{Expected Market Revenues} - \text{Investment Costs} - \text{Operating Costs}) $$
+        <p>Crucially, the investment decisions of one GenCo affect market prices, which in turn affect the profitability and decisions of other GenCos. This creates a complex strategic interaction, often modeled using <a href="https://en.wikipedia.org/wiki/Game_theory" target="_blank" class="term">game theory</a> concepts like <a href="https://en.wikipedia.org/wiki/Nash_equilibrium" target="_blank" class="term">Nash Equilibrium</a>. The paper uses an <a href="https://en.wikipedia.org/wiki/Mathematical_program_with_equilibrium_constraints" target="_blank" class="term">Equilibrium Problem with Equilibrium Constraints (EPEC)</a> framework called the Strategic Capacity Investment Model (SCIM).</p>
+
+        <hr>
+
+        <h2>Modeling the Markets: Where Revenue Comes From</h2>
+        <p>Understanding how these markets work is key to understanding GenCo behavior.</p>
+
+        <h3>Energy & Ancillary Services (E&AS) Market</h3>
+        <p>This is the short-term market where supply meets demand. The ISO runs an auction (economic dispatch) to determine which plants run each hour, minimizing the system's operating cost. The price is typically set by the cost of the most expensive generator needed to meet demand (the <a href="https://en.wikipedia.org/wiki/Locational_marginal_pricing" target="_blank" class="term">Locational Marginal Price - LMP</a>).</p>
+        <p>A critical feature, especially in "Energy-Only" markets (like Texas' ERCOT), is <a href="https://en.wikipedia.org/wiki/Scarcity_pricing" target="_blank" class="term">scarcity pricing</a>. When supply is tight (low reserves), prices can spike significantly higher than generator operating costs. This is often implemented via an <a href="https://en.wikipedia.org/wiki/Operating_reserve#Operating_Reserve_Demand_Curve" target="_blank" class="term">Operating Reserve Demand Curve (ORDC)</a>, which adds a premium to the energy price based on the level of available reserves. These scarcity prices are crucial for providing revenue to power plants (especially peaking plants like gas turbines) that don't run often but are needed for reliability.</p>
+
+        <div class="interactive-section">
+            <h4>Exploring the ORDC and Scarcity</h4>
+            <p>The ORDC adds a price adder when operating reserves get low. Different ORDC shapes reflect different values placed on reliability.</p>
+            <canvas id="ordcChart"></canvas>
+            <div class="slider-container mt-3">
+                <label for="reserveLevel">Available Operating Reserves (% of Requirement):</label>
+                <input type="range" id="reserveLevel" min="0" max="100" value="90" step="1" class="form-range">
+                <span class="output-value" id="reserveLevelValue">90</span>%
+            </div>
+             <div class="btn-group mt-2 mb-2" role="group" aria-label="ORDC Selection">
+                <button type="button" class="btn btn-outline-primary active" onclick="selectORDC('ORDC1', this)">ORDC #1 (Low Cap)</button>
+                <button type="button" class="btn btn-outline-primary" onclick="selectORDC('ORDC3', this)">ORDC #3 (Mid Cap)</button>
+                <button type="button" class="btn btn-outline-primary" onclick="selectORDC('ORDC4', this)">ORDC #4 (High Cap)</button>
+            </div>
+             <p>Price Adder due to Scarcity: $<span class="output-value" id="ordcAdderValue">0</span> / MWh</p>
+             <p><small>Note: This adder gets added to the marginal cost of energy. The ORDCs shown are based qualitatively on Figure 4 in the paper.</small></p>
+        </div>
+
+
+        <h3>Capacity Market (CM)</h3>
+        <p>Some regions (like PJM, ISO-NE, MISO) operate centralized capacity markets to ensure sufficient resources are available years in advance. GenCos offer their capacity (adjusted by a <a href="https://www.ferc.gov/media/capacity-performance" target="_blank" class="term">Capacity Credit</a> or derating factor, reflecting its expected contribution during peak times) into an auction.</p>
+        <p>The demand side is represented by a <a href="https://en.wikipedia.org/wiki/Demand_curve" target="_blank" class="term">demand curve</a>, set by the ISO, which reflects the desired level of reliability (PRM). Where the supply curve (total offered capacity) intersects the demand curve determines the <a href="https://en.wikipedia.org/wiki/Clearing_price" target="_blank" class="term">clearing price</a> paid to all selected generators for their capacity commitment.</p>
+        <p>The shape of the demand curve matters. A vertical curve means a fixed quantity is procured regardless of price. A downward-sloping curve allows price to influence the amount procured.</p>
+
+        <div class="interactive-section">
+            <h4>Exploring the Capacity Market Auction</h4>
+            <p>See how available supply intersects different demand curves to set the capacity price.</p>
+            <canvas id="capacityMarketChart"></canvas>
+             <div class="slider-container mt-3">
+                <label for="availableCapacity">Available Firm Capacity (GW):</label>
+                <input type="range" id="availableCapacity" min="80" max="110" value="95" step="0.5" class="form-range">
+                <span class="output-value" id="availableCapacityValue">95</span> GW
+            </div>
+             <div class="btn-group mt-2 mb-2" role="group" aria-label="CM Demand Curve Selection">
+                <button type="button" class="btn btn-outline-secondary active" onclick="selectCMCurve('CM1', this)">CM #1 (High Price)</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="selectCMCurve('CM2', this)">CM #2 (Mid Price)</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="selectCMCurve('CM3', this)">CM #3 (Low Price)</button>
+            </div>
+            <p>Capacity Clearing Price: $<span class="output-value" id="cmPriceOutput">X</span> / MW-day</p>
+            <p>Capacity Cleared Quantity: <span class="output-value" id="cmQuantityOutput">Y</span> GW</p>
+            <p><small>Note: Curves based qualitatively on Figure 5. NetCONE is the Net Cost of New Entry, a benchmark cost. Supply is shown as vertical assuming generators bid at $0 (as modeled in the paper), though real bids vary. Capacity Credits are assumed embedded in the 'Available Firm Capacity'.</small></p>
+        </div>
+
+        <h3>Clean Energy Market (CEM)</h3>
+        <p>This is a newer concept, designed to directly incentivize clean energy generation. Eligible resources (like wind, solar, nuclear, hydro in the paper's model) earn credits based on their clean energy production. Similar to a capacity market, a demand curve (reflecting policy goals or the social cost of carbon) intersects with the supply of clean attributes to set a price.</p>
+        <p>The paper models this as an annual market based on expected generation.</p>
+         <div class="interactive-section">
+            <h4>Exploring the Clean Energy Market</h4>
+            <p>See how the supply of clean energy attributes intersects the demand curve.</p>
+            <canvas id="cemChart"></canvas>
+             <div class="slider-container mt-3">
+                <label for="availableCEM">Available Clean Attributes (% of Demand):</label>
+                <input type="range" id="availableCEM" min="30" max="70" value="50" step="1" class="form-range">
+                <span class="output-value" id="availableCEMValue">50</span> %
+            </div>
+            <p>CEM Clearing Price: $<span class="output-value" id="cemPriceOutput">X</span> / MWh</p>
+            <p>CEM Cleared Quantity: <span class="output-value" id="cemQuantityOutput">Y</span> %</p>
+            <p><small>Note: Curve based qualitatively on Figure 6. Supply is vertical assuming generators offer attributes based on expected generation.</small></p>
+        </div>
+
+        <hr>
+
+        <h2>Key Findings: Market Design Matters</h2>
+        <p>The paper compares the outcomes of the profit-driven SCIM model against the traditional LC-GEP model across 14 scenarios with different market designs and policies. Here are some key insights:</p>
+
+        <h3>1. Strategic Behavior vs. Central Planning</h3>
+        <p>Profit-seeking behavior (SCIM) often leads to different outcomes than system cost minimization (LC-GEP).</p>
+        <ul>
+            <li><strong>Lower Reliability in Energy-Only Markets:</strong> In scenarios without a capacity market (EO-OR3, EO-OR4), SCIM consistently results in significantly lower Planning Reserve Margins (PRMs) than the target or the LC-GEP outcome. Profit-driven investors may under-invest compared to the system optimum if scarcity revenues alone aren't sufficient or predictable enough.</li>
+            <li><strong>Capacity Markets Help, But Mix Differs:</strong> When a capacity market is present, SCIM results show PRMs much closer to the target level. However, the *mix* of technologies chosen by profit-seeking investors can still differ substantially from the least-cost mix. For example, SCIM might favor more storage or wind compared to LC-GEP, even if the overall PRM is similar.</li>
+        </ul>
+
+        <div class="interactive-section">
+            <h4>Comparing SCIM vs. LC-GEP Outcomes</h4>
+            <p>Select a market scenario to see how the resulting system capacity mix and Planning Reserve Margin (PRM) differ between the profit-driven (SCIM) and cost-minimizing (LC-GEP) models.</p>
+             <div class="btn-group mt-2 mb-2" role="group" aria-label="Scenario Selection">
+                <button type="button" class="btn btn-info active" onclick="selectScenario('EO-OR3', this)">Energy Only (EO-OR3)</button>
+                <button type="button" class="btn btn-info" onclick="selectScenario('CM1-OR1', this)">Capacity Market (CM1-OR1)</button>
+                <button type="button" class="btn btn-info" onclick="selectScenario('CM1-OR1-CP', this)">CM + Carbon Price</button>
+                <button type="button" class="btn btn-info" onclick="selectScenario('CM1-OR1-CEM', this)">CM + Clean Market</button>
+            </div>
+            <p class="scenario-desc" id="scenarioDescription">Energy Only market with ORDC #3 ($5000/MWh cap).</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>SCIM (Profit-Driven)</h5>
+                    <canvas id="scimMixChart"></canvas>
+                    <p class="text-center mt-2">PRM: <span class="output-value" id="scimPRM">X</span>%</p>
+                </div>
+                <div class="col-md-6">
+                    <h5>LC-GEP (Least-Cost)</h5>
+                    <canvas id="lcgepMixChart"></canvas>
+                    <p class="text-center mt-2">PRM: <span class="output-value" id="lcgepPRM">Y</span>%</p>
+                </div>
+            </div>
+            <p class="caption">Capacity mix comparison. Data based on Figure 7 and Table 4 from the paper. Note the significant difference in PRM for the Energy-Only case.</p>
+        </div>
+
+        <h3>2. Market Parameters Have Big Impacts</h3>
+        <p>Subtle details in market rules can significantly alter investment signals:</p>
+        <ul>
+            <li><strong>ORDC Shape / Price Caps:</strong> Higher price caps or steeper ORDCs in the E&AS market provide stronger scarcity signals, potentially incentivizing more investment (especially in peaking or storage resources), as seen comparing EO-OR3 vs. EO-OR4 or CM1-OR1 vs. CM1-OR2/CM1-OR3.</li>
+            <li><strong>Capacity Demand Curve Shape:</strong> Steeper, higher-priced initial segments of the capacity demand curve (like CM1 vs. CM2/CM3) provide stronger revenue streams for capacity, influencing the type of resources built. The paper found CM1 favored some new NGCT investment in SCIM, while CM2/CM3 favored more solar instead.</li>
+            <li><strong>Capacity Credits:</strong> How much "firm" capacity VRE sources are credited with (e.g., Peak Average Output vs. ELCC - Effective Load Carrying Capability) impacts their competitiveness in capacity markets and influences the overall technology mix (compare CM1-OR1 vs. CM1-ELCC-OR1).</li>
+        </ul>
+
+        <h3>3. Clean Energy Incentives Interact with Market Design</h3>
+        <p>Policies like tax credits, carbon pricing, and clean energy markets influence investments, but their effect depends on the underlying market structure:</p>
+        <ul>
+            <li><strong>Tax Credits (TC):</strong> Generally boosted wind investment significantly in both Energy-Only and Capacity Market scenarios in the paper.</li>
+            <li><strong>Carbon Price (CP):</strong> Made emitting resources more expensive, strongly favoring PV, wind, storage, and even some NGCC-CCS (Carbon Capture) investment. Notably, it eliminated new NGCT investment in the capacity market scenario (CM1-OR1-CP).</li>
+            <li><strong>Clean Energy Market (CEM):</strong> Had a modest impact in the Energy-Only scenario (EO-OR3-CEM) at the assumed price ($1.30/MWh). However, in the Capacity Market scenario (CM1-OR1-CEM), it significantly promoted wind, PV, and storage while eliminating new NGCT investment, suggesting potential synergies or competition between capacity and clean attribute revenues.</li>
+        </ul>
+         <p>These findings highlight that simply adding an incentive might not achieve the desired outcome without considering its interaction with existing market rules.</p>
+
+        <hr>
+
+        <h2>Conclusion: The Importance of Careful Design and Analysis</h2>
+        <p>The paper by Kwon et al. demonstrates that electricity market design is not just a technical detail; it's a powerful lever shaping our energy future. Key takeaways include:</p>
+        <ol>
+            <li><strong>Strategic Behavior Matters:</strong> Relying solely on traditional least-cost planning models can be misleading, as they don't capture the profit-maximizing behavior of real-world investors, which can lead to different (and sometimes less reliable) outcomes, especially in energy-only markets.</li>
+            <li><strong>Market Rules Drive Investments:</strong> Details like capacity demand curves, scarcity pricing mechanisms (ORDCs), and capacity credits significantly influence which technologies get built and the overall system reliability.</li>
+            <li><strong>Incentives Interact with Markets:</strong> Clean energy policies are crucial, but their effectiveness depends on how they interact with the underlying wholesale market structure.</li>
+            <li><strong>Need for Sophisticated Tools:</strong> Evaluating the complex interplay between market design, strategic investment, and policy requires sophisticated modeling tools like the EPEC framework used in the paper (SCIM), alongside traditional methods (LC-GEP), to get a more complete picture.</li>
+        </ol>
+        <p>As we navigate the energy transition, carefully designing and analyzing electricity markets is essential to ensure we build a grid that is reliable, clean, and affordable.</p>
+
+        <hr>
+        <footer class="text-center text-muted">
+            <p><small>Interactive explanation based on: J. Kwon, T. Levin, Z. Zhou, A. Botterud, M. Mehrtash, B. F. Hobbs, "The impact of market design and clean energy incentives on strategic generation investments and resource adequacy in low-carbon electricity markets," Renewable Energy Focus 47 (2023) 100495. <a href="https://doi.org/10.1016/j.ref.2023.100495" target="_blank">DOI: 10.1016/j.ref.2023.100495</a></small></p>
+            <p><small>Visualizations created using Chart.js and Bootstrap. Inspired by Bartosz Ciechanowski and Bret Victor.</small></p>
+        </footer>
+
+    </div>
+
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Javascript for Interactivity -->
+    <script>
+        // --- Simplified Least-Cost Planning ---
+        const lcBudgetSlider = document.getElementById('lcBudget');
+        const lcTargetCapacitySlider = document.getElementById('lcTargetCapacity');
+        const lcBudgetValueSpan = document.getElementById('lcBudgetValue');
+        const lcTargetCapacityValueSpan = document.getElementById('lcTargetCapacityValue');
+        const lcGasOutputSpan = document.getElementById('lcGasOutput');
+        const lcSolarOutputSpan = document.getElementById('lcSolarOutput');
+        const lcCostOutputSpan = document.getElementById('lcCostOutput');
+
+        function updateLcPlan() {
+            const budget = parseFloat(lcBudgetSlider.value);
+            const targetCapacity = parseFloat(lcTargetCapacitySlider.value);
+            const gasCost = 1.0; // $B/GW
+            const solarCost = 0.8; // $B/GW
+
+            // Simple logic: prioritize cheaper solar, then fill with gas if budget/capacity allows
+            // This is NOT real optimization, just illustrative
+            let solarCapacity = Math.min(targetCapacity, budget / solarCost);
+            let remainingBudget = budget - solarCapacity * solarCost;
+            let remainingCapacity = targetCapacity - solarCapacity;
+
+            let gasCapacity = 0;
+            if (remainingCapacity > 0 && remainingBudget > 0) {
+                 // Can we afford the remaining capacity as gas?
+                gasCapacity = Math.min(remainingCapacity, remainingBudget / gasCost);
+                 // If we built less solar, could we afford more gas to meet the target?
+                 // Try reducing solar slightly to afford more gas (very crude adjustment)
+                 let costIfAllGas = remainingCapacity * gasCost;
+                 if (costIfAllGas > remainingBudget) {
+                     let neededBudgetForGas = costIfAllGas - remainingBudget;
+                     let solarReduction = neededBudgetForGas / solarCost;
+                     if (solarCapacity >= solarReduction){
+                         solarCapacity -= solarReduction;
+                         gasCapacity = remainingCapacity; // Now we can afford it
+                     } else {
+                         // Stick with max affordable gas
+                          gasCapacity = remainingBudget / gasCost;
+                          solarCapacity = targetCapacity-gasCapacity; // Reduce solar to meet target cap if affordable
+                          if(solarCapacity*solarCost + gasCapacity*gasCost > budget){
+                                //If still over budget, just max out solar first as it's cheaper
+                                solarCapacity = budget / solarCost;
+                                gasCapacity = 0;
+                          }
+
+                     }
+                 } else {
+                      gasCapacity = remainingCapacity; // Can afford the rest as gas
+                 }
+            }
+            // Ensure total capacity meets target if budget allows, prioritizing solar
+             let currentTotalCapacity = gasCapacity + solarCapacity;
+             let currentTotalCost = gasCapacity*gasCost + solarCapacity*solarCost;
+
+             if(currentTotalCapacity < targetCapacity && currentTotalCost < budget){
+                 let capacityDeficit = targetCapacity - currentTotalCapacity;
+                 let budgetSurplus = budget - currentTotalCost;
+                 // Add cheapest first (solar)
+                 let potentialSolarAdd = Math.min(capacityDeficit, budgetSurplus/solarCost);
+                 solarCapacity += potentialSolarAdd;
+                 currentTotalCapacity += potentialSolarAdd;
+                 currentTotalCost += potentialSolarAdd * solarCost;
+                 capacityDeficit -= potentialSolarAdd;
+                 budgetSurplus -= potentialSolarAdd * solarCost;
+
+                 if(capacityDeficit > 0 && budgetSurplus > 0){
+                     let potentialGasAdd = Math.min(capacityDeficit, budgetSurplus/gasCost);
+                     gasCapacity += potentialGasAdd;
+                     currentTotalCost += potentialGasAdd * gasCost;
+                 }
+             }
+             // Final check for budget constraint
+             while(gasCapacity*gasCost + solarCapacity*solarCost > budget && (gasCapacity > 0 || solarCapacity > 0)){
+                 if(gasCapacity > 0) gasCapacity = Math.max(0, gasCapacity - 0.1); // Reduce most expensive first
+                 else if (solarCapacity > 0) solarCapacity = Math.max(0, solarCapacity - 0.1);
+             }
+             // Final check for capacity target (best effort within budget)
+             currentTotalCapacity = gasCapacity + solarCapacity;
+             if(currentTotalCapacity > targetCapacity){
+                let excessCapacity = currentTotalCapacity - targetCapacity;
+                 // Reduce most expensive first
+                 let gasReduction = Math.min(excessCapacity, gasCapacity);
+                 gasCapacity -= gasReduction;
+                 excessCapacity -= gasReduction;
+                 if(excessCapacity > 0){
+                     solarCapacity -= excessCapacity;
+                 }
+             }
+
+
+            lcBudgetValueSpan.textContent = budget.toFixed(1);
+            lcTargetCapacityValueSpan.textContent = targetCapacity.toFixed(1);
+            lcGasOutputSpan.textContent = gasCapacity.toFixed(1);
+            lcSolarOutputSpan.textContent = solarCapacity.toFixed(1);
+            lcCostOutputSpan.textContent = (gasCapacity * gasCost + solarCapacity * solarCost).toFixed(1);
+        }
+
+        lcBudgetSlider.addEventListener('input', updateLcPlan);
+        lcTargetCapacitySlider.addEventListener('input', updateLcPlan);
+        updateLcPlan(); // Initial calculation
+
+        // --- ORDC Chart ---
+        const ordcChartCtx = document.getElementById('ordcChart').getContext('2d');
+        const reserveLevelSlider = document.getElementById('reserveLevel');
+        const reserveLevelValueSpan = document.getElementById('reserveLevelValue');
+        const ordcAdderValueSpan = document.getElementById('ordcAdderValue');
+        let currentORDC = 'ORDC1'; // Default
+
+        const ordcData = {
+            // Reserve Requirement % -> Price Adder ($/MWh) - Simplified from Fig 4
+            'ORDC1': { // Low Cap ~OR1/OR2
+                points: [{x: 0, y: 850}, {x: 40, y: 850}, {x: 60, y: 300}, {x: 96, y: 200}, {x: 100, y: 0}],
+                label: 'ORDC #1 ($850 Cap)'
+            },
+            'ORDC3': { // Mid Cap ~OR3
+                points: [{x: 0, y: 5000}, {x: 40, y: 5000}, {x: 60, y: 2250}, {x: 96, y: 200}, {x: 100, y: 0}],
+                 label: 'ORDC #3 ($5000 Cap)'
+            },
+            'ORDC4': { // High Cap ~OR4
+                points: [{x: 0, y: 9000}, {x: 40, y: 9000}, {x: 60, y: 5000}, {x: 96, y: 200}, {x: 100, y: 0}],
+                 label: 'ORDC #4 ($9000 Cap)'
+            }
+        };
+
+        function getORDCValue(reservePercent, ordcKey) {
+            const points = ordcData[ordcKey].points;
+            // Find the segment the reservePercent falls into
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                // Note: x-axis is reserve level, but data points define segments based on requirement % *shortfall* implicitly.
+                // Let's treat x as "Reserves as % of Requirement".
+                // Sort points by x ascending just in case
+                points.sort((a, b) => a.x - b.x);
+
+                 if (reservePercent >= p1.x && reservePercent <= p2.x) {
+                    // Linear interpolation
+                    if (p2.x === p1.x) return p1.y; // Avoid division by zero
+                    const slope = (p2.y - p1.y) / (p2.x - p1.x);
+                    return p1.y + slope * (reservePercent - p1.x);
+                }
+            }
+            // Handle edge cases (below min x or above max x)
+            if (reservePercent < points[0].x) return points[0].y;
+            if (reservePercent > points[points.length - 1].x) return points[points.length - 1].y;
+             return 0; // Default
+        }
+
+
+        const ordcChartConfig = {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: ordcData[currentORDC].label,
+                    data: ordcData[currentORDC].points,
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 0 // Hide points on main line
+                },
+                {
+                    label: 'Current Reserve Level',
+                     data: [], // Will be populated dynamically
+                     borderColor: 'rgb(54, 162, 235)',
+                     backgroundColor: 'rgba(54, 162, 235, 1)',
+                     pointRadius: 6,
+                     pointHoverRadius: 8,
+                     showLine: false // Only show the point
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Available Operating Reserves (% of Requirement)'
+                        },
+                         min:0,
+                         max:100
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Price Adder ($/MWh)'
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.datasetIndex === 1) { // Tooltip for the marker point
+                                     return `Adder: $${context.parsed.y.toFixed(0)}/MWh at ${context.parsed.x}% Reserves`;
+                                }
+                                return `${context.dataset.label}: $${context.parsed.y.toFixed(0)}/MWh`; // Tooltip for the line
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        const ordcChartInstance = new Chart(ordcChartCtx, ordcChartConfig);
+
+        function updateORDCChart() {
+            const reservePercent = parseFloat(reserveLevelSlider.value);
+            const adder = getORDCValue(reservePercent, currentORDC);
+
+            reserveLevelValueSpan.textContent = reservePercent;
+            ordcAdderValueSpan.textContent = adder.toFixed(0);
+
+            // Update the marker dataset
+             ordcChartInstance.data.datasets[1].data = [{ x: reservePercent, y: adder }];
+             ordcChartInstance.update();
+        }
+
+         function selectORDC(ordcKey, buttonElement) {
+             currentORDC = ordcKey;
+             // Update dataset for the main line
+             ordcChartInstance.data.datasets[0].data = ordcData[currentORDC].points;
+             ordcChartInstance.data.datasets[0].label = ordcData[currentORDC].label;
+             updateORDCChart(); // Recalculate adder and update marker
+
+             // Update button active state
+             document.querySelectorAll('.btn-group[aria-label="ORDC Selection"] .btn').forEach(btn => btn.classList.remove('active'));
+             buttonElement.classList.add('active');
+         }
+
+
+        reserveLevelSlider.addEventListener('input', updateORDCChart);
+        updateORDCChart(); // Initial draw
+
+        // --- Capacity Market Chart ---
+        const cmCtx = document.getElementById('capacityMarketChart').getContext('2d');
+        const availableCapacitySlider = document.getElementById('availableCapacity');
+        const availableCapacityValueSpan = document.getElementById('availableCapacityValue');
+        const cmPriceOutputSpan = document.getElementById('cmPriceOutput');
+        const cmQuantityOutputSpan = document.getElementById('cmQuantityOutput');
+        let currentCMCurve = 'CM1'; // Default
+
+        // NetCONE reference (simplified, units $/MW-year, converted to $/MW-day)
+        // Actual NetCONE varies, let's use a placeholder value related to prices.
+        // From Fig 5, CM1 peak is 1.5*NetCONE, CM3 is 1.0*NetCONE. Let's assume NetCONE price ~ 150 $/MW-day
+        const netConePrice = 150; // $/MW-day (placeholder)
+        const targetPRMBaseCapacity = 91; // Assumed base capacity for PRM calc (GW) - from Fig 5 centre
+
+        const cmDemandCurves = {
+            // Capacity (GW) -> Price ($/MW-day) - Simplified from Fig 5
+            'CM1': {
+                 // Target PRM +8.8% => ~99 GW. Target PRM -0.2% => ~90.8 GW
+                 points: [{x: 0, y: 1.5*netConePrice}, {x: targetPRMBaseCapacity*(1-0.002), y: 1.5*netConePrice}, {x: targetPRMBaseCapacity*(1+0.088), y: 0}, {x: 120, y: 0}],
+                 label: 'CM #1 (1.50x NetCONE)',
+                 targetQty: targetPRMBaseCapacity*(1-0.002) // Approx target quantity
+            },
+             'CM2': {
+                 // Target PRM +2.9% => ~93.6 GW. Target PRM -0.2% => ~90.8 GW
+                 points: [{x: 0, y: 1.25*netConePrice}, {x: targetPRMBaseCapacity*(1-0.002), y: 1.25*netConePrice}, {x: targetPRMBaseCapacity*(1+0.029), y: 0}, {x: 120, y: 0}],
+                 label: 'CM #2 (1.25x NetCONE)',
+                 targetQty: targetPRMBaseCapacity*(1-0.002)
+            },
+             'CM3': {
+                 // Target PRM +0% => 91 GW. Target PRM -0.2% => ~90.8 GW
+                 points: [{x: 0, y: 1.0*netConePrice}, {x: targetPRMBaseCapacity*(1-0.002), y: 1.0*netConePrice}, {x: targetPRMBaseCapacity*(1+0.00), y: 0}, {x: 120, y: 0}],
+                 label: 'CM #3 (1.00x NetCONE)',
+                 targetQty: targetPRMBaseCapacity*(1-0.002)
+            }
+        };
+
+        function getCMPrice(capacitySupply, curveKey) {
+            const points = cmDemandCurves[curveKey].points;
+             points.sort((a, b) => a.x - b.x); // Ensure sorted by capacity
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+                // Find where the vertical supply line intersects the demand curve segment
+                if (capacitySupply >= p1.x && capacitySupply <= p2.x) {
+                    // Interpolate price along the segment
+                     if (p2.x === p1.x) return p1.y;
+                     const slope = (p2.y - p1.y) / (p2.x - p1.x);
+                     return p1.y + slope * (capacitySupply - p1.x);
+                }
+            }
+             // Handle edge cases
+            if (capacitySupply < points[0].x) return points[0].y;
+            if (capacitySupply > points[points.length - 1].x) return points[points.length - 1].y;
+            return 0; // Default
+        }
+
+        const cmChartConfig = {
+             type: 'line',
+             data: {
+                 datasets: [{
+                     label: cmDemandCurves[currentCMCurve].label, // Demand curve
+                     data: cmDemandCurves[currentCMCurve].points,
+                     borderColor: 'rgb(75, 192, 192)',
+                     backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                     tension: 0, // Step-like curve
+                     fill: false,
+                     stepped: 'before' // Creates the downward sloping steps
+                 },
+                 {
+                    label: 'Available Firm Capacity (Supply)', // Supply curve (vertical line)
+                    data: [],
+                    borderColor: 'rgb(255, 159, 64)',
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Dashed line for supply
+                    pointRadius: 0,
+                    fill: false
+                 },
+                  {
+                    label: 'Clearing Point', // Marker for intersection
+                    data: [],
+                    borderColor: 'rgb(153, 102, 255)',
+                    backgroundColor: 'rgba(153, 102, 255, 1)',
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    showLine: false
+                 }]
+             },
+             options: {
+                 responsive: true,
+                 scales: {
+                     x: {
+                         type: 'linear',
+                         position: 'bottom',
+                         title: { display: true, text: 'Capacity (GW)' },
+                         min: 80,
+                         max: 110
+                     },
+                     y: {
+                         title: { display: true, text: 'Price ($/MW-day)' },
+                         beginAtZero: true,
+                         max: netConePrice * 1.6 // Adjust max based on highest curve
+                     }
+                 },
+                  plugins: {
+                     tooltip: {
+                         callbacks: {
+                             label: function(context) {
+                                 if (context.datasetIndex === 2) { // Tooltip for the marker
+                                     return `Cleared: ${context.parsed.x.toFixed(1)} GW at $${context.parsed.y.toFixed(1)}/MW-day`;
+                                 }
+                                 if (context.datasetIndex === 1) { // Tooltip for supply line
+                                      return `Supply: ${context.dataset.data[0]?.x.toFixed(1)} GW`; // Show capacity value
+                                 }
+                                 // Default tooltip for demand curve
+                                 return `${context.dataset.label}: $${context.parsed.y.toFixed(1)}/MW-day`;
+                             }
+                         }
+                     }
+                 }
+             }
+         };
+        const cmChartInstance = new Chart(cmCtx, cmChartConfig);
+
+         function updateCMMarket() {
+             const capacity = parseFloat(availableCapacitySlider.value);
+             const price = getCMPrice(capacity, currentCMCurve);
+             const clearedQty = capacity; // In this simple model, all offered capacity clears if price > 0
+
+             availableCapacityValueSpan.textContent = capacity.toFixed(1);
+             cmPriceOutputSpan.textContent = price.toFixed(1);
+             cmQuantityOutputSpan.textContent = clearedQty.toFixed(1); // Simple assumption
+
+             // Update supply line dataset (a vertical line at 'capacity')
+             const maxY = cmChartInstance.options.scales.y.max;
+             cmChartInstance.data.datasets[1].data = [{ x: capacity, y: 0 }, { x: capacity, y: maxY }];
+             // Update clearing point dataset
+             cmChartInstance.data.datasets[2].data = [{ x: capacity, y: price }];
+
+             cmChartInstance.update();
+         }
+
+         function selectCMCurve(curveKey, buttonElement) {
+             currentCMCurve = curveKey;
+             cmChartInstance.data.datasets[0].data = cmDemandCurves[currentCMCurve].points;
+             cmChartInstance.data.datasets[0].label = cmDemandCurves[currentCMCurve].label;
+             updateCMMarket(); // Recalculate intersection
+
+             document.querySelectorAll('.btn-group[aria-label="CM Demand Curve Selection"] .btn').forEach(btn => btn.classList.remove('active'));
+             buttonElement.classList.add('active');
+         }
+
+        availableCapacitySlider.addEventListener('input', updateCMMarket);
+        selectCMCurve(currentCMCurve, document.querySelector('.btn-group[aria-label="CM Demand Curve Selection"] .btn.active'));// Initial draw
+
+
+         // --- Clean Energy Market Chart ---
+         const cemCtx = document.getElementById('cemChart').getContext('2d');
+         const availableCEMSlider = document.getElementById('availableCEM');
+         const availableCEMValueSpan = document.getElementById('availableCEMValue');
+         const cemPriceOutputSpan = document.getElementById('cemPriceOutput');
+         const cemQuantityOutputSpan = document.getElementById('cemQuantityOutput');
+
+         // Based on Fig 6
+         const cemReferencePrice = 1.30; // $/MWh
+         const cemTargetPercent = 50; // % of annual demand
+
+         const cemDemandCurve = {
+             // Clean Gen (% of Demand) -> Price ($/MWh)
+             points: [
+                 { x: 0, y: 1.5 * cemReferencePrice },
+                 { x: cemTargetPercent - 0.2, y: 1.5 * cemReferencePrice }, // Flat top segment
+                 { x: cemTargetPercent, y: cemReferencePrice }, // Kink at reference price
+                 { x: cemTargetPercent + 0.2, y: 0 }, // Down to zero
+                 { x: 100, y: 0 }
+             ],
+             label: 'CEM Demand Curve'
+         };
+
+         function getCEMPrice(cemSupplyPercent) {
+             const points = cemDemandCurve.points;
+             points.sort((a,b) => a.x - b.x);
+
+             for (let i = 0; i < points.length - 1; i++) {
+                 const p1 = points[i];
+                 const p2 = points[i + 1];
+                 if (cemSupplyPercent >= p1.x && cemSupplyPercent <= p2.x) {
+                     if (p2.x === p1.x) return p1.y;
+                     const slope = (p2.y - p1.y) / (p2.x - p1.x);
+                     return p1.y + slope * (cemSupplyPercent - p1.x);
+                 }
+             }
+             if (cemSupplyPercent < points[0].x) return points[0].y;
+             if (cemSupplyPercent > points[points.length - 1].x) return points[points.length - 1].y;
+             return 0;
+         }
+
+         const cemChartConfig = {
+             type: 'line',
+             data: {
+                 datasets: [{
+                     label: cemDemandCurve.label,
+                     data: cemDemandCurve.points,
+                     borderColor: 'rgb(40, 167, 69)', // Green
+                     backgroundColor: 'rgba(40, 167, 69, 0.5)',
+                     tension: 0, // Linear segments
+                     fill: false
+                 },
+                 {
+                     label: 'Available Clean Attributes (Supply)',
+                     data: [],
+                     borderColor: 'rgb(255, 193, 7)', // Yellow/Orange
+                     borderWidth: 2,
+                     borderDash: [5, 5],
+                     pointRadius: 0,
+                     fill: false
+                 },
+                 {
+                     label: 'Clearing Point',
+                     data: [],
+                     borderColor: 'rgb(111, 66, 193)', // Purple
+                     backgroundColor: 'rgba(111, 66, 193, 1)',
+                     pointRadius: 6,
+                     pointHoverRadius: 8,
+                     showLine: false
+                 }]
+             },
+             options: {
+                 responsive: true,
+                 scales: {
+                     x: {
+                         type: 'linear',
+                         position: 'bottom',
+                         title: { display: true, text: 'Clean Energy Generation (% of Demand)' },
+                         min: 30, max: 70
+                     },
+                     y: {
+                         title: { display: true, text: 'Price ($/MWh)' },
+                         beginAtZero: true,
+                         max: cemReferencePrice * 1.6
+                     }
+                 },
+                 plugins: {
+                      tooltip: {
+                          callbacks: {
+                              label: function(context) {
+                                  if (context.datasetIndex === 2) {
+                                      return `Cleared: ${context.parsed.x.toFixed(1)}% at $${context.parsed.y.toFixed(2)}/MWh`;
+                                  }
+                                  if (context.datasetIndex === 1) {
+                                      return `Supply: ${context.dataset.data[0]?.x.toFixed(1)}%`;
+                                  }
+                                  return `${context.dataset.label}: $${context.parsed.y.toFixed(2)}/MWh`;
+                              }
+                          }
+                      }
+                  }
+             }
+         };
+         const cemChartInstance = new Chart(cemCtx, cemChartConfig);
+
+         function updateCEMarket() {
+             const supplyPercent = parseFloat(availableCEMSlider.value);
+             const price = getCEMPrice(supplyPercent);
+             const clearedQty = supplyPercent; // Assume all offered attributes clear
+
+             availableCEMValueSpan.textContent = supplyPercent.toFixed(0);
+             cemPriceOutputSpan.textContent = price.toFixed(2);
+             cemQuantityOutputSpan.textContent = clearedQty.toFixed(0);
+
+             const maxY = cemChartInstance.options.scales.y.max;
+             cemChartInstance.data.datasets[1].data = [{ x: supplyPercent, y: 0 }, { x: supplyPercent, y: maxY }];
+             cemChartInstance.data.datasets[2].data = [{ x: supplyPercent, y: price }];
+
+             cemChartInstance.update();
+         }
+
+         availableCEMSlider.addEventListener('input', updateCEMarket);
+         updateCEMarket(); // Initial draw
+
+
+        // --- SCIM vs LC-GEP Comparison Chart ---
+        const scimMixCtx = document.getElementById('scimMixChart').getContext('2d');
+        const lcgepMixCtx = document.getElementById('lcgepMixChart').getContext('2d');
+        const scimPRMSpan = document.getElementById('scimPRM');
+        const lcgepPRMSpan = document.getElementById('lcgepPRM');
+        const scenarioDescSpan = document.getElementById('scenarioDescription');
+
+        // Data extracted/approximated from Fig 7 and Table 4 (Unforced Capacity GW)
+        // Note: Existing capacity is constant, only new capacity changes. Let's show TOTAL capacity mix.
+        // Existing (approx from Table 1 after retirements): Coal 13.9, NGCC 30.7, NGCT 16.0, Nuc 5.3, Hydro 0.56, PV 11.3, Wind 35.1, Stor 1.7
+         const existingCapacity = { 'Coal': 13.9, 'NGCC': 30.7, 'NGCT': 16.0, 'Nuclear': 5.3, 'Hydro': 0.56, 'PV': 11.3, 'Wind': 35.1, 'Storage': 1.7, 'NGCC-CCS': 0 };
+         const techOrder = ['Coal', 'Nuclear', 'NGCC', 'NGCC-CCS', 'NGCT', 'Hydro', 'Storage', 'Wind', 'PV']; // Consistent color order
+         const techColors = { // Assign consistent colors
+            'Coal': 'rgba(100, 100, 100, 0.8)', // Grey
+            'Nuclear': 'rgba(255, 0, 255, 0.8)', // Magenta
+            'NGCC': 'rgba(255, 159, 64, 0.8)', // Orange
+            'NGCC-CCS': 'rgba(255, 100, 0, 0.8)', // Darker Orange
+            'NGCT': 'rgba(255, 99, 132, 0.8)', // Red
+            'Hydro': 'rgba(54, 162, 235, 0.8)', // Blue
+            'Storage': 'rgba(153, 102, 255, 0.8)', // Purple
+            'Wind': 'rgba(75, 192, 192, 0.8)', // Teal
+            'PV': 'rgba(255, 205, 86, 0.8)', // Yellow
+         };
+
+        const scenarioData = {
+            'EO-OR3': {
+                desc: 'Energy Only market with ORDC #3 ($5000/MWh cap). Relies on scarcity pricing.',
+                scim: { new: {'NGCT': 0, 'PV': 1.8, 'Storage': 0.3, 'Wind': 0.3}, prm: 3.70 },
+                lcgep: { new: {'NGCT': 0.9, 'PV': 5.5, 'Storage': 0, 'Wind': 0}, prm: 8.59 }
+            },
+            'CM1-OR1': {
+                 desc: 'Capacity Market (CM#1, high price) + E&AS Market (ORDC#1, low cap).',
+                 scim: { new: {'NGCT': 1.1, 'PV': 6.6, 'Storage': 0.3, 'Wind': 0.375}, prm: 12.12 }, // Wind 375 MW
+                 lcgep: { new: {'NGCT': 0, 'PV': 9.6, 'Storage': 0, 'Wind': 0}, prm: 12.51 }
+            },
+             'CM1-OR1-CP': {
+                 desc: 'Capacity Market (CM#1) + E&AS (ORDC#1) + $40/ton Carbon Price.',
+                 scim: { new: {'NGCT': 0, 'PV': 5.5, 'Storage': 1.8, 'Wind': 1.6, 'NGCC-CCS': 0.337}, prm: 11.99 }, // PV 5472, Wind 1575, Stor 1800, NGCC-CCS 337
+                 lcgep: { new: {'NGCT': 0, 'PV': 15.5, 'Storage': 0, 'Wind': 3.1, 'NGCC-CCS': 0}, prm: 23.60 } // Wind 3075
+            },
+            'CM1-OR1-CEM': {
+                 desc: 'Capacity Market (CM#1) + E&AS (ORDC#1) + Clean Energy Market.',
+                 scim: { new: {'NGCT': 0, 'PV': 7.8, 'Storage': 0.9, 'Wind': 0.6}, prm: 12.11 }, // PV 7752, Stor 900, Wind 600
+                 lcgep: { new: {'NGCT': 0, 'PV': 9.6, 'Storage': 0, 'Wind': 0}, prm: 12.51 }
+            }
+            // Add other scenarios if needed
+        };
+
+        function calculateTotalCapacity(newCapacity) {
+            let total = {};
+             techOrder.forEach(tech => {
+                 total[tech] = (existingCapacity[tech] || 0) + (newCapacity[tech] || 0);
+                 if (tech === 'NGCC-CCS' && newCapacity[tech] > 0 && !existingCapacity[tech]) total[tech] = newCapacity[tech]; // Handle CCS explicitly if new
+             });
+            return total;
+        }
+
+        function createMixChartConfig(title) {
+            return {
+                type: 'bar',
+                data: {
+                    labels: ['Capacity Mix'], // Single bar for stacked view
+                    datasets: techOrder.map(tech => ({
+                        label: tech,
+                        data: [0], // Placeholder
+                        backgroundColor: techColors[tech] || 'rgba(200, 200, 200, 0.8)' // Default color
+                    }))
+                },
+                options: {
+                    indexAxis: 'y', // Horizontal bars
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: title },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                     return `${context.dataset.label}: ${context.raw.toFixed(1)} GW`;
+                                 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, title: { display: true, text: 'Unforced Capacity (GW)' } },
+                        y: { stacked: true }
+                    },
+                    // Maintain aspect ratio better for single bar
+                    aspectRatio: 1.5
+                }
+            };
+        }
+
+        const scimChartInstance = new Chart(scimMixCtx, createMixChartConfig('SCIM Capacity Mix'));
+        const lcgepChartInstance = new Chart(lcgepMixCtx, createMixChartConfig('LC-GEP Capacity Mix'));
+
+        function updateComparisonCharts(scenarioKey) {
+            const data = scenarioData[scenarioKey];
+            if (!data) return;
+
+            const scimTotal = calculateTotalCapacity(data.scim.new);
+            const lcgepTotal = calculateTotalCapacity(data.lcgep.new);
+
+            scenarioDescSpan.textContent = data.desc;
+            scimPRMSpan.textContent = data.scim.prm.toFixed(2);
+            lcgepPRMSpan.textContent = data.lcgep.prm.toFixed(2);
+
+            scimChartInstance.data.datasets.forEach(dataset => {
+                 dataset.data = [scimTotal[dataset.label] || 0];
+            });
+             lcgepChartInstance.data.datasets.forEach(dataset => {
+                 dataset.data = [lcgepTotal[dataset.label] || 0];
+            });
+
+            scimChartInstance.update();
+            lcgepChartInstance.update();
+        }
+
+         function selectScenario(scenarioKey, buttonElement) {
+            updateComparisonCharts(scenarioKey);
+             // Update button active state
+             document.querySelectorAll('.btn-group[aria-label="Scenario Selection"] .btn').forEach(btn => btn.classList.remove('active'));
+             buttonElement.classList.add('active');
+         }
+
+         // Initial chart draw for the default selected scenario
+         selectScenario('EO-OR3', document.querySelector('.btn-group[aria-label="Scenario Selection"] .btn.active'));
+
+
+    </script>
+
+</body>
+</html>
