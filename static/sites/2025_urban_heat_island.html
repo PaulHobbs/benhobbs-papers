@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Urban Heat Adaptation Tradeoffs</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Plotly.js -->
+    <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
+
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+        </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 900px;
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        h1 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5em;
+        }
+        .plot-container {
+            margin-top: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .explanation {
+            background-color: #f0f8ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 5px solid #add8e6;
+        }
+        .term {
+            font-weight: bold;
+            color: #0056b3; /* Bootstrap primary color */
+        }
+        a.wiki-link {
+            text-decoration: none;
+            border-bottom: 1px dotted #0056b3;
+        }
+        a.wiki-link:hover {
+            text-decoration: none;
+            border-bottom: 1px solid #0056b3;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+        /* Custom style for parallel coordinates plot lines */
+        .plotly .parcoords .lines path {
+            stroke-opacity: 0.6 !important;
+        }
+        .plotly .parcoords .lines path:hover {
+            stroke-opacity: 1.0 !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>Cooling the City: Navigating Tradeoffs in Urban Heat Adaptation</h1>
+        <p class="lead">Cities are getting hotter, posing risks to health and well-being. How can we adapt effectively and equitably? This exploration dives into a study on balancing the complex choices involved in mitigating the <a href="https://en.wikipedia.org/wiki/Urban_heat_island" target="_blank" class="wiki-link term">Urban Heat Island (UHI)</a> effect under a changing climate.</p>
+
+        <p>As global temperatures rise, cities often experience even more intense heat due to the UHI effect – buildings and pavements absorb and retain more heat than natural landscapes. This isn't just uncomfortable; it leads to increased heat-related illnesses and deaths, disproportionately affecting vulnerable populations like the elderly, low-income communities, and those with pre-existing health conditions.</p>
+
+        <p>Cities aren't powerless. They can implement various <span class="term">adaptation strategies</span>, such as planting trees for shade and evaporative cooling, installing reflective "cool" roofs and pavements, or establishing public cooling centers. However, choosing the right mix of strategies is incredibly complex.</p>
+
+        <h2>The Adaptation Puzzle: Many Goals, Many Uncertainties</h2>
+
+        <p>Imagine you're a city planner tasked with tackling urban heat. You want to save lives, but you also have a limited budget. You want solutions that benefit everyone fairly, but some strategies might be easier or cheaper to implement in wealthier neighborhoods. You also need to consider environmental impacts like carbon emissions and ensure your plan works even if future climate change is worse (or milder) than expected. This is a classic <a href="https://en.wikipedia.org/wiki/Multi-objective_optimization" target="_blank" class="wiki-link term">multi-objective optimization</a> problem riddled with <a href="https://en.wikipedia.org/wiki/Knightian_uncertainty#Deep_uncertainty" target="_blank" class="wiki-link term">deep uncertainty</a>.</p>
+
+        <p>The study explored in this post (Eyni et al., "Distributional outcomes of urban heat island reduction pathways under climate extremes") uses a computational tool called <span class="term">City-HEAT</span> to navigate these challenges for Baltimore, USA. It searches for robust <span class="term">adaptation pathways</span> – sequences of actions over 50 years – that perform well across several competing objectives:</p>
+        <ul>
+            <li><span class="term">Minimize Cost:</span> Total discounted cost of implementing and maintaining strategies.</li>
+            <li><span class="term">Reduce Mortality:</span> Minimize the total number of heat-related deaths over 50 years.</li>
+            <li><span class="term">Improve Equity:</span> Minimize the difference in heat-related death rates between the hardest-hit and least-hit neighborhoods.</li>
+            <li><span class="term">Reduce CO2:</span> Maximize carbon dioxide uptake (a co-benefit, primarily from trees).</li>
+            <li><span class="term">Increase Reliability:</span> Minimize the number of deaths in the single worst year (worst-case scenario).</li>
+        </ul>
+
+        <h2>Visualizing the Tradeoffs: No Perfect Solution</h2>
+
+        <p>The optimization process doesn't find a single "best" pathway. Instead, it identifies a set of <a href="https://en.wikipedia.org/wiki/Pareto_efficiency" target="_blank" class="wiki-link term">Pareto-optimal</a> solutions, where you can't improve one objective without worsening another. Let's visualize these tradeoffs using a parallel coordinates plot, similar to Figure 2a in the paper. Each line represents a potential adaptation pathway, showing its performance across the five objectives. Lower values are generally better (except for CO2 Reduction, where higher is better, so we plot it as negative CO2 Reduction for consistency).</p>
+
+        <div class="plot-container">
+            <div id="parallelPlot"></div>
+            <div class="caption">Fig 1: Parallel coordinates plot showing tradeoffs between objectives for different adaptation pathways (Illustrative Data). Lower values indicate better performance. Hover over lines to see pathway details. Notice how lines cross – improving one objective often means sacrificing another.</div>
+        </div>
+
+        <div class="explanation">
+            <strong>How to read this plot:</strong> Each vertical axis represents one objective. A line connects the performance scores of a single adaptation pathway across all objectives. Where a line sits lower on an axis, it performs better for that objective. The highlighted lines show representative strategies:
+            <ul>
+                <li><span style="color: blue;">High Investment (All Strategies):</span> Spends a lot, uses trees, cool surfaces, etc. Good at reducing overall mortality but very expensive.</li>
+                <li><span style="color: green;">Greening Focused:</span> Prioritizes tree planting. Good for CO2 reduction and overall mortality, but potentially struggles with equity and cost.</li>
+                <li><span style="color: orange;">Infrastructure Focused:</span> Emphasizes cool roofs/pavements. More cost-effective and potentially better for equity, but less effective overall mortality reduction than high-investment options.</li>
+                <li><span style="color: purple;">Moderate Pathway:</span> A balanced approach, often representing a good compromise.</li>
+            </ul>
+            Notice how no single line is lowest on all axes. This highlights the inherent tradeoffs.
+        </div>
+
+        <h2>Focusing on Key Conflicts: Cost, Mortality, and Equity</h2>
+
+        <p>Let's zoom in on two critical tradeoffs revealed by the analysis:</p>
+        <ol>
+            <li><strong>Cost vs. Mortality Reduction:</strong> Generally, spending more money leads to saving more lives, but with diminishing returns. The most expensive strategies don't always provide proportionally larger benefits.</li>
+            <li><strong>Mortality Reduction vs. Equity:</strong> Reducing the *total* number of deaths doesn't automatically mean reducing the *disparities* between neighborhoods. Some pathways that are very effective overall might actually worsen inequality.</li>
+        </ol>
+
+        <p>The scatter plots below (inspired by Figures 2b and 2c) illustrate these relationships. Each point is a pathway.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="plot-container">
+                    <div id="costMortalityPlot"></div>
+                    <div class="caption">Fig 2: Cost vs. Mortality Reduction (Illustrative Data). More spending generally means more lives saved, but the relationship isn't linear.</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="plot-container">
+                    <div id="mortalityEquityPlot"></div>
+                    <div class="caption">Fig 3: Mortality Reduction vs. Equity (Mortality Rate Difference) (Illustrative Data). Lower difference = better equity. Reducing overall mortality doesn't guarantee better equity.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="explanation">
+            <strong>Insights from the Scatter Plots:</strong>
+            <ul>
+                <li>In Fig 2, we see the expected trend: higher cost (moving right) generally correlates with higher mortality reduction (moving up). However, notice the spread – for a given cost, some pathways are more effective than others. The most expensive options (blue, green) achieve the highest reductions.</li>
+                <li>Fig 3 is particularly interesting. While reducing overall mortality (moving right) *can* improve equity (moving down, towards lower difference), there's significant scatter. Crucially, some of the pathways that reduce mortality the *most* (e.g., greening-focused) don't achieve the *best* equity outcomes. Some moderate or infrastructure-focused pathways achieve better equity for a similar level of overall mortality reduction, often at lower cost.</li>
+            </ul>
+        </div>
+
+        <h2>Why Might Tree Planting Worsen Inequality?</h2>
+
+        <p>This finding might seem counter-intuitive – aren't trees always good? The study suggests a potential reason rooted in the practicalities and *assumptions* of the model:</p>
+        <ul>
+            <li><span class="term">Site Availability & Cost:</span> The model assumed planting trees is easier and cheaper in areas with existing open space or easily convertible land. These areas in Baltimore (and many cities) often coincide with more affluent, less densely populated neighborhoods.</li>
+            <li><span class="term">Implementation Challenges:</span> Planting trees in dense, highly paved, lower-income neighborhoods (often those most vulnerable to heat) can be significantly more expensive and logistically complex (e.g., requires removing concrete, smaller planting pits, higher maintenance).</li>
+            <li><span class="term">Optimization Bias:</span> Without specific constraints forcing equitable distribution, an optimization algorithm seeking cost-effectiveness might favor planting trees where it's cheapest, inadvertently concentrating benefits in better-off areas and neglecting the most vulnerable.</li>
+        </ul>
+
+        <p>This doesn't mean tree planting is bad! It highlights that <span class="term">how and where</span> strategies are implemented matters immensely for equity. A successful greening strategy likely needs specific targeting and potentially higher investment in underserved areas, or needs to be combined with other strategies like cool roofs that might be more easily deployed equitably in dense urban cores.</p>
+
+        <div class="row">
+            <div class="col-md-6 text-center">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCwgMTApIj4KICAgIDxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTMwIiBmaWxsPSIjZjBnOGZmIiBzdHJva2U9IiNhZGQ4ZTYiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHRleHQgeD0iOTAiIHk9IjIwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyI+R3JlZW5pbmcgRm9jdXNlZDwvdGV4dD4KICAgIDxjaXJjbGUgY3g9IjE0MCIgY3k9IjcwIiByPSIyMCIgZmlsbD0ibGlnaHRncmVlbiIgc3Ryb2tlPSJncmVlbiIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8Y2lyY2xlIGN4PSIxNTAiIGN5PSIxMDAiIHI9IjE1IiBmaWxsPSJsaWdodGdyZWVuIiBzdHJva2U9ImdyZWVuIiBzdHJva2Utd2lkdGg9IjEiLz4KICAgIDxjaXJjbGUgY3g9IjUwIiBjeT0iNjAiIHI9IjUiIGZpbGw9ImxpZ2h0Z3JlZW4iIHN0cm9rZT0iZ3JlZW4iIHN0cm9rZS13aWR0aD0iMSIvPgoKICAgIDxsaW5lIHgxPSI5MCIgeTE9IjM1IiB4Mj0iOTAiIHkyPSIxMjUiIHN0cm9rZT0iI2NjYyIgc3Ryb2tlLWRhc2hhcnJheT0iMiwyIi8+CiAgICA8dGV4dCB4PSI0NSIgeT0iMzUiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2Ij5WdWxuZXJhYmxlPC90ZXh0PgogICAgPHRleHQgeD0iMTM1IiB5PSIzNSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2NjYiPkxlc3MgVnVsbmVyYWJsZTwvdGV4dD4KICAgIDx0ZXh0IHg9IjkwIiB5PSIxNDUiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2NjYiPkxvd2VyIEludmVzdG1lbnQgLS0+IEhpZ2hlciBJbnZlc3RtZW50PC90ZXh0PgogIDwvZz4KPC9zdmc+Cg==" alt="Greening Investment Diagram">
+                <div class="caption">Fig 4a: Conceptual sketch of Greening Focused investment pattern (based on model assumptions).</div>
+            </div>
+             <div class="col-md-6 text-center">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxMCwgMTApIj4KICAgIDxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTMwIiBmaWxsPSIjZmZmMGYwIiBzdHJva2U9IiNmZmE1MDAiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHRleHQgeD0iOTAiIHk9IjIwIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzMzMyI+SW5mcmFzdHJ1Y3R1cmUgRm9jdXNlZDwvdGV4dD4KICAgIDxyZWN0IHg9IjMwIiB5PSI1MCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjMwIiBmaWxsPSJsaWdodGJsdWUiIHN0cm9rZT0iYmx1ZSIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8cmVjdCB4PSI0MCIgeT0iOTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIyMCIgZmlsbD0ibGlnaHRibHVlIiBzdHJva2U9ImJsdWUiIHN0cm9rZS13aWR0aD0iMSIvPgogICAgPHJlY3QgeD0iMTEwIiB5PSI2MCIgd2lkdGg9IjMwIiBoZWlnaHQ9IjQwIiBmaWxsPSJsaWdodGJsdWUiIHN0cm9rZT0iYmx1ZSIgc3Ryb2tlLXdpZHRoPSIxIi8+CgogICAgPGxpbmUgeDE9IjkwIiB5MT0iMzUiIHgyPSI5MCIgeTI9IjEyNSIgc3Ryb2tlPSIjY2NjIiBzdHJva2UtZGFzaGFycmF5PSIyLDIiLz4KICAgIDx0ZXh0IHg9IjQ1IiB5PSIzNSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IiM2NjYiPlZ1bG5lcmFibGU8L3RleHQ+CiAgICA8dGV4dCB4PSIxMzUiIHk9IjM1IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+TGVzcyBWdWxuZXJhYmxlPC90ZXh0PgogICAgPHRleHQgeD0iOTAiIHk9IjE0NSIgZm9udC1zaXplPSIxMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY2NiI+SGlnaGVyIEludmVzdG1lbnQgLS0+IExvd2VyIEludmVzdG1lbnQ8L3RleHQ+CiAgPC9nPgo8L3N2Zz4K" alt="Infrastructure Investment Diagram">
+                 <div class="caption">Fig 4b: Conceptual sketch of Infrastructure Focused investment pattern (potential for better targeting).</div>
+            </div>
+        </div>
+
+
+        <h2>Dealing with an Uncertain Future: Robustness to Climate Change</h2>
+
+        <p>A major challenge in climate adaptation is planning for an unknown future. Will warming be moderate or extreme? The study tackled this by testing pathways designed under one climate assumption (e.g., high warming) against different future climate realities (e.g., low warming), and vice versa.</p>
+
+        <p>They used a <span class="term">satisficing metric</span> to measure robustness: what fraction of possible future scenarios (<a href="https://en.wikipedia.org/wiki/Scenario_planning#States_of_the_world" target="_blank" class="wiki-link term">States of the World, or SOWs</a>) does a pathway successfully meet its performance goals (e.g., keeping mortality below a certain threshold)? A higher satisficing score means the pathway is more robust to uncertainty.</p>
+
+        <p>The surprising result? Pathways were generally robust to the level of future warming. Strategies optimized assuming high warming performed reasonably well even if only low warming occurred, and vice versa. This suggests that the *relative* benefits and tradeoffs between different *types* of strategies (greening vs. infrastructure vs. balanced) might be more important drivers of the optimal choice than the precise amount of future warming, at least within the range studied.</p>
+
+        <div class="plot-container">
+            <div id="robustnessPlot"></div>
+            <div class="caption">Fig 5: Robustness (Satisficing Score) vs. Unit Cost (Cost per life saved) under different climate scenarios (Illustrative Data). Higher satisficing score = more robust. Notice the general similarity in patterns regardless of whether pathways were trained for low or high warming.</div>
+        </div>
+
+        <div class="explanation">
+            <strong>Interpreting Robustness:</strong>
+            <ul>
+                <li>Each point represents a pathway's performance when tested against potentially unexpected future climate conditions.</li>
+                <li>The X-axis shows the average cost per life saved (Unit Cost) under those test conditions. Lower is better.</li>
+                <li>The Y-axis shows the Satisficing Score (robustness). Higher is better.</li>
+                <li>The key takeaway is the overall similarity between pathways designed assuming low warming (circles) and those designed assuming high warming (squares) when tested under high warming. There isn't a dramatic failure or inefficiency caused by "guessing" the future climate wrong.</li>
+                <li>This suggests that focusing on strategies that balance multiple objectives and address current vulnerabilities might be a good "no regrets" approach, robust to a range of future climate outcomes. However, note that unit costs *are* generally higher under low warming (fewer lives at risk means each life saved costs more).</li>
+            </ul>
+        </div>
+
+        <h2>The Math Behind the Adaptation: Dynamic Policies</h2>
+        <p>How does the model create pathways that adapt over time? It uses a technique called <span class="term">Direct Policy Search (DPS)</span>. Instead of pre-determining investments for all 50 years, it defines decision *rules*. For example, a rule might say: "If the average temperature in the last 5 years exceeds threshold $X$, increase investment in cool pavements by percentage $Y$."</p>
+        <p>The optimization algorithm searches for the best *parameters* for these rules. A common form for such a rule, as used in the study (Eq. 1), is a logistic function:</p>
+        $$ SD_{i,j} = \text{Cap}_{i,j} \times \frac{L}{1 + \exp(-k \times (x_i - x_0))} $$
+        <p>Where:</p>
+        <ul>
+            <li>$SD_{i,j}$ is the Strategy Development (e.g., fraction of available roofs to make 'cool') for strategy $j$ in neighborhood $i$.</li>
+            <li>$\text{Cap}_{i,j}$ is the maximum capacity for that strategy in that neighborhood.</li>
+            <li>$x_i$ is a state variable for neighborhood $i$ (e.g., recent average temperature or number of heatwave days).</li>
+            <li>$L$, $k$, and $x_0$ are parameters found by the optimization: $L$ controls the maximum response level, $k$ controls the steepness of the response, and $x_0$ is the threshold (inflection point) at which the response ramps up.</li>
+        </ul>
+        <p>By optimizing these rule parameters ($L, k, x_0$) across all neighborhoods and strategies, the model finds <span class="term">Dynamic Adaptive Policy Pathways (DAPP)</span> that automatically adjust investment levels based on observed conditions over the 50-year simulation.</p>
+
+
+        <h2>Conclusion: Key Takeaways for Urban Heat Adaptation</h2>
+
+        <p>This exploration, based on the Eyni et al. study, highlights several critical points for cities planning for a hotter future:</p>
+        <ol>
+            <li><strong>Tradeoffs are Unavoidable:</strong> There's no single perfect solution. Planners must explicitly weigh costs, overall effectiveness, equity, environmental co-benefits, and robustness.</li>
+            <li><strong>Equity Matters (and is Complex):</strong> Strategies that seem best overall might not benefit vulnerable communities the most. Distributional impacts need careful consideration, and implementation details (like *where* trees are planted) are crucial. Infrastructure solutions might sometimes offer more equitable outcomes in dense urban areas compared to greening, depending on costs and site availability.</li>
+            <li><strong>Diversification Can Be Key:</strong> Pathways relying heavily on a single strategy (like only trees) can underperform on some objectives (like equity or cost). Balanced approaches often provide good compromises.</li>
+            <li><strong>Robustness is Achievable:</strong> Good adaptation strategies can be surprisingly robust to uncertainty about the precise level of future climate change. Focusing on addressing current vulnerabilities and balancing multiple objectives seems more critical than perfectly predicting future temperatures.</li>
+            <li><strong>Models are Tools for Thought:</strong> Complex models like City-HEAT are powerful tools for exploring tradeoffs and challenging assumptions. They don't provide definitive answers but generate insights and data-informed narratives to support difficult conversations and decision-making among stakeholders.</li>
+        </ol>
+
+        <p>Adapting our cities to extreme heat is a pressing challenge, but by carefully considering the complex interplay of effectiveness, cost, and equity, and by using sophisticated tools to explore future uncertainties, we can develop more resilient and just urban environments.</p>
+
+        <hr>
+        <p class="text-muted small">This interactive explanation is based on the findings of Eyni, A., Zaitchik, B.F., Hobbs, B.F. et al. Distributional outcomes of urban heat island reduction pathways under climate extremes. Sci Rep 15, 9594 (2025). <a href="https://doi.org/10.1038/s41598-025-93896-4" target="_blank">https://doi.org/10.1038/s41598-025-93896-4</a>. Visualizations use illustrative data designed to reflect the paper's core concepts.</p>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Plotting JavaScript -->
+    <script>
+        // --- Illustrative Data Generation ---
+        // NOTE: This data is NOT from the paper's simulations.
+        // It's synthesized to visually represent the *patterns* and *tradeoffs* described.
+        const numPathways = 150;
+        const pathways = [];
+
+        // Helper function for random number in range
+        function rand(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+        // Helper function to clamp values
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(value, max));
+        }
+
+        // Generate illustrative pathway data
+        for (let i = 0; i < numPathways; i++) {
+            let type, color;
+            const typeRand = Math.random();
+            let baseCost = rand(10, 100); // Base cost M$
+            let baseMortalityRed = baseCost * rand(4, 8) - rand(0, 50); // Base mortality reduction (lives)
+            let baseEquity = rand(400, 550) - baseMortalityRed * rand(0.1, 0.3); // Base equity (higher is worse)
+            let baseCO2 = baseCost * rand(-0.2, 0.2); // Base CO2 (negative = reduction)
+            let baseReliability = baseEquity * rand(0.2, 0.4) + rand(0, 30); // Base reliability (worst year deaths)
+
+            if (typeRand < 0.15) { // High Investment (All)
+                type = 'High All'; color = 'blue';
+                baseCost *= rand(5, 10);
+                baseMortalityRed *= rand(1.5, 2.5);
+                baseEquity *= rand(0.8, 1.1); // Can be good or bad equity
+                baseCO2 *= rand(2, 4);
+                baseReliability *= rand(0.7, 1.0);
+            } else if (typeRand < 0.4) { // Greening Focused
+                type = 'Greening'; color = 'green';
+                baseCost *= rand(4, 8);
+                baseMortalityRed *= rand(1.2, 2.0);
+                baseEquity *= rand(1.0, 1.4); // Tend towards worse equity in this model
+                baseCO2 *= rand(4, 8); // High CO2 benefit
+                 baseReliability *= rand(0.8, 1.2);
+            } else if (typeRand < 0.7) { // Infrastructure Focused
+                type = 'Infrastructure'; color = 'orange';
+                baseCost *= rand(1.5, 4);
+                baseMortalityRed *= rand(0.8, 1.4);
+                baseEquity *= rand(0.6, 0.9); // Tend towards better equity
+                baseCO2 *= rand(0.1, 0.5); // Low CO2 benefit
+                 baseReliability *= rand(0.7, 1.0);
+            } else { // Moderate
+                type = 'Moderate'; color = 'purple';
+                baseCost *= rand(2, 5);
+                baseMortalityRed *= rand(1.0, 1.6);
+                baseEquity *= rand(0.7, 1.0); // Generally decent equity
+                baseCO2 *= rand(1, 3);
+                 baseReliability *= rand(0.7, 1.0);
+            }
+
+             // Add some noise and clamp values to reasonable ranges based on paper figures
+            const pathway = {
+                id: i,
+                type: type,
+                color: color,
+                cost: clamp(baseCost + rand(-baseCost*0.1, baseCost*0.1), 18, 1023),
+                mortalityReduction: clamp(baseMortalityRed + rand(-baseMortalityRed*0.1, baseMortalityRed*0.1), 81, 671),
+                equityDifference: clamp(baseEquity + rand(-baseEquity*0.1, baseEquity*0.1), 384, 554), // Lower is better
+                co2Reduction: clamp(-baseCO2 + rand(baseCO2*0.1, -baseCO2*0.1), 0, 614), // Higher is better
+                reliabilityWorstCase: clamp(baseReliability + rand(-baseReliability*0.1, baseReliability*0.1), 105, 143) // Lower is better
+            };
+            pathways.push(pathway);
+        }
+
+        // --- Plotting Functions ---
+
+        // 1. Parallel Coordinates Plot
+        function plotParallelCoordinates() {
+            const dimensions = [
+                { label: 'Cost (M$)', values: pathways.map(p => p.cost), range: [18, 1023] },
+                { label: 'Mortality Reduction', values: pathways.map(p => -p.mortalityReduction), range: [-671, -81]}, // Negate for lower=better
+                { label: 'Equity Difference', values: pathways.map(p => p.equityDifference), range: [384, 554] },
+                { label: 'CO2 Reduction (kTons)', values: pathways.map(p => -p.co2Reduction), range: [-614, 0] }, // Negate for lower=better
+                { label: 'Reliability (Worst Case)', values: pathways.map(p => p.reliabilityWorstCase), range: [105, 143] }
+            ];
+
+            // Map pathway type to color for lines
+             const lineColors = pathways.map(p => {
+                 switch(p.type) {
+                     case 'High All': return 'blue';
+                     case 'Greening': return 'green';
+                     case 'Infrastructure': return 'orange';
+                     case 'Moderate': return 'purple';
+                     default: return 'grey';
+                 }
+             });
+
+            const trace = {
+                type: 'parcoords',
+                line: {
+                    color: lineColors, // Use mapped colors
+                    // colorscale: [[0, 'purple'], [0.33, 'orange'], [0.66, 'green'], [1, 'blue']], // Example colorscale if using a numeric value
+                    // cmin: 0,
+                    // cmax: 3,
+                    // showscale: true // Optional: show color scale legend
+                },
+                dimensions: dimensions.map(dim => ({
+                    label: dim.label,
+                    values: dim.values,
+                    range: dim.range
+                }))
+            };
+
+             const layout = {
+                title: 'Tradeoffs Across Adaptation Objectives (Illustrative)',
+                margin: { l: 80, r: 50, b: 50, t: 80 },
+                paper_bgcolor: '#f9f9f9',
+                plot_bgcolor: '#f9f9f9'
+             };
+
+
+            Plotly.newPlot('parallelPlot', [trace], layout);
+        }
+
+
+        // 2. Scatter Plots
+        function plotScatterPlots() {
+            const types = ['High All', 'Greening', 'Infrastructure', 'Moderate'];
+            const colors = ['blue', 'green', 'orange', 'purple'];
+
+            // Cost vs Mortality
+            const tracesCostMort = types.map((type, i) => {
+                const filtered = pathways.filter(p => p.type === type);
+                return {
+                    x: filtered.map(p => p.cost),
+                    y: filtered.map(p => p.mortalityReduction),
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: type,
+                    marker: { color: colors[i], size: 8, opacity: 0.7 },
+                    text: filtered.map(p => `Cost: ${p.cost.toFixed(0)}M$<br>Deaths Avoided: ${p.mortalityReduction.toFixed(0)}<br>Type: ${p.type}`),
+                    hoverinfo: 'text'
+                };
+            });
+
+            const layoutCostMort = {
+                title: 'Cost vs. Mortality Reduction',
+                xaxis: { title: 'Total Cost (M$)' },
+                yaxis: { title: 'Heat Deaths Avoided' },
+                hovermode: 'closest',
+                margin: { l: 60, r: 30, b: 50, t: 50 },
+                paper_bgcolor: '#f9f9f9',
+                plot_bgcolor: '#f9f9f9',
+                legend: { orientation: "h", yanchor: "bottom", y: -0.3, xanchor: "center", x: 0.5 }
+            };
+            Plotly.newPlot('costMortalityPlot', tracesCostMort, layoutCostMort);
+
+            // Mortality vs Equity
+            const tracesMortEq = types.map((type, i) => {
+                const filtered = pathways.filter(p => p.type === type);
+                return {
+                    x: filtered.map(p => p.mortalityReduction),
+                    y: filtered.map(p => p.equityDifference),
+                    mode: 'markers',
+                    type: 'scatter',
+                    name: type,
+                    marker: { color: colors[i], size: 8, opacity: 0.7 },
+                     text: filtered.map(p => `Deaths Avoided: ${p.mortalityReduction.toFixed(0)}<br>Equity Diff: ${p.equityDifference.toFixed(0)}<br>Type: ${p.type}`),
+                    hoverinfo: 'text'
+                };
+            });
+
+            const layoutMortEq = {
+                title: 'Mortality Reduction vs. Equity',
+                xaxis: { title: 'Heat Deaths Avoided' },
+                yaxis: { title: 'Max Mortality Rate Difference (Equity)' },
+                hovermode: 'closest',
+                 margin: { l: 60, r: 30, b: 50, t: 50 },
+                paper_bgcolor: '#f9f9f9',
+                plot_bgcolor: '#f9f9f9',
+                legend: { orientation: "h", yanchor: "bottom", y: -0.3, xanchor: "center", x: 0.5 }
+            };
+            Plotly.newPlot('mortalityEquityPlot', tracesMortEq, layoutMortEq);
+        }
+
+        // 3. Robustness Plot
+        function plotRobustness() {
+            // Simulate some robustness scores - higher is better
+            const robustnessData = pathways.map(p => {
+                // Base satisficing score - generally better for moderate/infra?
+                let baseScore;
+                if (p.type === 'Infrastructure' || p.type === 'Moderate') {
+                    baseScore = rand(0.5, 0.9);
+                } else if (p.type === 'Greening') {
+                     baseScore = rand(0.3, 0.7);
+                } else { // High All
+                     baseScore = rand(0.4, 0.8);
+                }
+
+                 // Calculate Unit Cost (Cost / Lives Saved) - Lower is better
+                 // Add significant noise as unit cost varies a lot
+                const unitCost = (p.cost * 1e6) / p.mortalityReduction + rand(-0.2e6, 0.5e6);
+
+                // Simulate scores for different training/testing scenarios
+                return {
+                    ...p,
+                    unitCost_HighTest: clamp(unitCost / 1e6 + rand(-0.1, 0.1), 0.2, 3.0), // Unit cost in M$ per life
+                    score_TrainedLow_TestHigh: clamp(baseScore + rand(-0.1, 0.05), 0.1, 1.0),
+                    score_TrainedHigh_TestHigh: clamp(baseScore + rand(-0.05, 0.1), 0.1, 1.0)
+                };
+            });
+
+            const traceTrainedLow = {
+                x: robustnessData.map(p => p.unitCost_HighTest),
+                y: robustnessData.map(p => p.score_TrainedLow_TestHigh),
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Trained Low Warming, Tested High',
+                marker: {
+                    color: robustnessData.map(p => p.color), // Color by original type
+                    size: 8,
+                    opacity: 0.7,
+                    symbol: 'circle' // Use circle for trained low
+                },
+                 text: robustnessData.map(p => `Unit Cost: ${p.unitCost_HighTest.toFixed(2)}M$<br>Satisficing: ${p.score_TrainedLow_TestHigh.toFixed(2)}<br>Type: ${p.type}`),
+                hoverinfo: 'text'
+            };
+
+             const traceTrainedHigh = {
+                x: robustnessData.map(p => p.unitCost_HighTest),
+                y: robustnessData.map(p => p.score_TrainedHigh_TestHigh),
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Trained High Warming, Tested High',
+                 marker: {
+                    color: robustnessData.map(p => p.color), // Color by original type
+                    size: 8,
+                    opacity: 0.7,
+                    symbol: 'square' // Use square for trained high
+                },
+                 text: robustnessData.map(p => `Unit Cost: ${p.unitCost_HighTest.toFixed(2)}M$<br>Satisficing: ${p.score_TrainedHigh_TestHigh.toFixed(2)}<br>Type: ${p.type}`),
+                hoverinfo: 'text'
+            };
+
+
+            const layoutRobust = {
+                title: 'Robustness to Climate Uncertainty (Tested under High Warming)',
+                xaxis: { title: 'Unit Cost (M$ per life saved)' },
+                yaxis: { title: 'Satisficing Score (Robustness)' },
+                hovermode: 'closest',
+                margin: { l: 60, r: 30, b: 50, t: 50 },
+                paper_bgcolor: '#f9f9f9',
+                plot_bgcolor: '#f9f9f9',
+                legend: { orientation: "h", yanchor: "bottom", y: -0.3, xanchor: "center", x: 0.5 }
+            };
+
+            Plotly.newPlot('robustnessPlot', [traceTrainedLow, traceTrainedHigh], layoutRobust);
+        }
+
+
+        // --- Initial Plot Rendering ---
+        plotParallelCoordinates();
+        plotScatterPlots();
+        plotRobustness();
+
+    </script>
+
+</body>
+</html>
