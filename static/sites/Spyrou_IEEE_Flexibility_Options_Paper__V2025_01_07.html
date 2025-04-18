@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Flexibility Options for Power Grids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+      </script>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer spacing */
+        }
+        .container {
+            max-width: 900px;
+        }
+        h2, h3 {
+            margin-top: 2em;
+            margin-bottom: 1em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3em;
+        }
+        h3 {
+            margin-top: 1.5em;
+        }
+        .interactive-card {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.375rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        input[type=range] {
+            width: 100%;
+        }
+        .output-value {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        .equation {
+            background-color: #e9ecef;
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-bottom: 1rem;
+            overflow-x: auto; /* Handle potential overflow */
+        }
+        .term-link {
+            font-weight: bold;
+            color: #0a58ca; /* Darker blue for terms */
+            text-decoration: none;
+        }
+        .term-link:hover {
+            text-decoration: underline;
+        }
+        canvas {
+            display: block;
+            margin: 1rem auto;
+            max-width: 100%;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+        .highlight {
+            background-color: #fff3cd; /* Light yellow */
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .cost-negative {
+            color: #dc3545; /* Bootstrap danger red */
+        }
+        .cost-positive {
+            color: #198754; /* Bootstrap success green */
+        }
+        .section-intro {
+            font-style: italic;
+            color: #6c757d; /* Bootstrap secondary text color */
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Flexibility Options: Hedging Risk in Modern Power Grids</h1>
+        <p class="lead">Exploring a proposed market product to manage the uncertainty introduced by renewable energy, based on the paper by Spyrou et al.</p>
+        <hr>
+
+        <h2>The Challenge: Day-Ahead Plans vs. Real-Time Reality</h2>
+        <p class="section-intro">Modern electricity grids rely heavily on planning. System operators run complex auctions the day before (the <a href="https://en.wikipedia.org/wiki/Day-ahead_market" target="_blank" class="term-link">Day-Ahead Market</a> or DA) to schedule which power plants will run to meet forecasted demand. However, the rise of <a href="https://en.wikipedia.org/wiki/Variable_renewable_energy" target="_blank" class="term-link">Variable Renewable Energy</a> (VRE) sources like wind and solar introduces significant uncertainty. What happens when the wind doesn't blow as much as predicted, or clouds unexpectedly cover solar panels?</p>
+        <p>This creates an imbalance between the DA plan and the actual conditions in <a href="https://en.wikipedia.org/wiki/Real-time_pricing" target="_blank" class="term-link">Real-Time</a> (RT). Managing these imbalances often involves expensive, last-minute adjustments using fast-ramping generators, and exposes market participants (especially VRE producers) to volatile RT prices.</p>
+
+        <div class="interactive-card">
+            <h3>Visualizing Imbalance Risk</h3>
+            <p>Imagine you're a wind farm operator. You commit to selling a certain amount of energy in the DA market based on your forecast. But in RT, your actual output might be higher or lower.</p>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="daScheduleSlider">Your DA Schedule (MWh): <span id="daScheduleValue" class="output-value">100</span></label>
+                    <input type="range" id="daScheduleSlider" min="50" max="150" value="100" step="1" class="form-range">
+                </div>
+                <div class="col-md-6">
+                    <label for="rtOutcomeSlider">Actual RT Output (MWh): <span id="rtOutcomeValue" class="output-value">80</span></label>
+                    <input type="range" id="rtOutcomeSlider" min="30" max="170" value="80" step="1" class="form-range">
+                </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="daPriceSlider">DA Price ($/MWh): <span id="daPriceValue" class="output-value">40</span></label>
+                    <input type="range" id="daPriceSlider" min="20" max="80" value="40" step="1" class="form-range">
+                </div>
+                 <div class="col-md-6">
+                    <label for="rtPriceSlider">RT Price ($/MWh): <span id="rtPriceValue" class="output-value">60</span></label>
+                    <input type="range" id="rtPriceSlider" min="0" max="200" value="60" step="1" class="form-range">
+                </div>
+            </div>
+            <div>
+                <p><strong>Your Imbalance:</strong> <span id="imbalanceValue" class="output-value">-20</span> MWh (Negative means shortfall)</p>
+                <p><strong>Financial Impact of Imbalance:</strong>
+                    If you have a shortfall (negative imbalance), you must buy back the missing energy at the RT price.
+                    If you have a surplus (positive imbalance), you sell the excess energy at the RT price.
+                </p>
+                <p><strong>Cost/Gain from Imbalance Only:</strong> $<span id="imbalanceCostValue" class="output-value cost-negative">-1200</span> (Negative means cost)</p>
+                <p><small>(Calculation: Imbalance * RT Price. This ignores your initial DA revenue.)</small></p>
+            </div>
+            <canvas id="imbalanceCanvas" width="600" height="150"></canvas>
+        </div>
+
+        <p>Existing solutions, like traditional operating reserves, often struggle to efficiently price and allocate the *flexibility* needed to handle these imbalances, especially considering the specific risks faced by individual participants.</p>
+
+        <h2>Introducing Flexibility Options (FOs)</h2>
+        <p class="section-intro">The paper proposes a new market product: Flexibility Options (FOs). Think of them as a specialized insurance policy against energy imbalances, traded directly within the DA market alongside energy itself.</p>
+        <p>FOs are <span class="highlight">dual-trigger options</span>. This means two conditions must be met for the option to be exercised and pay out:</p>
+        <ol>
+            <li><strong>Quantity Trigger:</strong> The buyer's actual RT production must deviate significantly from a pre-agreed trigger quantity (related to their DA schedule or forecast).</li>
+            <li><strong>Price Trigger:</strong> The RT energy price must be unfavorable relative to a pre-agreed "strike price".</li>
+        </ol>
+        <p>There are two main types:</p>
+        <ul>
+            <li><strong>Upward FO (Call Option):</strong> Protects buyers against <span class="highlight">shortfalls</span> when RT prices are <span class="highlight">high</span>. Pays out if actual production is *below* the trigger quantity AND the RT price is *above* the strike price.</li>
+            <li><strong>Downward FO (Put Option):</strong> Protects buyers against <span class="highlight">surpluses</span> when RT prices are <span class="highlight">low</span>. Pays out if actual production is *above* the trigger quantity AND the RT price is *below* the strike price.</li>
+        </ul>
+
+        <div class="interactive-card">
+            <h3>How an Upward FO Works</h3>
+            <p>Let's revisit the wind farm example. You scheduled 100 MWh DA. You buy an Upward FO to protect against shortfalls.</p>
+            <div class="row mb-3">
+                 <div class="col-md-6">
+                    <label>Your DA Schedule: 100 MWh</label>
+                    <input type="hidden" id="foDaSchedule" value="100"> <!-- Keep DA schedule fixed for this example -->
+                 </div>
+                 <div class="col-md-6">
+                    <label for="foRtOutcomeSlider">Actual RT Output (MWh): <span id="foRtOutcomeValue" class="output-value">80</span></label>
+                    <input type="range" id="foRtOutcomeSlider" min="30" max="170" value="80" step="1" class="form-range">
+                 </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="foRtPriceSlider">RT Price ($/MWh): <span id="foRtPriceValue" class="output-value">60</span></label>
+                    <input type="range" id="foRtPriceSlider" min="0" max="200" value="60" step="1" class="form-range">
+                </div>
+                 <div class="col-md-6">
+                    <label for="foStrikePriceSlider">Upward FO Strike Price ($/MWh) ($VC^{\uparrow}$): <span id="foStrikePriceValue" class="output-value">50</span></label>
+                    <input type="range" id="foStrikePriceSlider" min="20" max="100" value="50" step="1" class="form-range">
+                 </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="foQuantityTriggerSlider">Upward FO Quantity Trigger (MWh) ($Q^{Trigger, \uparrow}$): <span id="foQuantityTriggerValue" class="output-value">90</span></label>
+                    <input type="range" id="foQuantityTriggerSlider" min="50" max="150" value="90" step="1" class="form-range">
+                 </div>
+                 <div class="col-md-6">
+                    <label for="foVolumeSlider">Volume of FO Bought (MWh): <span id="foVolumeValue" class="output-value">20</span></label>
+                    <input type="range" id="foVolumeSlider" min="0" max="50" value="20" step="1" class="form-range">
+                 </div>
+            </div>
+
+            <div>
+                <p><strong>Your Imbalance:</strong> <span id="foImbalanceValue" class="output-value">-20</span> MWh</p>
+                <p><strong>Quantity Trigger Met?</strong> (<span id="foRtOutcomeDisplay">80</span> MWh < <span id="foQuantityTriggerDisplay">90</span> MWh): <span id="quantityTriggerMet" class="output-value">Yes</span></p>
+                <p><strong>Price Trigger Met?</strong> (<span id="foRtPriceDisplay">60</span> $/MWh > <span id="foStrikePriceDisplay">50</span> $/MWh): <span id="priceTriggerMet" class="output-value">Yes</span></p>
+                <p><strong>FO Exercised?</strong> <span id="foExercised" class="output-value">Yes</span></p>
+                <p><strong>Payoff per MWh of Exercised FO:</strong> $\max(0, A^{RT} - VC^{\uparrow})$ = $\max(0, \span id="payoffCalcRtPrice">60</span> - \span id="payoffCalcStrikePrice">50</span>)$ = $<span id="payoffPerMwh" class="output-value">10</span></p>
+                <p><strong>Volume Exercised (Min of Imbalance, FO Volume):</strong> $\min(|\text{Imbalance}|, \text{FO Volume})$ = $\min(\span id="payoffCalcImbalance">20</span>, \span id="payoffCalcFoVolume">20</span>)$ = <span id="volumeExercised" class="output-value">20</span> MWh</p>
+                <p><strong>Total FO Payoff:</strong> $<span id="totalPayoff" class="output-value cost-positive">200</span></p>
+                <hr>
+                <p><strong>Comparison:</strong></p>
+                <ul>
+                    <li><strong>Cost of Imbalance without FO:</strong> $<span id="costWithoutFo" class="output-value cost-negative">-1200</span></li>
+                    <li><strong>Cost of Imbalance with FO Payoff:</strong> $<span id="costWithFo" class="output-value cost-negative">-1000</span></li>
+                </ul>
+                <p><small>(Note: This simple example ignores the DA premium paid for the FO.)</small></p>
+            </div>
+        </div>
+
+        <h2>Tiers and Probabilistic Hedging</h2>
+        <p class="section-intro">Real-world uncertainty isn't just one number; it's a distribution of possibilities. A wind farm might be 95% confident its output won't drop below X, but only 80% confident it won't drop below Y (where Y > X). FOs address this by introducing tiers.</p>
+        <p>Instead of just one trigger quantity, buyers can hedge against different levels of risk using FO tiers ($r$). Each tier corresponds to a different trigger quantity ($P_{i,s,t}$) and is associated with a specific probability of being exercised ($\Pi_r^{\uparrow \downarrow}$). Tier 1 might represent a small deviation with high probability, while Tier R represents a large deviation with low probability.</p>
+        <p>Buyers submit their expected RT output distribution ($P_{i,s,t}$ for scenarios $s=1...|S|$), and the system operator uses this, along with pre-defined exercise probabilities ($\Pi_r$), to determine the demand for FOs in each tier.</p>
+
+        <div class="interactive-card">
+            <h3>Visualizing Tiers (Inspired by Fig. 1)</h3>
+            <p>This chart shows the cumulative probability distribution of a VRE generator's potential RT output, as submitted by the generator. The steps represent different potential outcomes ($P_{i,s,t}$). The system operator defines tiers ($Q_r$) corresponding to specific cumulative probabilities ($\Pi_r$).</p>
+            <canvas id="tierChart" width="600" height="300"></canvas>
+             <div class="row mt-3">
+                <div class="col-md-6">
+                    <label for="meanOutputSlider">Adjust Forecast Mean (MWh): <span id="meanOutputValue" class="output-value">100</span></label>
+                    <input type="range" id="meanOutputSlider" min="70" max="130" value="100" step="1" class="form-range">
+                </div>
+                 <div class="col-md-6">
+                    <label for="stdDevSlider">Adjust Forecast Uncertainty (Std Dev): <span id="stdDevValue" class="output-value">15</span></label>
+                    <input type="range" id="stdDevSlider" min="5" max="30" value="15" step="1" class="form-range">
+                 </div>
+            </div>
+            <p><small>This interactive chart shows how changes in the VRE forecast (mean and uncertainty) shift the probability distribution ($P_{i,s,t}$). The vertical lines represent FO tiers ($Q_r^{\uparrow \downarrow}$) set by the operator, linked to specific cumulative probabilities ($\Pi_r$). For example, an Upward FO for Tier 1 (low $Q_r^{\uparrow}$) hedges against more probable, smaller shortfalls, while Tier R (high $Q_r^{\uparrow}$) hedges against less probable, larger shortfalls.</small></p>
+        </div>
+
+        <h2>Co-optimization: Trading Energy and Flexibility Together</h2>
+        <p class="section-intro">A crucial aspect of the FO proposal is that FOs are procured *within* the DA market, co-optimized with energy schedules. This means the system operator's market clearing algorithm simultaneously decides:</p>
+        <ul>
+            <li>How much energy each generator should produce ($P_{i,t}^{DA}$).</li>
+            <li>How much Upward/Downward FO each flexible generator should sell ($h_{i,r,t}^{s \uparrow \downarrow}$).</li>
+            <li>How much Upward/Downward FO each uncertain generator should buy ($h_{i,r,t}^{b \uparrow \downarrow}$).</li>
+        </ul>
+        <p>This co-optimization is vital because providing flexibility (selling FOs) has an <a href="https://en.wikipedia.org/wiki/Opportunity_cost" target="_blank" class="term-link">opportunity cost</a> for flexible generators. Reserving capacity to potentially ramp up or down in RT means they might not be able to sell that capacity as energy in the DA market. The market needs to discover the right price for FOs ($\lambda_{r,t}^{\uparrow \downarrow}$) that reflects both the buyer's need for hedging and the seller's cost of providing flexibility (including their own variable costs $C_{i,t}$ and the submitted strike prices $VC_{i,t}^{\uparrow \downarrow}$).</p>
+
+        <div class="interactive-card">
+            <h3>The Seller's Dilemma: Energy vs. FO</h3>
+            <p>Consider a flexible generator (e.g., a gas turbine) deciding how much capacity to offer as DA energy vs. how much to reserve for selling Upward FOs.</p>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sellerCapacitySlider">Generator Capacity (MW): <span id="sellerCapacityValue" class="output-value">50</span></label>
+                    <input type="range" id="sellerCapacitySlider" min="20" max="100" value="50" step="1" class="form-range">
+                </div>
+                <div class="col-md-6">
+                     <label for="sellerCostSlider">Variable Cost ($C_{i,t}$) ($/MWh): <span id="sellerCostValue" class="output-value">30</span></label>
+                    <input type="range" id="sellerCostSlider" min="10" max="60" value="30" step="1" class="form-range">
+                </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="daEnergyPriceSlider">DA Energy Price ($\lambda_t^{DA}$) ($/MWh): <span id="daEnergyPriceValue" class="output-value">40</span></label>
+                    <input type="range" id="daEnergyPriceSlider" min="20" max="80" value="40" step="1" class="form-range">
+                </div>
+                 <div class="col-md-6">
+                    <label for="daFoPriceSlider">DA FO Premium ($\lambda_{r,t}^{\uparrow}$) ($/MW): <span id="daFoPriceValue" class="output-value">5</span></label>
+                    <input type="range" id="daFoPriceSlider" min="0" max="20" value="5" step="1" class="form-range">
+                 </div>
+            </div>
+             <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sellerStrikePriceSlider">Seller's FO Strike Price ($VC_{i,t}^{\uparrow}$) ($/MWh): <span id="sellerStrikePriceValue" class="output-value">50</span></label>
+                    <input type="range" id="sellerStrikePriceSlider" min="20" max="100" value="50" step="1" class="form-range">
+                </div>
+                 <div class="col-md-6">
+                    <label for="foProbSlider">Probability FO is Exercised ($\Pi_r^{\uparrow}$): <span id="foProbValue" class="output-value">0.2</span></label>
+                    <input type="range" id="foProbSlider" min="0" max="1" value="0.2" step="0.05" class="form-range">
+                </div>
+            </div>
+            <div>
+                <p><strong>Simplified Decision Insight:</strong></p>
+                <ul>
+                    <li>Profit from selling 1 MW as DA Energy: $\lambda_t^{DA} - C_{i,t}$ = $<span id="profitDaEnergy" class="output-value">10</span></li>
+                    <li>Expected Profit from selling 1 MW as Upward FO:
+                        <br> (DA Premium) + Prob * (Strike Price - Var Cost)
+                        <br> $\lambda_{r,t}^{\uparrow} + \Pi_r^{\uparrow} \times (VC_{i,t}^{\uparrow} - C_{i,t})$
+                        <br> $<span id="profitFoPremiumPart" class="output-value">5</span> + <span id="profitFoProbPart" class="output-value">0.2</span> \times (<span id="profitFoStrikePart" class="output-value">50</span> - <span id="profitFoCostPart" class="output-value">30</span>)$ = $<span id="profitDaFo" class="output-value">9</span>
+                    </li>
+                </ul>
+                 <p>In this simplified view, selling DA energy seems slightly more profitable. However, the actual market clearing considers many generators, network constraints, ramp rates ($RR_{i,t}$), and the full objective function:</p>
+                 <div class="equation">
+                 $$ \min \sum_{i \in G, t \in T} C_{i,t} P_{i,t}^{DA} \quad \text{(Energy Cost)} $$
+                 $$ \pm \sum_{i \in G^S, r \in R, t \in T} \Pi_r^{\uparrow \downarrow} (VC_{i,t}^{\uparrow \downarrow} - C_{i,t}) h_{i,r,t}^{s \uparrow \downarrow} \quad \text{(Expected Seller FO Cost/Saving)} $$
+                 $$ \mp \sum_{i \in G^B, r \in R, t \in T} \Pi_r^{\uparrow \downarrow} VC_{i,t}^{\uparrow \downarrow} h_{i,r,t}^{b \uparrow \downarrow} \quad \text{(Expected Buyer FO Hedge Value)} $$
+                 $$ + \dots \quad \text{(Self-hedging, Penalties, etc.)} $$
+                 Subject to energy balance, FO balance, generator limits, ramp rates, and FO hedging constraints (linking $h_{i,r,t}^{b \uparrow \downarrow}$ to $P_{i,s,t}$).
+                 </div>
+                 <p>The co-optimization finds the least-cost way to meet energy demand while also procuring the necessary flexibility through FOs, respecting all constraints and discovering the market clearing prices ($\lambda_t^{DA}, \lambda_{r,t}^{\uparrow \downarrow}$).</p>
+            </div>
+        </div>
+
+        <h2>Settlement: Closing the Loop</h2>
+        <p class="section-intro">A well-designed market product needs a clear and fair settlement process. The FO settlement aims for <span class="highlight">revenue neutrality</span> for the system operator and follows <span class="highlight">cost causation</span> principles (those needing the hedge pay for it).</p>
+        <p><strong>Day-Ahead Settlement:</strong></p>
+        <ul>
+            <li>FO Buyers pay a premium for the FOs they purchase, based on the DA FO price ($\lambda_{r,t}^{\uparrow \downarrow}$).</li>
+            <li>FO Sellers receive a payment for the FOs they sell, based on the DA FO price and adjusted by their specific strike price commitment (implicitly, the DA price reflects the average expected value).</li>
+        </ul>
+        <p><strong>Real-Time Settlement:</strong></p>
+        <ul>
+            <li>If an FO is exercised (both quantity and price triggers met):
+                <ul>
+                    <li>The FO Seller pays the Buyer the difference between the RT price and the strike price (for Up FOs) or the strike price and the RT price (for Down FOs), capped by the volume exercised.</li>
+                    <li>This payoff effectively compensates the buyer for their unfavorable imbalance cost/lost revenue.</li>
+                </ul>
+            </li>
+            <li>No money changes hands via the FO mechanism if the triggers are not met.</li>
+        </ul>
+
+        <div class="interactive-card">
+            <h3>Simplified Settlement Flow (Upward FO Example)</h3>
+            <p>Assume DA FO Price $\lambda_{r,t}^{\uparrow} = \$5/MW$. Buyer buys 20 MW, Seller sells 20 MW. Strike Price $VC^{\uparrow} = \$50/MWh$. RT Price $A^{RT} = \$60/MWh$. RT Output is 80 MWh (shortfall of 20 MWh vs trigger of 90 MWh).</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Day-Ahead</h5>
+                            <p>Buyer Pays ISO: $20 \text{ MW} \times \$5/\text{MW} = \$100$</p>
+                            <p>ISO Pays Seller: $20 \text{ MW} \times \$5/\text{MW} = \$100$</p>
+                            <p class="text-success"><strong>ISO Net: $0</strong></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                     <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Real-Time (FO Exercised)</h5>
+                             <p>Payoff/MWh: $\max(0, 60 - 50) = \$10$</p>
+                             <p>Volume Exercised: $20$ MWh</p>
+                             <p>Seller Pays ISO: $20 \text{ MWh} \times \$10/\text{MWh} = \$200$</p>
+                             <p>ISO Pays Buyer: $20 \text{ MWh} \times \$10/\text{MWh} = \$200$</p>
+                             <p class="text-success"><strong>ISO Net: $0</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-3">Across both DA and RT, the system operator remains revenue neutral. The buyer paid $100 DA and received $200 RT (net gain $100). The seller received $100 DA and paid $200 RT (net cost $100). This transfer effectively hedges the buyer's exposure to the high RT price for their shortfall, funded by the seller who provided the flexibility.</p>
+        </div>
+
+        <h2>Key Benefits and Conclusion</h2>
+        <p>The proposed Flexibility Options offer several potential advantages over traditional reserve products:</p>
+        <ul>
+            <li><strong>Cost-Effectiveness:</strong> Co-optimization considers the actual costs (variable costs, strike prices) and opportunity costs of flexibility, leading to potentially more efficient DA schedules.</li>
+            <li><strong>Value-Driven Pricing:</strong> FO prices ($\lambda_{r,t}^{\uparrow \downarrow}$) directly reflect the market's valuation of flexibility under different conditions and probabilities, unlike fixed reserve demand curves.</li>
+            <li><strong>Targeted Hedging:</strong> Buyers (like VREs) can hedge their specific imbalance risks based on their own forecasts and risk tolerance using tiers.</li>
+            <li><strong>Fairer Cost Allocation:</strong> Costs are primarily borne by those causing the need for flexibility (the buyers), aligning with cost causation.</li>
+            <li><strong>Revenue Adequacy:</strong> The settlement mechanism is designed to be revenue neutral for the system operator, avoiding socialization of costs.</li>
+            <li><strong>Stable Revenue for Sellers:</strong> Flexible generators receive a DA premium, providing a less volatile revenue stream compared to relying solely on RT energy prices.</li>
+        </ul>
+        <p>While implementation involves complexities (e.g., forecasting accuracy, number of tiers, potential market power), Flexibility Options represent a sophisticated approach to integrating uncertainty and flexibility directly into electricity market design, potentially leading to more efficient and reliable grid operation in the face of increasing renewable energy penetration.</p>
+        <hr>
+         <p><small><em>This interactive explanation is based on the concepts presented in: E. Spyrou, Q. Zhang, R. B. Hytowitz, B. F. Hobbs, S. Tyagi, M. Cai, and M. Blonsky, "Flexibility Options: A Proposed Product for Managing Imbalance Risk." The specific interactive elements and simplified examples are interpretations for educational purposes.</em></small></p>
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Javascript for Interactivity -->
+    <script>
+        // --- Imbalance Visualization ---
+        const daScheduleSlider = document.getElementById('daScheduleSlider');
+        const rtOutcomeSlider = document.getElementById('rtOutcomeSlider');
+        const daPriceSlider = document.getElementById('daPriceSlider');
+        const rtPriceSlider = document.getElementById('rtPriceSlider');
+        const daScheduleValue = document.getElementById('daScheduleValue');
+        const rtOutcomeValue = document.getElementById('rtOutcomeValue');
+        const daPriceValue = document.getElementById('daPriceValue');
+        const rtPriceValue = document.getElementById('rtPriceValue');
+        const imbalanceValue = document.getElementById('imbalanceValue');
+        const imbalanceCostValue = document.getElementById('imbalanceCostValue');
+        const imbalanceCanvas = document.getElementById('imbalanceCanvas');
+        const imbCtx = imbalanceCanvas.getContext('2d');
+
+        function updateImbalanceVisualization() {
+            const daSched = parseFloat(daScheduleSlider.value);
+            const rtOut = parseFloat(rtOutcomeSlider.value);
+            const daPrice = parseFloat(daPriceSlider.value);
+            const rtPrice = parseFloat(rtPriceSlider.value);
+
+            daScheduleValue.textContent = daSched.toFixed(0);
+            rtOutcomeValue.textContent = rtOut.toFixed(0);
+            daPriceValue.textContent = daPrice.toFixed(0);
+            rtPriceValue.textContent = rtPrice.toFixed(0);
+
+            const imbalance = rtOut - daSched;
+            imbalanceValue.textContent = imbalance.toFixed(0);
+
+            const imbalanceCost = imbalance * rtPrice * -1; // Cost is negative of (RT_Output - DA_Sched) * RT_Price
+            imbalanceCostValue.textContent = imbalanceCost.toFixed(0);
+
+            if (imbalanceCost < 0) {
+                imbalanceCostValue.className = 'output-value cost-negative';
+            } else {
+                 imbalanceCostValue.className = 'output-value cost-positive';
+            }
+             if (imbalance < 0) {
+                imbalanceValue.className = 'output-value cost-negative';
+            } else {
+                 imbalanceValue.className = 'output-value cost-positive';
+            }
+
+            drawImbalanceCanvas(daSched, rtOut);
+        }
+
+        function drawImbalanceCanvas(da, rt) {
+            const w = imbalanceCanvas.width;
+            const h = imbalanceCanvas.height;
+            const maxVal = 200; // Max scale value
+            const scale = w / maxVal;
+            const barH = h * 0.4;
+            const yDa = h * 0.2;
+            const yRt = h * 0.7;
+
+            imbCtx.clearRect(0, 0, w, h);
+
+            // DA Bar
+            imbCtx.fillStyle = '#6c757d'; // Secondary grey
+            imbCtx.fillRect(0, yDa, da * scale, barH);
+            imbCtx.fillStyle = '#000';
+            imbCtx.fillText(`DA: ${da.toFixed(0)}`, 5, yDa - 5);
+
+            // RT Bar
+            imbCtx.fillStyle = '#0d6efd'; // Primary blue
+            imbCtx.fillRect(0, yRt, rt * scale, barH);
+            imbCtx.fillText(`RT: ${rt.toFixed(0)}`, 5, yRt - 5);
+
+             // Imbalance Arrow/Highlight
+             const startX = Math.min(da, rt) * scale;
+             const endX = Math.max(da, rt) * scale;
+             imbCtx.fillStyle = (rt < da) ? 'rgba(220, 53, 69, 0.5)' : 'rgba(25, 135, 84, 0.5)'; // Reddish for shortfall, greenish for surplus
+             imbCtx.fillRect(startX, yDa, endX - startX, h - yDa); // Highlight diff across both bars
+             imbCtx.fillStyle = '#000';
+             imbCtx.fillText(`Imbalance: ${(rt-da).toFixed(0)}`, (startX + endX)/2 - 30, h*0.5 + 5);
+        }
+
+        daScheduleSlider.addEventListener('input', updateImbalanceVisualization);
+        rtOutcomeSlider.addEventListener('input', updateImbalanceVisualization);
+        daPriceSlider.addEventListener('input', updateImbalanceVisualization);
+        rtPriceSlider.addEventListener('input', updateImbalanceVisualization);
+        updateImbalanceVisualization(); // Initial call
+
+        // --- FO Mechanism Visualization ---
+        const foRtOutcomeSlider = document.getElementById('foRtOutcomeSlider');
+        const foRtPriceSlider = document.getElementById('foRtPriceSlider');
+        const foStrikePriceSlider = document.getElementById('foStrikePriceSlider');
+        const foQuantityTriggerSlider = document.getElementById('foQuantityTriggerSlider');
+        const foVolumeSlider = document.getElementById('foVolumeSlider');
+
+        const foRtOutcomeValue = document.getElementById('foRtOutcomeValue');
+        const foRtPriceValue = document.getElementById('foRtPriceValue');
+        const foStrikePriceValue = document.getElementById('foStrikePriceValue');
+        const foQuantityTriggerValue = document.getElementById('foQuantityTriggerValue');
+        const foVolumeValue = document.getElementById('foVolumeValue');
+
+        const foImbalanceValue = document.getElementById('foImbalanceValue');
+        const foRtOutcomeDisplay = document.getElementById('foRtOutcomeDisplay');
+        const foQuantityTriggerDisplay = document.getElementById('foQuantityTriggerDisplay');
+        const quantityTriggerMet = document.getElementById('quantityTriggerMet');
+        const foRtPriceDisplay = document.getElementById('foRtPriceDisplay');
+        const foStrikePriceDisplay = document.getElementById('foStrikePriceDisplay');
+        const priceTriggerMet = document.getElementById('priceTriggerMet');
+        const foExercised = document.getElementById('foExercised');
+        const payoffCalcRtPrice = document.getElementById('payoffCalcRtPrice');
+        const payoffCalcStrikePrice = document.getElementById('payoffCalcStrikePrice');
+        const payoffPerMwh = document.getElementById('payoffPerMwh');
+        const payoffCalcImbalance = document.getElementById('payoffCalcImbalance');
+        const payoffCalcFoVolume = document.getElementById('payoffCalcFoVolume');
+        const volumeExercised = document.getElementById('volumeExercised');
+        const totalPayoff = document.getElementById('totalPayoff');
+        const costWithoutFo = document.getElementById('costWithoutFo');
+        const costWithFo = document.getElementById('costWithFo');
+        const foDaSchedule = parseFloat(document.getElementById('foDaSchedule').value); // Fixed DA schedule
+
+
+        function updateFoVisualization() {
+            const rtOut = parseFloat(foRtOutcomeSlider.value);
+            const rtPrice = parseFloat(foRtPriceSlider.value);
+            const strikePrice = parseFloat(foStrikePriceSlider.value);
+            const quantityTrigger = parseFloat(foQuantityTriggerSlider.value);
+            const foVolume = parseFloat(foVolumeSlider.value);
+
+            foRtOutcomeValue.textContent = rtOut.toFixed(0);
+            foRtPriceValue.textContent = rtPrice.toFixed(0);
+            foStrikePriceValue.textContent = strikePrice.toFixed(0);
+            foQuantityTriggerValue.textContent = quantityTrigger.toFixed(0);
+            foVolumeValue.textContent = foVolume.toFixed(0);
+
+            const imbalance = rtOut - foDaSchedule;
+            foImbalanceValue.textContent = imbalance.toFixed(0);
+            foImbalanceValue.className = imbalance < 0 ? 'output-value cost-negative' : 'output-value cost-positive';
+
+            // Update display values in trigger checks
+            foRtOutcomeDisplay.textContent = rtOut.toFixed(0);
+            foQuantityTriggerDisplay.textContent = quantityTrigger.toFixed(0);
+            foRtPriceDisplay.textContent = rtPrice.toFixed(0);
+            foStrikePriceDisplay.textContent = strikePrice.toFixed(0);
+
+            // Check triggers (Upward FO example)
+            const isQuantityTriggerMet = rtOut < quantityTrigger;
+            const isPriceTriggerMet = rtPrice > strikePrice;
+
+            quantityTriggerMet.textContent = isQuantityTriggerMet ? 'Yes' : 'No';
+            quantityTriggerMet.className = isQuantityTriggerMet ? 'output-value text-success' : 'output-value text-danger';
+            priceTriggerMet.textContent = isPriceTriggerMet ? 'Yes' : 'No';
+             priceTriggerMet.className = isPriceTriggerMet ? 'output-value text-success' : 'output-value text-danger';
+
+            const isFoExercised = isQuantityTriggerMet && isPriceTriggerMet;
+            foExercised.textContent = isFoExercised ? 'Yes' : 'No';
+            foExercised.className = isFoExercised ? 'output-value text-success' : 'output-value text-danger';
+
+            // Calculate payoff
+            let currentPayoffPerMwh = 0;
+            let currentVolumeExercised = 0;
+            let currentTotalPayoff = 0;
+
+            if (isFoExercised) {
+                currentPayoffPerMwh = Math.max(0, rtPrice - strikePrice);
+                // Only exercise up to the volume needed (abs imbalance) or volume bought
+                currentVolumeExercised = Math.min(Math.abs(imbalance), foVolume);
+                // Ensure volume exercised is only for actual shortfall relative to trigger
+                currentVolumeExercised = Math.min(currentVolumeExercised, Math.max(0, quantityTrigger - rtOut));
+                currentTotalPayoff = currentPayoffPerMwh * currentVolumeExercised;
+            }
+
+            payoffCalcRtPrice.textContent = rtPrice.toFixed(0);
+            payoffCalcStrikePrice.textContent = strikePrice.toFixed(0);
+            payoffPerMwh.textContent = currentPayoffPerMwh.toFixed(2);
+            payoffCalcImbalance.textContent = Math.abs(imbalance).toFixed(0);
+            payoffCalcFoVolume.textContent = foVolume.toFixed(0);
+            volumeExercised.textContent = currentVolumeExercised.toFixed(2);
+            totalPayoff.textContent = currentTotalPayoff.toFixed(2);
+            totalPayoff.className = currentTotalPayoff > 0 ? 'output-value cost-positive' : 'output-value';
+
+
+            // Comparison
+            const currentCostWithoutFo = imbalance * rtPrice * -1; // Negative cost if surplus
+            costWithoutFo.textContent = currentCostWithoutFo.toFixed(0);
+            costWithoutFo.className = currentCostWithoutFo < 0 ? 'output-value cost-negative' : 'output-value cost-positive';
+
+
+            const currentCostWithFo = currentCostWithoutFo + currentTotalPayoff;
+            costWithFo.textContent = currentCostWithFo.toFixed(0);
+            costWithFo.className = currentCostWithFo < 0 ? 'output-value cost-negative' : 'output-value cost-positive';
+        }
+
+
+        foRtOutcomeSlider.addEventListener('input', updateFoVisualization);
+        foRtPriceSlider.addEventListener('input', updateFoVisualization);
+        foStrikePriceSlider.addEventListener('input', updateFoVisualization);
+        foQuantityTriggerSlider.addEventListener('input', updateFoVisualization);
+        foVolumeSlider.addEventListener('input', updateFoVisualization);
+        updateFoVisualization(); // Initial call
+
+
+        // --- Tier Chart Visualization ---
+        const tierChartCanvas = document.getElementById('tierChart');
+        const meanOutputSlider = document.getElementById('meanOutputSlider');
+        const stdDevSlider = document.getElementById('stdDevSlider');
+        const meanOutputValue = document.getElementById('meanOutputValue');
+        const stdDevValue = document.getElementById('stdDevValue');
+        let tierChart = null;
+
+        // Simple Normal CDF approximation (Error function based)
+        function erf(x) {
+            // save the sign of x
+            var sign = (x >= 0) ? 1 : -1;
+            x = Math.abs(x);
+
+            // constants
+            var a1 =  0.254829592;
+            var a2 = -0.284496736;
+            var a3 =  1.421413741;
+            var a4 = -1.453152027;
+            var a5 =  1.061405429;
+            var p  =  0.3275911;
+
+            // A&S formula 7.1.26
+            var t = 1.0/(1.0 + p*x);
+            var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return sign * y; // erf(-x) = -erf(x)
+        }
+
+        function normalCDF(x, mean, stdDev) {
+            return 0.5 * (1 + erf((x - mean) / (stdDev * Math.sqrt(2))));
+        }
+
+        function generateDistributionData(mean, stdDev, numPoints = 9) {
+            // Generate points roughly representing percentiles for visualization
+            const points = [];
+            const probabilities = [0.01, 0.1, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 0.99]; // Example cumulative probabilities
+            const minX = mean - 3 * stdDev;
+            const maxX = mean + 3 * stdDev;
+
+            // Create a discrete representation based on the continuous CDF
+             for (let i = 0; i < numPoints; i++) {
+                // Find x such that CDF(x) is close to probabilities[i]
+                // This is inverse CDF, hard to compute directly, so we approximate
+                // by sampling points and assigning probabilities.
+                // A simpler way for visualization: sample points evenly and get their CDF value
+                 const x = minX + (maxX - minX) * (i / (numPoints -1));
+                 const p = normalCDF(x, mean, stdDev);
+                 points.push({ x: Math.max(0, Math.round(x)), y: p }); // Ensure non-negative MW
+             }
+             // Sort by x value just in case
+             points.sort((a, b) => a.x - b.x);
+
+            // Make unique x values if duplicates arise from rounding
+            const uniquePoints = [];
+            const seenX = new Set();
+            for(const pt of points) {
+                if (!seenX.has(pt.x)) {
+                    uniquePoints.push(pt);
+                    seenX.add(pt.x);
+                } else {
+                    // If x is duplicate, slightly adjust or just use the last probability
+                    const last = uniquePoints[uniquePoints.length - 1];
+                    last.y = Math.max(last.y, pt.y); // Keep the higher probability for the step
+                }
+            }
+            return uniquePoints;
+        }
+
+        function updateTierChart() {
+            const mean = parseFloat(meanOutputSlider.value);
+            const stdDev = parseFloat(stdDevSlider.value);
+            meanOutputValue.textContent = mean.toFixed(0);
+            stdDevValue.textContent = stdDev.toFixed(0);
+
+            const data = generateDistributionData(mean, stdDev);
+
+            const labels = data.map(p => p.x);
+            const values = data.map(p => p.y);
+
+            // Define some fixed tiers based on probability for visualization
+            const tiers = [
+                { prob: 0.2, label: 'Q1 (Up)', color: 'rgba(255, 99, 132, 0.5)', dir: 'up' }, // ~20th percentile
+                { prob: 0.4, label: 'Q2 (Up)', color: 'rgba(255, 99, 132, 0.5)', dir: 'up' }, // ~40th percentile
+                { prob: 0.6, label: 'Q1 (Down)', color: 'rgba(54, 162, 235, 0.5)', dir: 'down'}, // ~60th percentile
+                { prob: 0.8, label: 'Q2 (Down)', color: 'rgba(54, 162, 235, 0.5)', dir: 'down'}  // ~80th percentile
+            ];
+
+            const annotations = tiers.map(tier => {
+                 // Find the data point just at or below the target probability
+                 let idx = data.findIndex(p => p.y >= tier.prob);
+                 if (idx === -1) idx = data.length - 1; // Use last point if prob is never reached
+                 if (idx > 0 && data[idx].y > tier.prob) idx--; // Step back if we overshot
+
+                 const xValue = data[idx].x;
+                 const yValue = tier.prob * 100; // Scale to chart y-axis
+
+                 return {
+                    type: 'line',
+                    xMin: xValue,
+                    xMax: xValue,
+                    yMin: 0,
+                    yMax: tier.prob, // Line goes up to the probability level
+                    borderColor: tier.color,
+                    borderWidth: 2,
+                    borderDash: [6, 6],
+                    label: {
+                        content: tier.label + ` (${xValue} MW)`,
+                        enabled: true,
+                        position: tier.dir === 'up' ? 'start' : 'end',
+                        yAdjust: tier.dir === 'up' ? -10 : 10,
+                        backgroundColor: tier.color,
+                        color: '#fff',
+                        font: { size: 10 }
+                    }
+                };
+            });
+
+
+            if (tierChart) {
+                tierChart.data.labels = labels;
+                tierChart.data.datasets[0].data = values;
+                tierChart.options.plugins.annotation.annotations = annotations;
+                tierChart.update();
+            } else {
+                const ctx = tierChartCanvas.getContext('2d');
+                tierChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Cumulative Probability',
+                            data: values,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            stepped: 'before', // Creates the step chart look
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 1,
+                                title: { display: true, text: 'Cumulative Probability' }
+                            },
+                            x: {
+                                title: { display: true, text: 'RT Output (MWh)' }
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += (context.parsed.y * 100).toFixed(1) + '% chance of output <= ' + context.parsed.x + ' MWh';
+                                        }
+                                        return label;
+                                    }
+                                }
+                            },
+                            annotation: {
+                                annotations: annotations
+                            }
+                        },
+                        maintainAspectRatio: false // Important for custom height/width
+                    }
+                });
+            }
+        }
+
+
+        meanOutputSlider.addEventListener('input', updateTierChart);
+        stdDevSlider.addEventListener('input', updateTierChart);
+
+         // Need annotation plugin - ensure it's loaded or handle error
+         // For simplicity here, we assume Chart.js bundle includes it or it's loaded separately.
+         // If using CDN, might need: https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js
+         // For now, let's proceed assuming it works.
+         updateTierChart(); // Initial call
+
+
+        // --- Seller's Dilemma ---
+        const sellerCapacitySlider = document.getElementById('sellerCapacitySlider');
+        const sellerCostSlider = document.getElementById('sellerCostSlider');
+        const daEnergyPriceSlider = document.getElementById('daEnergyPriceSlider');
+        const daFoPriceSlider = document.getElementById('daFoPriceSlider');
+        const sellerStrikePriceSlider = document.getElementById('sellerStrikePriceSlider');
+        const foProbSlider = document.getElementById('foProbSlider');
+
+        const sellerCapacityValue = document.getElementById('sellerCapacityValue');
+        const sellerCostValue = document.getElementById('sellerCostValue');
+        const daEnergyPriceValue = document.getElementById('daEnergyPriceValue');
+        const daFoPriceValue = document.getElementById('daFoPriceValue');
+        const sellerStrikePriceValue = document.getElementById('sellerStrikePriceValue');
+        const foProbValue = document.getElementById('foProbValue');
+
+        const profitDaEnergy = document.getElementById('profitDaEnergy');
+        const profitFoPremiumPart = document.getElementById('profitFoPremiumPart');
+        const profitFoProbPart = document.getElementById('profitFoProbPart');
+        const profitFoStrikePart = document.getElementById('profitFoStrikePart');
+        const profitFoCostPart = document.getElementById('profitFoCostPart');
+        const profitDaFo = document.getElementById('profitDaFo');
+
+        function updateSellerDilemma() {
+            const capacity = parseFloat(sellerCapacitySlider.value);
+            const cost = parseFloat(sellerCostSlider.value);
+            const daPrice = parseFloat(daEnergyPriceSlider.value);
+            const foPremium = parseFloat(daFoPriceSlider.value);
+            const foStrike = parseFloat(sellerStrikePriceSlider.value);
+            const foProb = parseFloat(foProbSlider.value);
+
+            sellerCapacityValue.textContent = capacity.toFixed(0);
+            sellerCostValue.textContent = cost.toFixed(0);
+            daEnergyPriceValue.textContent = daPrice.toFixed(0);
+            daFoPriceValue.textContent = foPremium.toFixed(1);
+            sellerStrikePriceValue.textContent = foStrike.toFixed(0);
+            foProbValue.textContent = foProb.toFixed(2);
+
+            const energyProfit = daPrice - cost;
+            profitDaEnergy.textContent = energyProfit.toFixed(1);
+            profitDaEnergy.className = energyProfit >= 0 ? 'output-value cost-positive' : 'output-value cost-negative';
+
+
+            const foProfit = foPremium + foProb * Math.max(0, foStrike - cost); // Assume seller only gains if strike > cost
+            profitFoPremiumPart.textContent = foPremium.toFixed(1);
+            profitFoProbPart.textContent = foProb.toFixed(2);
+            profitFoStrikePart.textContent = foStrike.toFixed(0);
+            profitFoCostPart.textContent = cost.toFixed(0);
+            profitDaFo.textContent = foProfit.toFixed(1);
+             profitDaFo.className = foProfit >= 0 ? 'output-value cost-positive' : 'output-value cost-negative';
+        }
+
+        sellerCapacitySlider.addEventListener('input', updateSellerDilemma);
+        sellerCostSlider.addEventListener('input', updateSellerDilemma);
+        daEnergyPriceSlider.addEventListener('input', updateSellerDilemma);
+        daFoPriceSlider.addEventListener('input', updateSellerDilemma);
+        sellerStrikePriceSlider.addEventListener('input', updateSellerDilemma);
+        foProbSlider.addEventListener('input', updateSellerDilemma);
+        updateSellerDilemma(); // Initial call
+
+    </script>
+
+</body>
+</html>

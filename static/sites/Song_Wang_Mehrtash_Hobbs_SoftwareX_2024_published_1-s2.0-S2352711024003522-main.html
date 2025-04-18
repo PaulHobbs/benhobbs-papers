@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding HOPE: Holistic Optimization for Electricity Grids</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+        </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            line-height: 1.8;
+            color: #333;
+        }
+        h1, h2, h3 {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        h1 {
+             border-bottom: 2px solid #ddd;
+             font-weight: 400;
+        }
+        .container {
+            max-width: 900px; /* Increased width for better layout */
+            margin-top: 2rem;
+            margin-bottom: 4rem;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e9ecef;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        .param-value {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary color */
+        }
+        .explanation {
+             background-color: #e9f5ff; /* Light blue background */
+             border-left: 5px solid #0d6efd;
+             padding: 15px;
+             margin-top: 15px;
+             font-size: 0.95em;
+        }
+        .tech-icon {
+            font-size: 2rem;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+        .term-link {
+            color: #0d6efd;
+            text-decoration: none;
+            border-bottom: 1px dotted #0d6efd;
+        }
+        .term-link:hover {
+            color: #0a58ca;
+            border-bottom-style: solid;
+        }
+        canvas {
+            max-height: 400px; /* Limit chart height */
+            margin-top: 1rem;
+        }
+        #result-summary {
+            margin-top: 1.5rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <h1>Planning Our Electric Future: An Introduction to HOPE</h1>
+        <p class="lead">Our electricity grids are undergoing a massive transformation. We need them to be reliable and affordable, but also increasingly clean to combat climate change. Integrating variable sources like wind and solar, alongside energy storage and new policies, makes planning the future grid incredibly complex. How do we make the right investment decisions today for the grid we need tomorrow?</p>
+        <p>The academic paper introduces the <strong>Holistic Optimization Program for Electricity (HOPE)</strong>, an open-source tool designed to help answer these questions. It uses mathematical optimization to find the most cost-effective ways to build and operate the power grid while meeting demand and policy goals.</p>
+        <p>This post explores the core ideas behind tools like HOPE, using interactive elements to build intuition about the trade-offs involved in grid planning.</p>
+        <p><em>Based on: Wang, S., Song, Z., Mehrtash, M., & Hobbs, B. F. (2025). HOPE: Holistic Optimization Program for Electricity. SoftwareX, 29, 101982. <a href="https://doi.org/10.1016/j.softx.2024.101982" target="_blank" class="term-link">DOI: 10.1016/j.softx.2024.101982</a></em></p>
+
+        <h2>The Challenge: Juggling Costs, Reliability, and Cleanliness</h2>
+        <p>Imagine you're responsible for planning the electricity supply for a region for the next 10-20 years. You have several goals:</p>
+        <ul>
+            <li><strong>Reliability:</strong> Ensure there's always enough electricity to meet demand, even during peak hours or when some power plants are offline.</li>
+            <li><strong>Affordability:</strong> Keep electricity costs low for consumers. This involves considering both the upfront investment costs of new power plants and transmission lines, and the ongoing operational costs (fuel, maintenance).</li>
+            <li><strong>Cleanliness:</strong> Reduce greenhouse gas emissions and meet environmental regulations or policy targets, like a <a href="https://en.wikipedia.org/wiki/Renewable_portfolio_standard" target="_blank" class="term-link">Renewable Portfolio Standard (RPS)</a> or a <a href="https://en.wikipedia.org/wiki/Emissions_trading#Cap_and_trade" target="_blank" class="term-link">Carbon Cap</a>.</li>
+        </ul>
+        <p>Making decisions is tricky because different technologies have different profiles:</p>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><span class="tech-icon">🔥</span> Fossil Fuels (e.g., Natural Gas)</h5>
+                        <p class="card-text">Relatively low investment cost, reliable (dispatchable), but produce emissions and have fuel costs.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><span class="tech-icon">☀️</span> Solar PV</h5>
+                        <p class="card-text">Zero emissions, zero fuel cost, decreasing investment cost, but variable (only generates when sunny) and non-dispatchable.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><span class="tech-icon">🌬️</span> Wind Power</h5>
+                        <p class="card-text">Zero emissions, zero fuel cost, but variable (only generates when windy), non-dispatchable, and location-dependent.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><span class="tech-icon">🔋</span> Battery Storage</h5>
+                        <p class="card-text">Can store excess renewable energy for later use, improving reliability, but adds cost and has energy losses.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p>How do you find the "best" mix of these (and potentially other) technologies? This is where optimization comes in.</p>
+
+        <h2>What is Optimization? Finding the "Best" Plan</h2>
+        <p>At its core, optimization is about making the best choices given a set of constraints and an objective. In power system planning, the typical objective is to <strong>minimize the total system cost</strong>. This cost includes:</p>
+        <ul>
+            <li><strong>Investment Costs:</strong> The upfront cost of building new generators, transmission lines, and storage.</li>
+            <li><strong>Operational Costs:</strong> The cost of running the system, primarily fuel costs for fossil generators, plus maintenance.</li>
+            <li><strong>Policy Costs (Implicit/Explicit):</strong> Costs associated with meeting regulations, like buying carbon allowances or penalties for not meeting RPS targets.</li>
+        </ul>
+        <p>This minimization is subject to several crucial <strong>constraints</strong>:</p>
+        <ul>
+            <li><strong>Meeting Demand:</strong> Generation must meet electricity demand at all times (or at least in representative time periods).</li>
+            <li><strong>Operational Limits:</strong> Generators have maximum output limits, ramp rate limits (how quickly they can increase/decrease output), and minimum run times. Renewables have availability limits based on weather. Storage has limits on charge/discharge rates and capacity.</li>
+            <li><strong>Policy Constraints:</strong> Limits on total emissions (carbon cap) or requirements for a minimum percentage of generation from renewables (RPS).</li>
+            <li><strong>Resource Limits:</strong> There might be limits on suitable land for solar/wind or on transmission capacity.</li>
+        </ul>
+        <p>Mathematically, this is often formulated as a <a href="https://en.wikipedia.org/wiki/Mathematical_optimization" target="_blank" class="term-link">constrained optimization problem</a>. HOPE uses techniques like <a href="https://en.wikipedia.org/wiki/Linear_programming" target="_blank" class="term-link">Linear Programming (LP)</a> or <a href="https://en.wikipedia.org/wiki/Integer_programming#Mixed-integer_linear_programming" target="_blank" class="term-link">Mixed-Integer Linear Programming (MILP)</a> to solve these complex problems. The goal is to find the values for decision variables (like how much capacity of each technology to build, $Cap_{tech}$, and how much each generator produces in each hour, $Gen_{tech, hour}$) that minimize the total cost function:</p>
+        $$ \min \sum_{tech} (\text{InvestCost}_{tech} \times Cap_{tech}) + \sum_{tech, hour} (\text{OpCost}_{tech, hour} \times Gen_{tech, hour}) $$
+        <p>Subject to constraints like:</p>
+        $$ \sum_{tech} Gen_{tech, hour} \ge \text{Demand}_{hour} \quad \forall \text{ hours} $$
+        $$ \sum_{tech} (\text{EmissionRate}_{tech} \times Gen_{tech, hour}) \le \text{CarbonCap}_{hour} \quad \forall \text{ hours} $$
+        $$ \dots \text{(and many other constraints)} $$
+
+        <h2>Interactive Exploration: Building a Future Grid</h2>
+        <p>Let's explore these trade-offs interactively. Below is a simplified simulation of a <a href="https://en.wikipedia.org/wiki/Electric_power_transmission#Capacity_expansion" target="_blank" class="term-link">Generation Expansion Planning (GEP)</a> problem for a single region. You can adjust key parameters using the sliders and see how the cost-optimal mix of generation technologies changes. The goal is always to meet a target peak demand reliably while minimizing total annualized cost (investment + fixed O&M + estimated fuel/variable O&M).</p>
+
+        <div class="interactive-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="carbonCapSlider" class="form-label">Carbon Cap (% of 2020 emissions): <span id="carbonCapValue" class="param-value">100</span>%</label>
+                    <input type="range" class="form-range" id="carbonCapSlider" min="10" max="100" step="5" value="100">
+                    <small>Lower values represent stricter climate policies.</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="solarCostSlider" class="form-label">Solar Investment Cost (% of baseline): <span id="solarCostValue" class="param-value">100</span>%</label>
+                    <input type="range" class="form-range" id="solarCostSlider" min="50" max="150" step="10" value="100">
+                     <small>Lower values reflect technology becoming cheaper.</small>
+               </div>
+                 <div class="col-md-6">
+                    <label for="gasCostSlider" class="form-label">Natural Gas Fuel Price (% of baseline): <span id="gasCostValue" class="param-value">100</span>%</label>
+                    <input type="range" class="form-range" id="gasCostSlider" min="50" max="200" step="10" value="100">
+                     <small>Higher values make gas generation more expensive.</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="batteryCostSlider" class="form-label">Battery Investment Cost (% of baseline): <span id="batteryCostValue" class="param-value">100</span>%</label>
+                    <input type="range" class="form-range" id="batteryCostSlider" min="50" max="150" step="10" value="100">
+                     <small>Lower values make energy storage cheaper.</small>
+                </div>
+            </div>
+
+            <canvas id="capacityChart"></canvas>
+             <div id="result-summary">
+                Optimal Capacity Mix (MW) | Total Annualized Cost: $<span id="totalCostValue">...</span> M | Total Emissions: $<span id="totalEmissionsValue">...</span> kT CO2
+            </div>
+
+            <div class="explanation">
+                <strong>How to interpret this:</strong> This chart shows the calculated optimal amount of generating capacity (in Megawatts, MW) for each technology type needed to meet demand reliably at the lowest cost, given your chosen parameters.
+                <ul>
+                    <li>Try lowering the <strong>Carbon Cap</strong>. Notice how high-emission sources (like traditional Gas) are reduced or replaced by low-emission sources (Solar, Wind, potentially Gas with CCS if available) and enabling technologies like Batteries. This usually increases the total cost.</li>
+                    <li>Try reducing the <strong>Solar Investment Cost</strong>. Solar likely becomes more dominant in the mix, potentially displacing other technologies.</li>
+                    <li>Increase the <strong>Natural Gas Fuel Price</strong>. Gas generation becomes less economically attractive, potentially leading to more investment in renewables or storage.</li>
+                    <li>Lower the <strong>Battery Investment Cost</strong>. Batteries become more viable, enabling higher penetrations of variable renewables like solar and wind by storing energy for when the sun isn't shining or the wind isn't blowing.</li>
+                </ul>
+                <em>Note: This is a highly simplified model for illustration. Real models like HOPE include much more detail (hourly variations, transmission constraints, unit commitment, different storage types, etc.). The optimization here is simulated based on expected qualitative behavior.</em>
+            </div>
+        </div>
+
+
+        <h2>HOPE's Approach: Holistic and Flexible</h2>
+        <p>The interactive example gives a taste of the GEP problem. HOPE goes further by being:</p>
+        <ul>
+            <li><strong>Holistic:</strong> It can link long-term investment planning (<a href="https://en.wikipedia.org/wiki/Electric_power_transmission#Capacity_expansion" target="_blank" class="term-link">GTEP</a> - Generation and Transmission Expansion Planning) with detailed short-term operational simulation (<a href="https://en.wikipedia.org/wiki/Production_cost_modeling" target="_blank" class="term-link">PCM</a> - Production Cost Modeling). This ensures that the planned system can actually operate reliably and cost-effectively on an hour-to-hour basis, considering things like <a href="https://en.wikipedia.org/wiki/Unit_commitment_problem_in_electrical_power_generation" target="_blank" class="term-link">unit commitment</a> (decisions to turn generators on/off).</li>
+            <li><strong>Flexible:</strong> Users can activate different features (e.g., include storage, model transmission lines, enforce specific policies) and choose different levels of temporal and spatial detail depending on their needs. It supports various solvers (both open-source and commercial).</li>
+            <li><strong>Policy-Aware:</strong> HOPE includes features to model complex policy interactions across different regions or jurisdictions (e.g., state-level RPS targets within a multi-state power market).</li>
+            <li><strong>Transparent & Open-Source:</strong> Being open-source (available on <a href="https://github.com/HOPE-Model-Project" target="_blank" class="term-link">GitHub</a>) allows users to understand, verify, and modify the model, fostering collaboration and trust, especially important for policy analysis.</li>
+        </ul>
+
+        <h2>Case Study Highlights (from the paper)</h2>
+        <p>The paper demonstrates HOPE's capabilities with case studies for Maryland and the wider PJM Interconnection (a regional transmission organization in the Eastern US). </p>
+        <p>For Maryland, aiming for 100% clean energy by 2035, the model shows significant deployment of solar PV and energy storage, replacing fossil fuels. It also captures the operational dynamics, like battery charging during sunny periods and discharging during peak demand hours (similar to the patterns hinted at in our interactive example).</p>
+        <div class="text-center">
+             <img src="https://raw.githubusercontent.com/mjmeh/HOPE-Model-Project/main/docs/src/assets/MD_results.png" class="img-fluid" alt="Maryland Case Study Results Chart (placeholder - adapted from paper Fig 4/5)">
+             <small class="d-block text-muted">Figure: Stylized representation of Maryland results (based on Paper Figs 4 & 5), showing a shift towards Solar PV and Batteries by 2035.</small>
+        </div>
+         <p>For the broader PJM region, under a different scenario, the results highlight large-scale onshore wind deployment alongside gas plants fitted with Carbon Capture and Storage (CCS) and battery storage.</p>
+          <div class="text-center mt-3">
+             <img src="https://raw.githubusercontent.com/mjmeh/HOPE-Model-Project/main/docs/src/assets/PJM_results.png" class="img-fluid" alt="PJM Case Study Results Chart (placeholder - adapted from paper Fig 6)">
+              <small class="d-block text-muted">Figure: Stylized representation of PJM results (based on Paper Fig 6), showing significant wind deployment by 2035.</small>
+        </div>
+        <p>These examples illustrate how HOPE can provide quantitative insights into feasible and cost-effective pathways for decarbonizing the electricity sector under specific policy goals and technology assumptions.</p>
+
+
+        <h2>Conclusion: Empowering Better Grid Decisions</h2>
+        <p>Planning the future electricity grid is a complex optimization problem with high stakes. Tools like HOPE provide a structured, quantitative, and increasingly accessible way to explore different pathways, technologies, and policies.</p>
+        <p>By combining long-term planning with operational simulation in a flexible, transparent framework, HOPE aims to support better decision-making by policymakers, grid planners, researchers, and other stakeholders navigating the energy transition. The interactive exploration above, though simplified, hopefully provides some intuition into the fundamental trade-offs these powerful tools help us understand and manage.</p>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JS for Interactivity -->
+    <script>
+        // --- DOM Elements ---
+        const carbonCapSlider = document.getElementById('carbonCapSlider');
+        const solarCostSlider = document.getElementById('solarCostSlider');
+        const gasCostSlider = document.getElementById('gasCostSlider');
+        const batteryCostSlider = document.getElementById('batteryCostSlider');
+
+        const carbonCapValueSpan = document.getElementById('carbonCapValue');
+        const solarCostValueSpan = document.getElementById('solarCostValue');
+        const gasCostValueSpan = document.getElementById('gasCostValue');
+        const batteryCostValueSpan = document.getElementById('batteryCostValue');
+
+        const totalCostValueSpan = document.getElementById('totalCostValue');
+        const totalEmissionsValueSpan = document.getElementById('totalEmissionsValue');
+
+        const ctx = document.getElementById('capacityChart').getContext('2d');
+
+        // --- Baseline Parameters (Simplified & Representative) ---
+        // These represent relative costs and characteristics, not precise engineering values.
+        const baseline = {
+            peakDemand: 1000, // MW (Target capacity needs to exceed this)
+            reserveMargin: 0.15, // Need 15% extra capacity
+            technologies: {
+                gas:    { name: 'Natural Gas', invCost: 100,  opCost: 50,  emissions: 0.4, color: 'rgba(108, 117, 125, 0.8)', capacityFactor: 0.85 }, // $/kW-yr, $/MWh, tCO2/MWh
+                solar:  { name: 'Solar PV',    invCost: 80,   opCost: 5,   emissions: 0.0, color: 'rgba(255, 193, 7, 0.8)',  capacityFactor: 0.20 },
+                wind:   { name: 'Wind',        invCost: 150,  opCost: 3,   emissions: 0.0, color: 'rgba(13, 110, 253, 0.8)',  capacityFactor: 0.35 },
+                battery:{ name: 'Battery',     invCost: 120,  opCost: 2,   emissions: 0.0, color: 'rgba(25, 135, 84, 0.8)',  capacityFactor: 0.90 } // Treat battery cost as $/kW, opCost low
+            },
+            // Base capacity mix (heuristic starting point)
+            baseCapacity: { gas: 800, solar: 200, wind: 200, battery: 100 }
+        };
+        const targetCapacity = baseline.peakDemand * (1 + baseline.reserveMargin);
+
+        // --- Chart Configuration ---
+        let capacityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.values(baseline.technologies).map(t => t.name),
+                datasets: [{
+                    label: 'Optimal Capacity (MW)',
+                    data: [], // To be filled by simulation
+                    backgroundColor: Object.values(baseline.technologies).map(t => t.color),
+                    borderColor: Object.values(baseline.technologies).map(t => t.color.replace('0.8', '1')),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y', // Horizontal bars
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Installed Capacity (MW)' }
+                    },
+                     y: {
+                         ticks: { autoSkip: false } // Ensure all labels show
+                    }
+                },
+                 plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.x !== null) {
+                                    label += context.parsed.x.toFixed(0) + ' MW';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false // Allow chart to resize height
+            }
+        });
+
+        // --- Simulation Logic (Simplified Heuristic) ---
+        function updateSimulation() {
+            // 1. Read current slider values
+            const carbonCapFactor = parseInt(carbonCapSlider.value) / 100; // 0.1 to 1.0
+            const solarCostFactor = parseInt(solarCostSlider.value) / 100; // 0.5 to 1.5
+            const gasCostFactor = parseInt(gasCostSlider.value) / 100; // 0.5 to 2.0
+            const batteryCostFactor = parseInt(batteryCostSlider.value) / 100; // 0.5 to 1.5
+
+            // Update display values
+            carbonCapValueSpan.textContent = carbonCapSlider.value;
+            solarCostValueSpan.textContent = solarCostSlider.value;
+            gasCostValueSpan.textContent = gasCostSlider.value;
+            batteryCostValueSpan.textContent = batteryCostSlider.value;
+
+            // 2. Calculate "Optimal" Mix (Heuristic Rules - NOT a real optimization)
+            // This part simulates the *qualitative* outcome of an optimization
+            let optimalCapacity = { ...baseline.baseCapacity }; // Start with base
+
+            // Adjust based on carbon cap (lower cap -> less gas, more renewables/battery)
+            // This is a very crude representation
+            let gasReductionFactor = Math.max(0, (carbonCapFactor - 0.1) / (1.0 - 0.1)); // Scale gas down as cap tightens
+            optimalCapacity.gas *= gasReductionFactor * gasReductionFactor; // Sharper reduction for tight caps
+
+            // Adjust based on costs (lower cost -> more of that tech)
+            optimalCapacity.solar *= (1 / solarCostFactor);
+            optimalCapacity.battery *= (1 / batteryCostFactor);
+            optimalCapacity.gas *= (1 / gasCostFactor); // Higher fuel cost reduces gas viability
+
+            // Increase renewables/battery to compensate for reduced gas (if cap is tight)
+            let compensationFactor = (1 - gasReductionFactor);
+             if (compensationFactor > 0) {
+                 optimalCapacity.solar += baseline.baseCapacity.solar * compensationFactor * (1 / solarCostFactor);
+                 optimalCapacity.wind += baseline.baseCapacity.wind * compensationFactor; // Assume wind cost fixed for simplicity
+                 optimalCapacity.battery += baseline.baseCapacity.battery * compensationFactor * (1 / batteryCostFactor);
+             }
+
+             // 3. Scale to meet target capacity
+             let currentTotalCapacity = Object.values(optimalCapacity).reduce((sum, cap) => sum + cap, 0);
+             let scaleFactor = targetCapacity / currentTotalCapacity;
+             for (const tech in optimalCapacity) {
+                 optimalCapacity[tech] *= scaleFactor;
+             }
+
+            // 4. Calculate total cost and emissions (Simplified)
+            let totalAnnualCost = 0;
+            let totalEmissions = 0;
+            const hoursPerYear = 8760;
+
+            for (const tech in optimalCapacity) {
+                const capacity = optimalCapacity[tech];
+                const techData = baseline.technologies[tech];
+                const currentInvCost = techData.invCost * (
+                    tech === 'solar' ? solarCostFactor :
+                    tech === 'battery' ? batteryCostFactor : 1
+                );
+                const currentOpCost = techData.opCost * (tech === 'gas' ? gasCostFactor : 1);
+
+                // Annualized Investment Cost (simplified) - assume 10% annuity factor
+                totalAnnualCost += capacity * currentInvCost * 0.1;
+
+                // Simplified Operational Cost & Emissions (assuming generation proportional to capacity * capacity_factor)
+                let estimatedGeneration = capacity * techData.capacityFactor * hoursPerYear; // MWh/yr
+                totalAnnualCost += estimatedGeneration * currentOpCost / 1000; // Convert cost to M$/yr
+                totalEmissions += estimatedGeneration * techData.emissions; // tCO2/yr
+            }
+
+            // Convert emissions to kiloTonnes
+            totalEmissions /= 1000;
+
+            // 5. Update Chart Data
+            capacityChart.data.datasets[0].data = Object.keys(baseline.technologies).map(tech => optimalCapacity[tech] || 0);
+            capacityChart.update();
+
+             // 6. Update Summary Text
+            totalCostValueSpan.textContent = totalAnnualCost.toFixed(0);
+            totalEmissionsValueSpan.textContent = totalEmissions.toFixed(0);
+        }
+
+        // --- Event Listeners ---
+        carbonCapSlider.addEventListener('input', updateSimulation);
+        solarCostSlider.addEventListener('input', updateSimulation);
+        gasCostSlider.addEventListener('input', updateSimulation);
+        batteryCostSlider.addEventListener('input', updateSimulation);
+
+        // --- Initial Calculation ---
+        document.addEventListener('DOMContentLoaded', updateSimulation);
+
+    </script>
+
+</body>
+</html>

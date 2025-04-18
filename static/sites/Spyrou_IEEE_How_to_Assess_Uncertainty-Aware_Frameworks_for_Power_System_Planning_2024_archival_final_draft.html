@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessing Uncertainty-Aware Frameworks for Power System Planning</title>
+    <!-- Bootstrap CSS (via CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- MathJax Library -->
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- Chart.js (via CDN) - Although not used in final version, kept for potential future extension -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Minimal Custom CSS */
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+            color: #0056b3; /* A slightly darker blue */
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 1.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.3em;}
+        h3 { font-size: 1.4rem; color: #17a2b8; /* Teal color for H3 */}
+
+        .container {
+            max-width: 960px;
+            margin: auto;
+            padding: 20px;
+        }
+        .lead {
+            font-size: 1.25rem;
+            font-weight: 300;
+            color: #555;
+        }
+        .interactive-section {
+            background-color: #f8f9fa; /* Light grey background */
+            border: 1px solid #dee2e6; /* Light border */
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 2em;
+            margin-bottom: 2em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .slider-label {
+            font-weight: bold;
+            margin-bottom: 0.5em;
+            display: block;
+            color: #495057; /* Darker grey for labels */
+        }
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #007bff; /* Bootstrap primary blue */
+            min-width: 80px; /* Ensure alignment */
+            display: inline-block;
+            text-align: right;
+        }
+        .comparison-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 250px; /* Increased height */
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #fff;
+            position: relative;
+            margin-top: 20px;
+        }
+        .bar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 18%; /* Adjust width for spacing */
+            position: relative;
+        }
+        .bar {
+            width: 80%; /* Wider bars */
+            background-color: steelblue;
+            transition: height 0.3s ease-in-out, background-color 0.3s ease-in-out;
+            position: relative;
+            cursor: pointer; /* Indicate interactivity */
+        }
+        .bar-label {
+            margin-top: 8px;
+            font-size: 0.9em;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+        }
+        .bar-value-tooltip {
+            position: absolute;
+            bottom: 105%; /* Position above the bar */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 10;
+        }
+        .bar-container:hover .bar-value-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        .regret-bar {
+            background-color: #dc3545; /* Red for regret */
+        }
+        .cost-bar {
+            background-color: #28a745; /* Green for cost */
+        }
+        .sp-bar { background-color: #ffc107; /* Yellow for SP */ }
+        .rdm1-bar { background-color: #17a2b8; /* Teal */ }
+        .rdm2-bar { background-color: #6f42c1; /* Indigo */ }
+        .rdm3-bar { background-color: #fd7e14; /* Orange */ }
+
+        .framework-box {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+        }
+        .framework-title {
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 10px;
+        }
+        .framework-step {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            padding-left: 15px;
+            position: relative;
+        }
+        .framework-step::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #17a2b8;
+        }
+        .definition {
+            font-style: italic;
+            color: #6c757d; /* Muted grey */
+            margin-bottom: 1em;
+        }
+        .highlight {
+             background-color: #fff3cd; /* Light yellow highlight */
+             padding: 2px 4px;
+             border-radius: 3px;
+        }
+        .wikipedia-link {
+            color: #0d6efd;
+            text-decoration: none;
+            border-bottom: 1px dotted #0d6efd;
+        }
+        .wikipedia-link:hover {
+            text-decoration: none;
+            border-bottom: 1px solid #0d6efd;
+        }
+        .small-text {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        /* Simple Flowchart Styles */
+        .flowchart {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .flow-step {
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 120px; /* Minimum width for steps */
+            margin: 5px; /* Spacing between steps */
+            background-color: #e9ecef; /* Light grey background */
+        }
+        .flow-arrow {
+            font-size: 1.5em;
+            color: #6c757d;
+            margin: 0 10px; /* Spacing around arrows */
+        }
+         /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .flowchart {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+            .comparison-chart {
+                height: 300px; /* More height on mobile */
+            }
+            .bar-container {
+                 width: 22%; /* Slightly wider on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="text-center mt-5 mb-5">
+            <h1>Navigating the Fog: Assessing Frameworks for Power System Planning Under Uncertainty</h1>
+            <p class="lead">An interactive exploration inspired by the paper "How to Assess Uncertainty-Aware Frameworks for Power System Planning?" by Spyrou et al.</p>
+        </header>
+
+        <section>
+            <h2>The High-Stakes Game of Power Planning</h2>
+            <p>Planning the future of our electricity grids is a monumental task. We need to invest billions in power plants and transmission lines that will operate for decades. But the future is deeply uncertain. How much will electricity demand grow? What will fuel (like natural gas or coal) cost? What new technologies will emerge? What climate policies will be enacted? Making the wrong bets can lead to expensive, unreliable, or polluting energy systems.</p>
+            <p>Traditional planning often relies on a few fixed <a href="https://en.wikipedia.org/wiki/Scenario_planning" target="_blank" class="wikipedia-link">scenarios</a> (e.g., "high demand, low fuel cost"). But what if the future unfolds differently? A plan optimized for one scenario might perform terribly in another.</p>
+            <div class="definition">
+                <strong>Deep Uncertainty:</strong> Situations where analysts do not know or cannot agree on (1) the models relating system variables, (2) the probability distributions for key parameters, or (3) the value of alternative outcomes. Power system planning often faces deep uncertainty.
+            </div>
+            <p>This interactive post explores the core ideas from the paper by Spyrou et al., which tackles how to evaluate better planning methods—frameworks designed to handle this deep uncertainty.</p>
+        </section>
+
+        <section>
+            <h2>How Do We Judge a Planning Framework?</h2>
+            <p>The paper proposes a set of criteria to assess how well different planning frameworks handle uncertainty and support decision-making. Think of it as a scorecard for planning methods. They extend earlier work by proposing three main categories:</p>
+            <ul>
+                <li><strong>Methodological Capability:</strong> Can the framework actually model the complexities? This includes how it represents uncertainties (scenarios, probabilities?), defines possible plans (a fixed list, an optimized solution?), calculates consequences (cost, reliability, emissions?), and incorporates decision-maker preferences.</li>
+                <li><strong>Practical Applicability:</strong> Is the framework usable in the real world? This considers computational resources needed (can we run the models?), data requirements, software availability, required expertise, and whether it fits regulatory processes.</li>
+                <li><strong>Contribution to Decision Making and Stakeholder Acceptance:</strong> Does the framework help decision-makers and stakeholders understand the trade-offs and build consensus? How well does it engage different parties? Can it incorporate multiple viewpoints? This is crucial because public acceptance is often vital for implementing large infrastructure projects.</li>
+            </ul>
+            <p>Using these criteria helps planners choose or design a process that's not just technically sound, but also practical and likely to lead to accepted outcomes.</p>
+        </section>
+
+        <section>
+            <h2>A Tale of Two Philosophies: RDM vs. SP</h2>
+            <p>The paper compares two fundamentally different approaches to planning under uncertainty, using the criteria above:</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="framework-box">
+                        <div class="framework-title">Robust Decision Making (RDM) - "Agree on Plans"</div>
+                        <p class="small-text">Focus: Find plans that perform reasonably well across a wide range of possible futures.</p>
+                        <div class="framework-step">Start with a set of candidate investment plans (strategies).</div>
+                        <div class="framework-step">Simulate the performance (e.g., cost, reliability) of each plan across hundreds or thousands of future scenarios.</div>
+                        <div class="framework-step">Analyze the results to identify vulnerabilities: under which scenarios does a plan perform poorly?</div>
+                        <div class="framework-step">Use this information to refine existing plans or design new, more robust ones.</div>
+                        <div class="framework-step">Iterate until decision-makers are comfortable with the robustness of a plan.</div>
+                        <div class="flowchart">
+                            <div class="flow-step">Define Plans (L)</div>
+                            <div class="flow-arrow">➡️</div>
+                            <div class="flow-step">Simulate across Scenarios (X)</div>
+                            <div class="flow-arrow">➡️</div>
+                            <div class="flow-step">Analyze Vulnerabilities</div>
+                            <div class="flow-arrow">🔄</div>
+                            <div class="flow-step">Refine/Add Plans</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="framework-box">
+                        <div class="framework-title">Stochastic Programming (SP) - "Agree on Assumptions"</div>
+                        <p class="small-text">Focus: Find the single best plan that optimizes expected performance, considering uncertainty explicitly.</p>
+                        <div class="framework-step">Define the uncertain factors and their (often simplified) probability distributions (scenarios with probabilities).</div>
+                        <div class="framework-step">Formulate a large-scale <a href="https://en.wikipedia.org/wiki/Stochastic_programming" target="_blank" class="wikipedia-link">optimization problem</a> that minimizes (or maximizes) an objective (e.g., expected cost) subject to constraints.</div>
+                        <div class="framework-step">Crucially, SP models <span class="highlight">recourse</span>: the ability to adjust later decisions based on how uncertainty resolves over time.</div>
+                        <div class="framework-step">Solve the optimization problem (often requiring approximations due to size) to find the optimal initial investment plan.</div>
+                        <div class="flowchart">
+                             <div class="flow-step">Define Uncertainties (X, Probabilities) & Model</div>
+                             <div class="flow-arrow">➡️</div>
+                             <div class="flow-step">Formulate Optimization (Minimize Expected Cost)</div>
+                             <div class="flow-arrow">➡️</div>
+                             <div class="flow-step">Solve (Approximate)</div>
+                             <div class="flow-arrow">➡️</div>
+                             <div class="flow-step">Get Optimal Plan (L*)</div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <p>RDM explores the performance of *given* plans, while SP *finds* an optimal plan based on probabilistic assumptions. RDM is simulation-heavy, SP is optimization-heavy.</p>
+        </section>
+
+        <section class="interactive-section">
+            <h2>Interactive Exploration: Bangladesh Power Planning</h2>
+            <p>Let's explore these ideas using a simplified simulation inspired by the paper's Bangladesh case study. Imagine we need to decide on initial investments (first stage, say 2016-2025) in power generation capacity. Key uncertainties include future electricity demand growth and the price/availability of different fuels (especially imported vs. domestic coal and interconnections with India).</p>
+            <p>We'll compare three hypothetical RDM candidate plans against the plan suggested by a simplified SP optimization. Use the sliders to change the assumptions about the future scenario (which resolves *after* the initial investments are made) and see how the plans perform in terms of <span class="highlight">Expected Regret</span>.</p>
+            <div class="definition">
+                <strong>Regret:</strong> For a given future scenario, the regret of a plan is the difference between its cost and the cost of the *best possible* plan had we known that specific future would occur. Low regret across many scenarios indicates robustness.
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <label for="demandSlider" class="form-label slider-label">Future Demand Growth:</label>
+                    <input type="range" class="form-range" id="demandSlider" min="0" max="2" step="1" value="1">
+                    <div class="text-center"><span id="demandValue" class="value-display">Medium</span></div>
+                </div>
+                <div class="col-md-4">
+                    <label for="fuelPriceSlider" class="form-label slider-label">Future Fuel Price (Imported):</label>
+                    <input type="range" class="form-range" id="fuelPriceSlider" min="0" max="2" step="1" value="1">
+                    <div class="text-center"><span id="fuelPriceValue" class="value-display">Medium</span></div>
+                </div>
+                <div class="col-md-4">
+                    <label for="domCoalSlider" class="form-label slider-label">Domestic Coal Viable?</label>
+                    <input type="range" class="form-range" id="domCoalSlider" min="0" max="1" step="1" value="1">
+                     <div class="text-center"><span id="domCoalValue" class="value-display">Yes</span></div>
+                </div>
+            </div>
+
+             <p class="text-center small-text mb-3">Performance Metric: <span class="highlight">Regret</span> (Lower is better, indicates robustness)</p>
+
+            <div class="comparison-chart" id="regretChart">
+                <!-- Bars will be added here by JavaScript -->
+            </div>
+
+            <p class="mt-3 small-text"><strong>Note:</strong> This is a highly simplified model for illustrative purposes. The actual costs and regrets depend on complex interactions and second-stage adjustments not fully captured here. The "SP Optimal" plan shown is based on optimizing *expected* regret over a balanced mix of these scenarios.</p>
+        </section>
+
+
+        <section>
+            <h2>Comparing the Frameworks: Insights from the Study</h2>
+            <p>The paper's head-to-head comparison using the Bangladesh case study revealed key differences:</p>
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>Robust Decision Making (RDM)</th>
+                        <th>Stochastic Programming (SP)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Core Idea</strong></td>
+                        <td>Explore performance of given plans across many futures; identify vulnerabilities.</td>
+                        <td>Optimize expected performance under probabilistic uncertainty; find the 'best' expected plan.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Handling Plans</strong></td>
+                        <td>Starts with discrete, user-defined plans. Quality depends on the initial set.</td>
+                        <td>Considers an infinite space of plans (implicitly via optimization constraints).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Handling Uncertainty</strong></td>
+                        <td>Uses many scenarios (often without explicit probabilities initially). Can incorporate probabilities later for aggregation.</td>
+                        <td>Requires probabilities (or ranges) upfront. Explicitly models scenario likelihoods.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recourse (Adaptability)</strong></td>
+                        <td>Second-stage decisions are optimized *given* the first-stage plan and the scenario. Flexibility is assessed implicitly via regret.</td>
+                        <td>Explicitly models and optimizes first-stage decisions *knowing* that second-stage recourse is possible.</td>
+                    </tr>
+                     <tr>
+                        <td><strong>Computational Effort</strong></td>
+                        <td>Many simulations (can be parallelized). Time scales with number of plans and scenarios.</td>
+                        <td>Solves one large, complex optimization problem (suffers from 'curse of dimensionality', often requires approximations).</td>
+                    </tr>
+                     <tr>
+                        <td><strong>Key Output</strong></td>
+                        <td>Performance data (costs, regrets, etc.) for multiple plans across many scenarios; vulnerability analysis.</td>
+                        <td>A single 'optimal' investment plan and its expected performance.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stakeholder Engagement</strong></td>
+                        <td>Good for discussing trade-offs between specific, understandable plans. Facilitates "agree-on-plans".</td>
+                        <td>Focuses discussion on assumptions (probabilities, models). Facilitates "agree-on-assumptions".</td>
+                    </tr>
+                     <tr>
+                        <td><strong>Case Study Finding (Regret)</strong></td>
+                        <td>Identified several plans; performance varied. Best RDM plan had higher expected regret than SP.</td>
+                        <td>Found a plan with lower expected regret, favoring flexible interconnection early and deferring large coal commitments.</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>In essence, RDM provides a broad exploration, helping understand *why* certain plans might fail, while SP provides a sharp focus on finding the mathematically best plan *given the assumptions*. RDM's strength is in exploring and communicating trade-offs among concrete alternatives, while SP's strength is in leveraging probabilistic information and optimizing for expected outcomes considering future flexibility.</p>
+        </section>
+
+        <section>
+            <h2>Conclusion: Choosing the Right Lens</h2>
+            <p>The paper concludes that neither RDM nor SP is universally superior. The best framework depends on the specific planning context, the nature of the uncertainties, the available data and resources, and crucially, the goals of the planning process, especially regarding stakeholder engagement.</p>
+            <ul>
+                <li>If exploring diverse strategies and understanding their specific failure points across many possible futures is key, and engaging stakeholders around concrete plan alternatives is desired, <span class="highlight">RDM might be preferred</span>.</li>
+                <li>If there's reasonable confidence in probabilistic assumptions about the future, and the goal is to find a single plan that optimizes expected performance while explicitly accounting for future adjustments, <span class="highlight">SP might be more suitable</span>.</li>
+            </ul>
+            <p>The paper's main contribution isn't just the comparison, but the provision of a structured set of <span class="highlight">criteria</span> for planners to assess *any* uncertainty-aware framework. By systematically considering methodological capability, practical applicability, and stakeholder engagement, planners can make more informed choices about the tools they use to navigate the complex and uncertain future of our energy systems.</p>
+        </section>
+
+         <footer class="text-center mt-5 mb-3">
+            <p class="small-text">Disclaimer: This interactive explanation is a simplified interpretation of the research paper for educational purposes. Consult the original paper for full details and methodology.</p>
+            <p class="small-text"><a href="https://ieeexplore.ieee.org/document/10440079" target="_blank">Link to Paper (DOI: 10.1109/TEMPR.2024.3365977)</a></p>
+         </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Inlined JavaScript -->
+    <script>
+        // --- Interactive Simulation Logic ---
+
+        // Simplified representation of plans (e.g., relative investment focus)
+        // These are just labels for our simplified model
+        const plans = [
+            { id: 'rdm1', name: 'RDM 1: Coal Heavy', color: '#17a2b8', baseCapitalCost: 150, investments: { domestic: 3, imported: 1, interconnect: 1 } },
+            { id: 'rdm2', name: 'RDM 2: Import Heavy', color: '#6f42c1', baseCapitalCost: 140, investments: { domestic: 1, imported: 3, interconnect: 2 } },
+            { id: 'rdm3', name: 'RDM 3: Balanced', color: '#fd7e14', baseCapitalCost: 130, investments: { domestic: 2, imported: 2, interconnect: 2 } },
+            { id: 'sp', name: 'SP Optimal', color: '#ffc107', baseCapitalCost: 120, investments: { domestic: 1, imported: 1, interconnect: 3 } } // SP favors flexibility (interconnect)
+        ];
+
+        // DOM Elements
+        const demandSlider = document.getElementById('demandSlider');
+        const fuelPriceSlider = document.getElementById('fuelPriceSlider');
+        const domCoalSlider = document.getElementById('domCoalSlider');
+        const demandValue = document.getElementById('demandValue');
+        const fuelPriceValue = document.getElementById('fuelPriceValue');
+        const domCoalValue = document.getElementById('domCoalValue');
+        const regretChart = document.getElementById('regretChart');
+
+        // Lookup tables for slider values
+        const demandLevels = ['Low', 'Medium', 'High'];
+        const fuelPriceLevels = ['Low', 'Medium', 'High'];
+        const domCoalViability = ['No', 'Yes'];
+
+        // --- Simplified Cost Calculation ---
+        // This function simulates the total cost (capital + operational) for a plan under a given scenario.
+        // It's highly simplified for demonstration.
+        function calculateTotalCost(plan, scenario) {
+            let operationalCost = 0;
+            const demandFactor = [0.8, 1.0, 1.3][scenario.demand]; // Multiplier based on demand level
+            const fuelPriceFactor = [0.7, 1.0, 1.5][scenario.fuelPrice]; // Multiplier for imported fuel/interconnect cost
+
+            // Base operational cost related to demand
+            operationalCost += 50 * demandFactor;
+
+            // Cost related to investment types and scenario factors
+            operationalCost += plan.investments.imported * 15 * fuelPriceFactor * demandFactor; // Imported coal cost varies with fuel price
+            operationalCost += plan.investments.interconnect * 10 * fuelPriceFactor * demandFactor; // Interconnection cost also varies with import prices
+
+            if (scenario.domCoalViable === 1) {
+                operationalCost += plan.investments.domestic * 5 * demandFactor; // Domestic coal is cheap if viable
+            } else {
+                operationalCost += plan.investments.domestic * 25 * demandFactor; // Domestic coal plants expensive/unusable if not viable
+                // Add a penalty if domestic was heavily relied upon but isn't viable
+                if (plan.investments.domestic > 1) operationalCost += 30;
+            }
+
+            // Simple capacity check - penalty if total investment doesn't meet high demand
+            const totalCapacityUnits = plan.investments.domestic + plan.investments.imported + plan.investments.interconnect;
+            const requiredCapacityUnits = [4, 6, 8][scenario.demand]; // Arbitrary units needed
+            if (totalCapacityUnits < requiredCapacityUnits) {
+                operationalCost += (requiredCapacityUnits - totalCapacityUnits) * 40; // Penalty for unmet demand
+            }
+
+
+            return plan.baseCapitalCost + operationalCost;
+        }
+
+        // --- Update Visualization ---
+        function updateVisualization() {
+            const scenario = {
+                demand: parseInt(demandSlider.value),
+                fuelPrice: parseInt(fuelPriceSlider.value),
+                domCoalViable: parseInt(domCoalSlider.value)
+            };
+
+            // Update slider labels
+            demandValue.textContent = demandLevels[scenario.demand];
+            fuelPriceValue.textContent = fuelPriceLevels[scenario.fuelPrice];
+            domCoalValue.textContent = domCoalViability[scenario.domCoalViable];
+
+            // Calculate costs for all plans under the current scenario
+            const costs = plans.map(plan => ({
+                id: plan.id,
+                cost: calculateTotalCost(plan, scenario)
+            }));
+
+            // Find the minimum cost for this scenario (the 'perfect foresight' cost)
+            const minCost = Math.min(...costs.map(c => c.cost));
+
+            // Calculate regret for each plan
+            const results = plans.map(plan => {
+                const planCost = costs.find(c => c.id === plan.id).cost;
+                const regret = planCost - minCost;
+                return {
+                    ...plan,
+                    cost: planCost,
+                    regret: regret
+                };
+            });
+
+            // Determine max regret for scaling
+            const maxRegret = Math.max(...results.map(r => r.regret), 10); // Ensure maxRegret is at least 10 to avoid zero division
+
+            // Update the regret chart
+            regretChart.innerHTML = ''; // Clear previous bars
+            results.forEach(result => {
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+
+                const bar = document.createElement('div');
+                const barHeight = Math.max(0, (result.regret / maxRegret) * 100); // Scale height, ensure non-negative
+                bar.className = `bar regret-bar ${result.id}-bar`; // Use regret-bar class + specific ID class
+                bar.style.height = `${barHeight}%`;
+                bar.style.backgroundColor = result.color; // Use plan-specific color
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'bar-value-tooltip';
+                tooltip.textContent = `Regret: ${result.regret.toFixed(1)}`; // Show regret value
+
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = result.name;
+
+                bar.appendChild(tooltip);
+                barContainer.appendChild(bar);
+                barContainer.appendChild(label);
+                regretChart.appendChild(barContainer);
+            });
+        }
+
+        // --- Event Listeners ---
+        demandSlider.addEventListener('input', updateVisualization);
+        fuelPriceSlider.addEventListener('input', updateVisualization);
+        domCoalSlider.addEventListener('input', updateVisualization);
+
+        // --- Initial Render ---
+        document.addEventListener('DOMContentLoaded', updateVisualization);
+
+    </script>
+
+</body>
+</html>

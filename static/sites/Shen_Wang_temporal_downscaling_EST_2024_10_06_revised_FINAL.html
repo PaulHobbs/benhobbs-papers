@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explaining Temporal Downscaling for Power Emissions</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa; /* Light background */
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background-color: #ffffff; /* White content background */
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        }
+        h1, h2, h3 {
+            color: #2c3e50; /* Darker blue-grey heading */
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.3em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+
+        .interactive-section {
+            background-color: #f0f4f8; /* Lighter blue background for interactive parts */
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #d6e0ea;
+        }
+        .slider-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #34495e; /* Slightly darker text for labels */
+        }
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #2980b9; /* Blue for dynamic values */
+        }
+        .explanation {
+            background-color: #e8f6f3; /* Light green background for explanations */
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #1abc9c; /* Green accent border */
+        }
+        .limitation {
+             background-color: #fdedec; /* Light red background for limitations */
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+            border-left: 4px solid #e74c3c; /* Red accent border */
+        }
+        code {
+            background-color: #ecf0f1; /* Light grey for code */
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #555;
+        }
+        a {
+            color: #3498db; /* Standard blue link */
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #7f8c8d; /* Grey for captions */
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 250px; /* Adjust height as needed */
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+         /* Custom styles for better visual appeal */
+        .btn-scenario {
+            margin: 0.2rem;
+        }
+        .math-block {
+            background-color: #fdfefe;
+            padding: 1em;
+            border: 1px solid #eaecee;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bridging the Gap: Hourly Power Emissions for a Changing Grid</h1>
+        <p class="lead">Modern energy policies aim for deep decarbonization, often relying on complex models to plan future power systems. But how do we accurately predict the air quality impacts of these future grids hour by hour?</p>
+        <p>This post explores the core ideas from the paper <a href="https://arxiv.org/abs/2311.05683" target="_blank">"Linking Electricity and Air Quality Models by Downscaling: Weather-Informed Hourly Dispatch of Generation Accounting for Renewable and Load Temporal Variability Scenarios"</a> by Wang et al. We'll look at why linking long-term energy models to short-term air quality models is tricky and how a new method, the Temporal Downscaling Model (TDM), aims to solve this.</p>
+
+        <h2>The Challenge: A Mismatch in Time</h2>
+        <p>Long-term energy planning models, like the <a href="https://www.eia.gov/outlooks/aeo/nems/documentation/" target="_blank">National Energy Modeling System (NEMS)</a> used in the paper, often simulate the entire year using just a handful of representative time periods (e.g., 9 "time blocks" in NEMS). This simplification keeps computations manageable for planning decades ahead.</p>
+        <div class="row align-items-center interactive-section">
+            <div class="col-md-4">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YwZjRmOCIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMzNDQ5NWUiIGZvbnQtd2VpZ2h0PSJib2xkIj5ORU1TIFRpbWUgQmxvY2tzPC90ZXh0PgoKICA8cmVjdCB4PSIyMCIgeT0iNDAiIHdpZHRoPSI0MCIgaGVpZ2h0PSIyMCIgZmlsbD0iI2E5Y2ZjMyIgc3Ryb2tlPSIjMzMzIi8+CiAgPHJlY3QgeD0iNzAiIHk9IjQwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiNhOWNmYzMiIHN0cm9rZT0iIzMzMyIvPgogIDx0ZXh0IHg9IjQwIiB5PSI1MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMzMyI+V2VlazEvUms8L3RleHQ+CiAgPHRleHQgeD0iOTAiIHk9IjUzIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEwIiBmaWxsPSIjMzMzIj5XZWVrMi9QazwvdGV4dD4KICA8dGV4dCB4PSIxNDUiIHk9IjUwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjMzMzIj4uLi48L3RleHQ+CiAgPHJlY3QgeD0iMjAiIHk9IjcwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiNhOWNmYzMiIHN0cm9rZT0iIzMzMyIvPgogIDx0ZXh0IHg9IjQwIiB5PSI4MyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMzMyI+U3VtbWVyL09QPC90ZXh0PgoKICA8cmVjdCB4PSIyMCIgeT0iMTAwIiB3aWR0aD0iNDAiIGhlaWdodD0iMjAiIGZpbGw9IiNhOWNmYzMiIHN0cm9rZT0iIzMzMyIvPgogIDx0ZXh0IHg9IjQwIiB5PSIxMTMiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTAiIGZpbGw9IiMzMzMiPldpbnRlci9QazwvdGV4dD4KCiAgPHRleHQgeD0iMTUwIiB5PSIxMTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjEyIiBmaWxsPSIjN2Y4YzhkIj4oOSBibG9ja3MgLSA4NzYwIGhycyk8L3RleHQ+Cjwvc3ZnPg==" alt="NEMS Time Blocks" class="img-fluid">
+                <p class="caption">NEMS: Few blocks represent the year.</p>
+            </div>
+            <div class="col-md-2 text-center fs-1">&rarr;</div>
+            <div class="col-md-6">
+                 <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDMwMCAxNTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YwZjRmOCIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiMzNDQ5NWUiIGZvbnQtd2VpZ2h0PSJib2xkIj5BaXIgUXVhbGl0eSBNb2RlbCBJbnB1dDwvdGV4dD4KCiAgPGxpbmUgeDE9IjEwIiB5MT0iMTAwIiB4Mj0iMjkwIiB5Mj0iMTAwIiBzdHJva2U9IiM3ZjhiOGMiIHN0cm9rZS13aWR0aD0iMSIvPgogIDxsaW5lIHgxPSIxMCIgeTE9IjQwIiB4Mj0iMTAiIHkyPSIxMDAiIHN0cm9rZT0iIzdmOGM4ZCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgPHRleHQgeD0iNSIgeT0iNDAiIHRleHQtYW5jaG9yPSJlbmQiIGZvbnQtc2l6ZT0iOCIgZmlsbD0iIzMzMyI+RW1pc3Npb25zPC90ZXh0PgoKICA8cG9seWxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMzQ5OGRiIiBzdHJva2Utd2lkdGg9IjEuNSIgcG9pbnRzPSIxMCw5MCAyMCw3MCAzMCw2NSA0MCw3NSA1MCw5NSA2MCwxMDAgNzAsOTUgODAsODAgOTAsNzAgMTAwLDY1IDExMCw2MCAxMjAsNjUgMTMwLDgwIDE0MCw5NSAxNTAsMTAwIDE2MCw5OCAxNzAsOTAgMTgwLDgwIDE5MCw3NSAyMDAsNzAgMjEwLDc1IDIyMCw4NSAyMzAsOTUgMjQwLDEwMCAyNTAsOTggMjYwLDkwIDI3MCw4MCAyODAsNzUiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjEyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIxMCIgZmlsbD0iIzMzMyI+SG91ciAwIC4gLiAuIEhvdXIgMjMgLiAuLiBIb3VyIDg3NTk8L3RleHQ+CiAgPHRleHQgeD0iOTUlIiB5PSIxNDUiIHRleHQtYW5jaG9yPSJlbmQiIGZvbnQtc2l6ZT0iMTIiIGZpbGw9IiM3ZjhiOGQiPihIb3VybHkgUmVzb2x1dGlvbik8L3RleHQ+Cjwvc3ZnPg==" alt="Hourly Air Quality Input" class="img-fluid">
+                 <p class="caption">Air Quality Models (e.g., CMAQ): Need hourly emissions.</p>
+            </div>
+        </div>
+        <p>On the other hand, air quality models like <a href="https://www.epa.gov/cmaq" target="_blank">CMAQ</a> need hourly emission inputs to simulate the complex chemistry and transport of pollutants in the atmosphere. Factors like sunlight, temperature, and wind change rapidly, affecting how pollutants like Nitrogen Oxides (NOx) react to form ozone ($O_3$).</p>
+        <p>The core problem is: **How do we accurately translate the coarse, aggregated outputs of long-term models into the detailed hourly emission profiles needed by air quality models, especially for future scenarios unlike the past?**</p>
+
+        <h2>Traditional Approach: Statistical Profiles (SMOKE)</h2>
+        <p>A common method, used in tools like the <a href="https://www.cmascenter.org/smoke/" target="_blank">SMOKE</a> (Sparse Matrix Operator Kernel Emissions) processing system, relies on **statistical temporal profiles**. These profiles are derived from historical operational data of power plants.</p>
+        <p>Imagine a "typical weekday in summer" profile for a coal plant. SMOKE takes the total annual emissions projected by a model like NEMS and distributes them across the 8760 hours of the year using these pre-defined shapes.</p>
+
+        <div class="interactive-section">
+            <h3>Visualizing a SMOKE Profile (Conceptual)</h3>
+            <p>This chart shows a simplified, repeating daily NOx emission profile, typical of historical thermal generation patterns (higher during the day, lower at night). The total annual emissions can be scaled, but the *shape* of the daily pattern remains fixed.</p>
+            <div class="chart-container">
+                <canvas id="smokeChart"></canvas>
+            </div>
+            <label for="smokeScale" class="form-label slider-label">Scale Factor (represents total annual emissions): <span id="smokeScaleValue" class="value-display">1.0</span></label>
+            <input type="range" class="form-range" id="smokeScale" min="0.5" max="2.0" step="0.1" value="1.0">
+            <p class="caption">A conceptual SMOKE profile for one week. Notice the repeating daily pattern.</p>
+        </div>
+
+        <div class="limitation">
+            <strong>Limitations of Static Profiles:</strong>
+            <ul>
+                <li><strong>Insensitive to Weather:</strong> These profiles don't inherently change if a particular day is unusually hot (high A/C load) or cloudy (low solar output). They just repeat the historical average pattern.</li>
+                <li><strong>Anchored to the Past:</strong> They reflect how power plants operated historically. This might be inaccurate for future grids with massive amounts of wind and solar, which force thermal plants (coal, gas) to operate much more flexibly and at different times.</li>
+                <li><strong>Climate Change Blindness:</strong> They don't account for how changing climate might alter load patterns or renewable generation potential.</li>
+                <li><strong>Scenario Differences Obscured:</strong> Different future energy scenarios (e.g., high renewables vs. high natural gas) might lead to vastly different hourly operational patterns, which static profiles struggle to capture beyond simple scaling.</li>
+            </ul>
+            <p>As the paper argues (lines 94-95, 289-298), this can lead to biases, like underestimating peak emissions or misrepresenting the timing of emissions relative to weather conditions crucial for ozone formation.</p>
+        </div>
+
+        <h2>A New Approach: The Temporal Downscaling Model (TDM)</h2>
+        <p>The paper proposes the TDM, a **fundamentals-based** approach. Instead of relying solely on historical statistical shapes, TDM uses an **optimization model** to simulate the hourly dispatch (operation) of the power grid for the future scenario.</p>
+
+        <div class="explanation">
+            <strong>Core Idea of TDM:</strong>
+            <ol>
+                <li><strong>Start with Future Setup:</strong> Takes the projected power plant fleet (capacities, types, locations - potentially from a spatial downscaling model like SAG mentioned in the paper) and aggregate energy generation targets (from NEMS time blocks) for a future year.</li>
+                <li><strong>Add Hourly Weather:</strong> Uses hourly meteorological data (temperature, solar radiation, wind speed) for that year.</li>
+                <li><strong>Simulate Hourly Operations:</strong> Runs an optimization model (conceptually, a <a href="https://en.wikipedia.org/wiki/Unit_commitment_problem_in_electrical_power_generation" target="_blank">Unit Commitment</a> / <a href="https://en.wikipedia.org/wiki/Economic_dispatch" target="_blank">Economic Dispatch</a> type model) for every hour of the year. This model decides which power plants should run, and how much power they should generate, to:
+                    <ul>
+                        <li>Meet the hourly electricity demand (influenced by temperature).</li>
+                        <li>Maximize the use of available wind and solar generation (influenced by weather).</li>
+                        <li>Minimize operating costs (or meet other objectives).</li>
+                        <li>Respect constraints like plant capacities, ramp rates (how quickly plants can increase/decrease output), and crucially, **match the aggregated generation totals from the NEMS model over its time blocks.**</li>
+                    </ul>
+                </li>
+                <li><strong>Calculate Hourly Emissions:</strong> Based on which thermal plants ran and how much they generated each hour, calculate the corresponding hourly emissions (e.g., NOx, SO2).</li>
+            </ol>
+            <p>The result is an hourly emissions profile that is consistent with the long-term scenario (NEMS totals) but also dynamically responds to short-term weather variations and the specific operational challenges of the future grid mix.</p>
+        </div>
+
+        <h2>Interactive Simulation: Weather-Informed Dispatch</h2>
+        <p>Let's simulate a simplified power grid over one week to see how TDM might work conceptually. We have load (demand), solar, wind, and two thermal generators (coal and gas) to meet the remaining demand ("net load"). We'll track the resulting NOx emissions.</p>
+        <p><strong>Adjust the sliders</strong> to see how weather conditions affect operations and emissions. Compare the dynamic "TDM" NOx profile with the static "SMOKE" profile shown earlier.</p>
+
+        <div class="interactive-section">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="tempSlider" class="form-label slider-label">Avg Temperature (°C): <span id="tempValue" class="value-display">25</span></label>
+                    <input type="range" class="form-range" id="tempSlider" min="5" max="35" step="1" value="25">
+                </div>
+                <div class="col-md-4">
+                    <label for="solarSlider" class="form-label slider-label">Avg Solar Intensity (%): <span id="solarValue" class="value-display">70</span></label>
+                    <input type="range" class="form-range" id="solarSlider" min="10" max="100" step="5" value="70">
+                </div>
+                 <div class="col-md-4">
+                    <label for="windSlider" class="form-label slider-label">Avg Wind Speed (m/s): <span id="windValue" class="value-display">8</span></label>
+                    <input type="range" class="form-range" id="windSlider" min="2" max="15" step="1" value="8">
+                </div>
+            </div>
+             <div class="row mt-3">
+                 <div class="col-md-6">
+                    <label class="form-label slider-label">Scenario:</label>
+                    <button class="btn btn-sm btn-primary btn-scenario active" data-scenario="ref">Reference (Mix)</button>
+                    <button class="btn btn-sm btn-outline-primary btn-scenario" data-scenario="high_re">High Renewables</button>
+                 </div>
+                 <div class="col-md-6">
+                     <label for="showOzoneIndex" class="form-check-label slider-label">Overlay Ozone Potential Index:</label>
+                     <input class="form-check-input" type="checkbox" id="showOzoneIndex">
+                 </div>
+             </div>
+
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <canvas id="loadRenewableChart"></canvas>
+                    </div>
+                    <p class="caption">Hourly Load and Renewable Generation</p>
+                </div>
+                <div class="col-md-6">
+                     <div class="chart-container">
+                        <canvas id="netLoadThermalChart"></canvas>
+                    </div>
+                    <p class="caption">Net Load and Thermal Dispatch by Fuel</p>
+                </div>
+            </div>
+             <div class="row mt-2">
+                 <div class="col-12">
+                     <div class="chart-container">
+                        <canvas id="noxEmissionsChart"></canvas>
+                    </div>
+                    <p class="caption">Resulting Hourly NOx Emissions (TDM Approach)</p>
+                 </div>
+             </div>
+        </div>
+
+        <div class="explanation">
+            <strong>Observations from the Simulation:</strong>
+            <ul>
+                <li><strong>Temperature drives Load:</strong> Higher temperatures increase electricity demand (think air conditioning).</li>
+                <li><strong>Weather drives Renewables:</strong> Solar generation follows the sun's intensity and daily cycle. Wind generation follows wind speed.</li>
+                <li><strong>Net Load is Key:</strong> The "Net Load" (Total Load - Renewable Generation) is what thermal power plants (coal, gas) must cover. High renewables, especially solar during the day, drastically reduce mid-day net load, creating the famous <a href="https://www.caiso.com/Documents/FlexibleResourcesHelpRenewables_FastFacts.pdf" target="_blank">"Duck Curve"</a> shape.</li>
+                <li><strong>Thermal Plants Adapt:</strong> Coal (often less flexible, higher emissions per MWh in this simple model) and Gas (more flexible, lower emissions) ramp up and down to follow the net load.</li>
+                <li><strong>Emissions Follow Thermal Generation:</strong> The NOx emissions profile directly reflects when and how much the fossil fuel plants are running. Notice how high solar penetration shifts the peak NOx emissions away from midday (when load might be highest) towards the morning and evening ramps when solar is unavailable.</li>
+                <li><strong>Contrast with SMOKE:</strong> Compare the shape of the "TDM NOx Emissions" chart above (which changes with weather and scenario) to the static, repeating "SMOKE Profile" chart shown earlier. TDM captures dynamics that SMOKE misses.</li>
+                <li><strong>Scenario Matters:</strong> Switching to "High Renewables" significantly changes the net load shape and forces thermal plants into different operating patterns, altering the timing and magnitude of emissions.</li>
+            </ul>
+        </div>
+
+        <h2>Connecting Emissions to Air Quality: The Ozone Example</h2>
+        <p>The *timing* of emissions matters greatly for air quality. Ground-level ozone ($O_3$), a major component of smog, forms chemically in the atmosphere from precursor pollutants like NOx and <a href="https://en.wikipedia.org/wiki/Volatile_organic_compound" target="_blank">VOCs</a> in the presence of sunlight and heat.</p>
+        <p>The paper analyzes an "Ozone Formation Potential Index" based on weather conditions (high solar radiation, low wind speed, high temperature are favorable for ozone formation). If peak NOx emissions coincide with high ozone potential conditions, the air quality impact could be worse.</p>
+        <p>Try checking the "Overlay Ozone Potential Index" box in the simulation. The index here is simplified (based mainly on solar intensity and inverse wind speed).</p>
+        <div class="limitation">
+        <strong>Potential Misleading Results from SMOKE:</strong>
+        The paper suggests (lines 322-331, 400-404) that because SMOKE profiles often peak emissions around midday (following historical load peaks), they might wrongly predict higher ozone formation in future high-solar scenarios. In reality (as TDM shows), high solar generation can *suppress* midday thermal plant operation and emissions, shifting peak emissions to times potentially less favorable for ozone formation. Relying on SMOKE could overestimate the ozone problem or misdirect mitigation efforts in these future scenarios.
+        </div>
+
+
+        <h2>The Math: Optimization at the Core</h2>
+        <p>While we simulated the *effect* of TDM, the actual method uses a formal optimization model. The exact formulation is complex (see SI Section 2.2 of the paper), but the core idea is often to minimize the total system operating cost subject to various constraints, for each hour (or block of hours).</p>
+
+        <div class="math-block">
+        Conceptually, for a given time step $t$:
+        $$ \min \sum_{i \in \text{Generators}} C_i(P_{i,t}) $$
+        Subject to:
+        <ul>
+            <li>Power Balance: $\sum_{i} P_{i,t} = D_t$ (Total Generation = Demand)</li>
+            <li>Generation Limits: $P_{i}^{\min} \le P_{i,t} \le P_{i,t}^{\max}$ (Each generator $i$ within its limits)</li>
+            <li>Renewable Availability: $P_{j,t} \le A_{j,t}$ (Renewable generator $j$ output $\le$ available resource)</li>
+            <li>Ramping Limits: $|P_{i,t} - P_{i,t-1}| \le R_i$ (Output change within ramp rate $R_i$)</li>
+            <li>Transmission Limits: (Flows across lines within limits - simplified in the paper)</li>
+            <li>NEMS Energy Constraints: $\sum_{t \in \text{Block } b} P_{k,t} \cdot \Delta t = E_{k,b}^{\text{NEMS}}$ (Total energy from generator type $k$ over NEMS block $b$ must match NEMS target $E_{k,b}^{\text{NEMS}$)</li>
+            <li>... (Other constraints like reserves, start-up/shutdown)</li>
+        </ul>
+        Where:
+        <ul>
+            <li>$P_{i,t}$ is power output of generator $i$ at time $t$.</li>
+            <li>$C_i(\cdot)$ is the cost function for generator $i$.</li>
+            <li>$D_t$ is the electricity demand at time $t$.</li>
+            <li>$A_{j,t}$ is the available power from renewable source $j$ at time $t$.</li>
+        </ul>
+        </div>
+        <p>Solving this complex optimization problem for all 8760 hours provides the detailed dispatch ($P_{i,t}$) from which hourly emissions are calculated.</p>
+
+
+        <h2>Conclusion: Why Does This Matter?</h2>
+        <p>Accurately predicting the hourly emissions from future power grids is crucial for assessing the air quality and public health impacts of different energy transition pathways. </p>
+        <ul>
+            <li><strong>TDM offers a more realistic approach</strong> than traditional statistical profiles by incorporating the physics and economics of grid operation under varying weather conditions and high renewable penetration.</li>
+            <li>It captures how the *timing* of emissions changes in response to renewables and weather, which is critical for accurate air quality modeling (e.g., ozone formation).</li>
+            <li>It allows for better comparison of different policy scenarios, revealing potential operational changes and emission patterns that static methods might miss.</li>
+        </ul>
+        <p>However, this improved accuracy comes at the cost of increased complexity and data requirements compared to simpler statistical methods (lines 421-431). The choice of method depends on the specific research question, available resources, and desired level of detail.</p>
+        <p>By bridging the temporal gap with a fundamentals-based approach, methods like TDM provide essential tools for understanding the complex interplay between energy systems, climate change, and air quality in a rapidly evolving world.</p>
+
+        <hr>
+        <p class="text-muted small">Disclaimer: This explanation simplifies concepts for clarity. The interactive simulation is illustrative and does not replicate the full complexity of the TDM model described in the paper. Refer to the original paper for complete details.</p>
+        <p class="text-muted small">Based on: Wang, S., Wang, H., Ellis, J. H., & Hobbs, B. F. (2024). Linking Electricity and Air Quality Models by Downscaling: Weather-Informed Hourly Dispatch of Generation Accounting for Renewable and Load Temporal Variability Scenarios. <i>arXiv preprint arXiv:2311.05683</i>. Available at <a href="https://arxiv.org/abs/2311.05683" target="_blank">https://arxiv.org/abs/2311.05683</a></p>
+
+    </div> <!-- /container -->
+
+    <!-- Bootstrap Bundle JS (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // --- SMOKE Chart ---
+        const smokeCtx = document.getElementById('smokeChart').getContext('2d');
+        let smokeChart;
+        const smokeScaleSlider = document.getElementById('smokeScale');
+        const smokeScaleValue = document.getElementById('smokeScaleValue');
+
+        // Generate a simple repeating daily profile (e.g., 7 days = 168 hours)
+        function generateSmokeProfile(scale) {
+            const hoursInWeek = 24 * 7;
+            const labels = Array.from({ length: hoursInWeek }, (_, i) => `H${i}`);
+            const data = [];
+            // Simple diurnal pattern: low at night, peak afternoon
+            const dailyPattern = [
+                0.4, 0.3, 0.3, 0.3, 0.4, 0.5, 0.7, 0.8, 0.9, 1.0, 1.0, 1.0,
+                0.9, 0.9, 0.8, 0.8, 0.7, 0.7, 0.6, 0.6, 0.5, 0.5, 0.4, 0.4
+            ];
+            for (let i = 0; i < hoursInWeek; i++) {
+                data.push(dailyPattern[i % 24] * scale * 10); // Arbitrary base scale * scale factor
+            }
+            return { labels, data };
+        }
+
+        function updateSmokeChart() {
+            const scale = parseFloat(smokeScaleSlider.value);
+            smokeScaleValue.textContent = scale.toFixed(1);
+            const profile = generateSmokeProfile(scale);
+
+            if (smokeChart) {
+                smokeChart.data.labels = profile.labels;
+                smokeChart.data.datasets[0].data = profile.data;
+                smokeChart.update('none'); // 'none' prevents animation
+            } else {
+                smokeChart = new Chart(smokeCtx, {
+                    type: 'line',
+                    data: {
+                        labels: profile.labels,
+                        datasets: [{
+                            label: 'SMOKE NOx Profile (Conceptual)',
+                            data: profile.data,
+                            borderColor: 'rgb(150, 150, 150)',
+                            backgroundColor: 'rgba(150, 150, 150, 0.5)',
+                            borderWidth: 1.5,
+                            pointRadius: 0,
+                            fill: true,
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Relative NOx Emissions' }
+                            },
+                            x: {
+                                title: { display: true, text: 'Hour of Week' },
+                                ticks: { maxTicksLimit: 10 }
+                            }
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+        smokeScaleSlider.addEventListener('input', updateSmokeChart);
+        updateSmokeChart(); // Initial draw
+
+        // --- TDM Interactive Simulation ---
+        const tempSlider = document.getElementById('tempSlider');
+        const solarSlider = document.getElementById('solarSlider');
+        const windSlider = document.getElementById('windSlider');
+        const tempValue = document.getElementById('tempValue');
+        const solarValue = document.getElementById('solarValue');
+        const windValue = document.getElementById('windValue');
+        const showOzoneCheckbox = document.getElementById('showOzoneIndex');
+        const scenarioButtons = document.querySelectorAll('.btn-scenario');
+
+        const loadRenewableCtx = document.getElementById('loadRenewableChart').getContext('2d');
+        const netLoadThermalCtx = document.getElementById('netLoadThermalChart').getContext('2d');
+        const noxEmissionsCtx = document.getElementById('noxEmissionsChart').getContext('2d');
+        let loadRenewableChart, netLoadThermalChart, noxEmissionsChart;
+
+        let currentScenario = 'ref'; // 'ref' or 'high_re'
+
+        // Simulation Parameters (Simplified)
+        const hoursInWeek = 24 * 7;
+        const baseLoad = 5000; // MW
+        const tempSensitivity = 150; // MW per degree C above 18C
+        const solarCapacityRef = 3000; // MW
+        const windCapacityRef = 2500; // MW
+        const solarCapacityHighRE = 6000; // MW
+        const windCapacityHighRE = 5000; // MW
+        const coalCapacity = 4000; // MW
+        const gasCapacity = 5000; // MW
+        const coalNOxRate = 0.5; // kg/MWh (example)
+        const gasNOxRate = 0.1; // kg/MWh (example)
+
+        function runTdmSimulation() {
+            const temp = parseFloat(tempSlider.value);
+            const solarIntensity = parseFloat(solarSlider.value) / 100;
+            const windSpeed = parseFloat(windSlider.value);
+
+            tempValue.textContent = temp.toFixed(0);
+            solarValue.textContent = (solarIntensity * 100).toFixed(0);
+            windValue.textContent = windSpeed.toFixed(0);
+
+            const solarCapacity = (currentScenario === 'high_re') ? solarCapacityHighRE : solarCapacityRef;
+            const windCapacity = (currentScenario === 'high_re') ? windCapacityHighRE : windCapacityRef;
+
+            const labels = Array.from({ length: hoursInWeek }, (_, i) => `H${i}`);
+            const loadData = [];
+            const solarData = [];
+            const windData = [];
+            const netLoadData = [];
+            const coalData = [];
+            const gasData = [];
+            const noxData = [];
+            const ozoneIndexData = [];
+
+            for (let i = 0; i < hoursInWeek; i++) {
+                const hourOfDay = i % 24;
+
+                // 1. Calculate Load (simple temp dependence + diurnal shape)
+                const diurnalLoadFactor = 0.8 + 0.4 * Math.sin((hourOfDay - 8) * Math.PI / 16); // Peaks afternoon
+                const tempEffect = Math.max(0, temp - 18) * tempSensitivity;
+                const currentLoad = (baseLoad + tempEffect) * Math.max(0.6, diurnalLoadFactor); // Base load + temp effect * shape
+                loadData.push(currentLoad);
+
+                // 2. Calculate Renewable Generation
+                const diurnalSolarFactor = Math.max(0, Math.sin(hourOfDay * Math.PI / 24) ** 1.5); // Peaks midday
+                const currentSolar = solarCapacity * solarIntensity * diurnalSolarFactor * (0.8 + Math.random()*0.4); // Add some randomness
+                solarData.push(currentSolar);
+
+                const windFactor = Math.max(0.1, Math.min(1, windSpeed / 12)) * (0.7 + Math.random()*0.6); // Simple wind curve + randomness
+                const currentWind = windCapacity * windFactor;
+                windData.push(currentWind);
+
+                // 3. Calculate Net Load
+                const currentNetLoad = Math.max(0, currentLoad - currentSolar - currentWind);
+                netLoadData.push(currentNetLoad);
+
+                // 4. Dispatch Thermal (Simplified Merit Order: Coal then Gas)
+                let remainingNetLoad = currentNetLoad;
+                const currentCoal = Math.min(remainingNetLoad, coalCapacity);
+                coalData.push(currentCoal);
+                remainingNetLoad -= currentCoal;
+
+                const currentGas = Math.min(remainingNetLoad, gasCapacity);
+                gasData.push(currentGas);
+                // Ignoring unmet demand for simplicity
+
+                // 5. Calculate NOx Emissions
+                const currentNOx = currentCoal * coalNOxRate + currentGas * gasNOxRate;
+                noxData.push(currentNOx);
+
+                // 6. Calculate Ozone Potential Index (Simplified)
+                // Normalize solar factor (0-1), normalize inverse wind speed (higher index for lower wind)
+                const normalizedSolar = diurnalSolarFactor * solarIntensity;
+                const normalizedInvWind = Math.max(0, 1 - windSpeed / 15); // Scale 0-1 approx
+                const ozoneIndex = (normalizedSolar + normalizedInvWind) / 2 * 100; // Scale 0-100
+                ozoneIndexData.push(ozoneIndex);
+            }
+
+            // Update Charts
+            updateLoadRenewableChart(labels, loadData, solarData, windData);
+            updateNetLoadThermalChart(labels, netLoadData, coalData, gasData);
+            updateNoxEmissionsChart(labels, noxData, showOzoneCheckbox.checked ? ozoneIndexData : null);
+        }
+
+        function createChartOptions(yLabel, xLabel = 'Hour of Week', suggestedMax = undefined) {
+            return {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: { display: true, text: yLabel },
+                        stacked: yLabel.includes('Dispatch') ? true : false, // Stack thermal dispatch
+                        suggestedMax: suggestedMax
+                    },
+                    x: {
+                         title: { display: true, text: xLabel },
+                         ticks: { maxTicksLimit: 10 }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                animation: { duration: 0 } // Disable animation for faster updates
+            };
+        }
+
+         function createDualAxisOptions(y1Label, y2Label, xLabel = 'Hour of Week') {
+            return {
+                scales: {
+                    y: { // Primary axis (Emissions)
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        beginAtZero: true,
+                        title: { display: true, text: y1Label }
+                    },
+                    y1: { // Secondary axis (Ozone Index)
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100, // Ozone index scaled 0-100
+                        title: { display: true, text: y2Label },
+                        grid: { drawOnChartArea: false } // only draw grid for primary axis
+                    },
+                    x: {
+                         title: { display: true, text: xLabel },
+                         ticks: { maxTicksLimit: 10 }
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'top' } },
+                animation: { duration: 0 } // Disable animation for faster updates
+            };
+        }
+
+
+        function updateLoadRenewableChart(labels, loadData, solarData, windData) {
+            const datasets = [
+                { label: 'Load', data: loadData, borderColor: 'rgb(255, 99, 132)', backgroundColor: 'rgba(255, 99, 132, 0.1)', borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0.1 },
+                { label: 'Solar Gen', data: solarData, borderColor: 'rgb(255, 205, 86)', backgroundColor: 'rgba(255, 205, 86, 0.3)', borderWidth: 1.5, pointRadius: 0, fill: true, tension: 0.1 },
+                { label: 'Wind Gen', data: windData, borderColor: 'rgb(54, 162, 235)', backgroundColor: 'rgba(54, 162, 235, 0.3)', borderWidth: 1.5, pointRadius: 0, fill: true, tension: 0.1 }
+            ];
+            if (loadRenewableChart) {
+                loadRenewableChart.data.labels = labels;
+                loadRenewableChart.data.datasets = datasets;
+                loadRenewableChart.update('none');
+            } else {
+                loadRenewableChart = new Chart(loadRenewableCtx, {
+                    type: 'line',
+                    data: { labels: labels, datasets: datasets },
+                    options: createChartOptions('Power (MW)')
+                });
+            }
+        }
+
+        function updateNetLoadThermalChart(labels, netLoadData, coalData, gasData) {
+             const datasets = [
+                { label: 'Net Load', data: netLoadData, borderColor: 'rgb(100, 100, 100)', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.1, type: 'line', order: 0 }, // Draw line on top
+                { label: 'Coal Dispatch', data: coalData, borderColor: 'rgb(75, 75, 75)', backgroundColor: 'rgba(75, 75, 75, 0.7)', borderWidth: 1, pointRadius: 0, fill: true, tension: 0.1, order: 2 },
+                { label: 'Gas Dispatch', data: gasData, borderColor: 'rgb(255, 159, 64)', backgroundColor: 'rgba(255, 159, 64, 0.7)', borderWidth: 1, pointRadius: 0, fill: true, tension: 0.1, order: 1 }
+             ];
+             if (netLoadThermalChart) {
+                 netLoadThermalChart.data.labels = labels;
+                 netLoadThermalChart.data.datasets = datasets;
+                 netLoadThermalChart.options.scales.y.stacked = true; // Ensure stacking is enabled
+                 netLoadThermalChart.update('none');
+             } else {
+                netLoadThermalChart = new Chart(netLoadThermalCtx, {
+                    type: 'bar', // Use bar for stacked, but line for net load
+                    data: { labels: labels, datasets: datasets },
+                    options: createChartOptions('Power (MW) - Dispatch Stacked')
+                 });
+             }
+        }
+
+        function updateNoxEmissionsChart(labels, noxData, ozoneIndexData) {
+             const datasets = [
+                {
+                    label: 'TDM NOx Emissions',
+                    data: noxData,
+                    borderColor: 'rgb(153, 102, 255)',
+                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: true,
+                    tension: 0.1,
+                    yAxisID: 'y' // Primary axis
+                }
+             ];
+             let options;
+             if (ozoneIndexData) {
+                 datasets.push({
+                    label: 'Ozone Potential Index',
+                    data: ozoneIndexData,
+                    borderColor: 'rgb(255, 99, 71)',
+                    backgroundColor: 'rgba(255, 99, 71, 0.1)',
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: false, // Don't fill the index line
+                    tension: 0.1,
+                    yAxisID: 'y1' // Secondary axis
+                 });
+                 options = createDualAxisOptions('NOx Emissions (kg/hr)', 'Ozone Potential Index (%)');
+             } else {
+                 options = createChartOptions('NOx Emissions (kg/hr)', undefined, Math.max(...noxData) * 1.1 || 500); // Ensure single axis options if index is off
+             }
+
+
+             if (noxEmissionsChart) {
+                 noxEmissionsChart.data.labels = labels;
+                 noxEmissionsChart.data.datasets = datasets;
+                 // Crucially update options if the number of axes changes
+                 noxEmissionsChart.options = options;
+                 noxEmissionsChart.update('none');
+             } else {
+                 noxEmissionsChart = new Chart(noxEmissionsCtx, {
+                     type: 'line',
+                     data: { labels: labels, datasets: datasets },
+                     options: options
+                 });
+             }
+        }
+
+        // Event Listeners
+        tempSlider.addEventListener('input', runTdmSimulation);
+        solarSlider.addEventListener('input', runTdmSimulation);
+        windSlider.addEventListener('input', runTdmSimulation);
+        showOzoneCheckbox.addEventListener('change', runTdmSimulation);
+
+        scenarioButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                scenarioButtons.forEach(btn => btn.classList.remove('active', 'btn-primary'));
+                scenarioButtons.forEach(btn => btn.classList.add('btn-outline-primary'));
+                button.classList.add('active', 'btn-primary');
+                button.classList.remove('btn-outline-primary');
+                currentScenario = button.getAttribute('data-scenario');
+                runTdmSimulation();
+            });
+        });
+
+
+        // Initial Run
+        runTdmSimulation();
+
+    </script>
+
+</body>
+</html>
