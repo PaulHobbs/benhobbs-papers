@@ -6,6 +6,7 @@ from google.genai import types  # type: ignore
 from pathlib import Path
 from tqdm import tqdm
 from typing import Optional
+from functools import cache
 import base64
 import datetime
 import datetime
@@ -19,14 +20,14 @@ _MODEL = "gemini-2.5-pro-exp-03-25"
 _PROMPT = f"""
 I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (https://ciechanow.ski/).
 
-The goal is a single HTML file (with Javascript and CSS inlined) that serves as a professional, well-decorated, and highly intuitive blog post exploring the paper's main concepts.
+The goal is a single HTML file (with Javascript and CSS inlined) that serves as a professional, well-decorated, and highly intuitive blog post exploring the paper's main concepts. A layman with a high school education in mathematics and should be able to build understanding of the paper's mathematical model and contributions mainly through interacting with javascript simulations and visualizations.
 
 **Requirements:**
 
-1.  **Libraries:**
-    * Use simulation when appropriate. Stuff that moves is almost always preferred over static charts.
+1.  **Technical:**
+    * Use simulation when appropriate. Use interaction to demonstrate the mathematical concepts and build intuition for the ideas. Every visualization should always have some interactive component, always preferred over static charts.
     * Prioritize **interactive Javascript visualizations** to build intuition *before* introducing complex equations.
-    * If you must make a chart, use Chart.js or D3.js.
+    * If you must make a chart, prefer using D3.js.
     * Use **MathJax** to render ALL mathematical notation. Ensure LaTeX delimiters (`$...$` for inline, `$$...$$` for display) are used correctly in the output HTML.
     * Use **Bootstrap** (via CDN link preferably, or minimal inline CSS) for overall styling, layout (containers, rows, columns), and standard components (buttons, cards).
     * For any custom diagrams or simple simulations needed beyond standard charts, use **plain Javascript** or **p5.js** if appropriate.
@@ -37,17 +38,17 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
     * Focus on the **core mathematical model or central idea** of the paper. Don't try to cover everything; aim for depth on the key concept.
 
 3.  **Handling Mathematical Models:**
-    * When the paper presents constrained optimization models, create interactive visualizations (using Plotly.js or D3.js if needed for custom views) that allow users to **adjust key input parameters** (e.g., costs, resource limits, demand levels) via sliders or input fields. The visualization should dynamically show how the **optimal solution** (objective function value, key decision variable values) changes in response.
-    * When appropriate, write a Monte Carlo simulation which explores how the modeled system might evolve. Using a visual simulation (using p5.js or plain JS) might be appropriate over graphs.
-
-4.  **Interactivity:**
+    * When appropriate, write a Monte Carlo simulation which explores how the modeled system might evolve.
+    * When the paper presents constrained optimization models, create interactive visualizations that allow users to adjust key input parameters (e.g., costs, resource limits, demand levels) via sliders or input fields.
     * Make visualizations genuinely interactive: use sliders for parameters, tooltips on hover for data points, potentially buttons to trigger calculation updates or simulation steps.
+    * Use many small visualizations of ideas to build up intuition, rather than just relying on one or two.
 
 5.  **Output Format & Quality:**
     * Produce a **single, self-contained HTML file**.
     * Inline necessary Javascript and CSS. Keep inline CSS minimal; rely on Bootstrap classes.
     * Include **comments in the Javascript code** explaining the logic, especially for visualizations and interactive elements.
     * Ensure the final output is polished, professional, and technically accurate according to the paper's content.
+    * You'll probably need to generate the HTML body first before adding scripts and styles at the bottom, given your autoregressive generation of the page. 
 
 Please generate the HTML file based on the provided paper content and these instructions.
 """.strip()
@@ -55,11 +56,13 @@ Please generate the HTML file based on the provided paper content and these inst
 
 def main():
     index_path = Path(__file__).parent.parent / "src/lib/sites.json"
-    with open(index_path, "r", encoding="utf-8") as f:
-        sites = json.load(f)
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            sites = json.load(f)
+    except FileNotFoundError:
+        sites = []
 
     for paper in tqdm(sys.argv[1:]):
-        # Get input PDF path (assuming this is defined earlier)
         pdf_path = Path(paper)
       
         # Sanitize filename
@@ -68,15 +71,8 @@ def main():
           print(f'Skipping {papername}')
           continue
 
-        html = _parse_html(generate(paper))
+        html = fix_links(generate(paper))
 
-        try:
-            # Get input PDF path (assuming this is defined earlier)
-            pdf_path = Path(paper)
-        except Exception as e:
-            print(f"Error generating HTML file: {str(e)}", file=sys.stderr)
-            sys.exit(1)
-          
         # Write content
         output_dir = Path(__file__).parent.parent / "static" / "sites"
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -105,11 +101,15 @@ def main():
         print(f"Successfully wrote to {output_path}")
 
 
+@cache
+def client() -> genai.Client:
+    return genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+
+
 def generate(pdf: str):
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
     files = [
         # Please ensure that the file is available in local system working direrctory or change the file path.
-        client.files.upload(file=pdf),
+        client().files.upload(file=pdf),
     ]
     contents = [
         types.Content(
@@ -128,12 +128,47 @@ def generate(pdf: str):
         response_mime_type="text/plain",
     )
 
-    chunks = client.models.generate_content_stream(
+    chunks = client().models.generate_content_stream(
         model=_MODEL,
         contents=contents,
         config=generate_content_config,
     )
-    return "".join(chunk.text for chunk in tqdm(chunks))
+    return _parse_html("".join(chunk.text for chunk in tqdm(chunks)))
+
+
+def fix_links(html: str) -> str:
+    contents = [
+        types.Content(
+            role="user",
+            parts=[
+                types.Part.from_text(text=f"""
+Please use the google search tool to fix any broken links to wikipedia in this html:
+
+```html
+{html}
+```
+
+The wikipedia links in the corrected HTML should point to the real articles in wikipedia.
+""")
+            ]
+        )
+    ]
+    model = "gemini-2.5-flash-preview-04-17"
+    tools = [
+        types.Tool(google_search=types.GoogleSearch())
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        temperature=0,
+        tools=tools,
+        response_mime_type="text/plain",
+    )
+    chunks = client().models.generate_content_stream(
+        model=model,
+        contents=contents,
+        config=generate_content_config,
+    )
+    return _parse_html("".join(chunk.text for chunk in chunks))
+
 
 
 _HTML = re.compile(
