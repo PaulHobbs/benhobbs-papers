@@ -80,10 +80,6 @@ def main():
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html)
 
-        # Update sites index
-        with open(index_path, "r", encoding="utf-8") as f:
-            sites = json.load(f)
-
         # Add new entry if not exists
         title = extract_title(html)
         new_entry = {
@@ -149,6 +145,8 @@ Please use the google search tool to fix any broken links to wikipedia in this h
 ```
 
 The wikipedia links in the corrected HTML should point to the real articles in wikipedia.
+
+Also, any text which is accidentally using **markdown** should use <strong>html tags</strong> instead.
 """)
             ]
         )
