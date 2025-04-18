@@ -2,71 +2,85 @@
   {
     "paper": "2025_urban_heat_island",
     "path": "/sites/2025_urban_heat_island.html",
-    "generated": "2025-04-16T23:27:26.100248"
+    "generated": "2025-04-16T23:27:26.100248",
+    "title": "Cooling Our Cities: Navigating the Complex Choices of Urban Heat Mitigation"
   },
   {
     "paper": "Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main",
     "path": "/sites/Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main.html",
-    "generated": "2025-04-16T23:29:31.353074"
+    "generated": "2025-04-16T23:29:31.353074",
+    "title": "Keeping the Lights On: Designing Electricity Markets for Reliability"
   },
   {
     "paper": "Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy",
     "path": "/sites/Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.html",
-    "generated": "2025-04-16T23:31:30.722307"
+    "generated": "2025-04-16T23:31:30.722307",
+    "title": "The Risk of Bad Data: Why Sampling and Averaging Weather Data Can Hurt Power Grid Planning"
   },
   {
     "paper": "IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset",
     "path": "/sites/IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.html",
-    "generated": "2025-04-16T23:33:26.253457"
+    "generated": "2025-04-16T23:33:26.253457",
+    "title": "Energy Storage vs. Transmission Wires: A Reliability Perspective"
   },
   {
     "paper": "IEEE_Mehrtash_2023_Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning",
     "path": "/sites/IEEE_Mehrtash_2023_Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning.html",
-    "generated": "2025-04-16T23:35:09.730457"
+    "generated": "2025-04-16T23:35:09.730457",
+    "title": "Untangling the Grid: Why Planning Power Systems Together Matters"
   },
   {
     "paper": "IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation",
     "path": "/sites/IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation.html",
-    "generated": "2025-04-16T23:37:11.437986"
+    "generated": "2025-04-16T23:37:11.437986",
+    "title": "Making Sense of Power Grids: Why Simplifications Matter"
   },
   {
     "paper": "Kwon_Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
     "path": "/sites/Kwon_Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main.html",
-    "generated": "2025-04-16T23:39:52.037518"
+    "generated": "2025-04-16T23:39:52.037518",
+    "title": "How Market Rules Shape Our Clean Energy Future"
   },
   {
     "paper": "Mehrtash_Hobbs_Ela_ORDC_2023_06",
     "path": "/sites/Mehrtash_Hobbs_Ela_ORDC_2023_06.html",
-    "generated": "2025-04-16T23:41:56.913003"
+    "generated": "2025-04-16T23:41:56.913003",
+    "title": "Keeping the Lights On: Understanding Scarcity Pricing in Power Markets"
   },
   {
     "paper": "Nature_Energy_Storage_2023_s41560-023-01340-6",
     "path": "/sites/Nature_Energy_Storage_2023_s41560-023-01340-6.html",
-    "generated": "2025-04-17T07:32:55.389900"
+    "generated": "2025-04-17T07:32:55.389900",
+    "title": "Powering the Future: The Crucial Role of Energy Storage"
   },
   {
     "paper": "Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
     "path": "/sites/Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main.html",
-    "generated": "2025-04-17T07:35:12.684814"
+    "generated": "2025-04-17T07:35:12.684814",
+    "title": "Keeping the Lights On (and Clean!): How Market Rules Shape Our Energy Future"
   },
   {
     "paper": "Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL",
     "path": "/sites/Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL.html",
-    "generated": "2025-04-17T07:46:18.832684"
+    "generated": "2025-04-17T07:46:18.832684",
+    "title": "Bridging the Gap: Hourly Power Emissions for a Changing Grid"
   },
   {
     "paper": "Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main",
     "path": "/sites/Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main.html",
-    "generated": "2025-04-17T07:47:55.675715"
+    "generated": "2025-04-17T07:47:55.675715",
+    "title": "Planning Our Electric Future: An Introduction to HOPE"
   },
   {
     "paper": "Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft",
     "path": "/sites/Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft.html",
-    "generated": "2025-04-17T07:49:40.107226"
+    "generated": "2025-04-17T07:49:40.107226",
+    "title": "Navigating the Fog: Assessing Frameworks for Power System Planning Under Uncertainty"
   },
   {
     "paper": "Spyrou_IEEE_Flexibility_Options_Paper__V2025_01_07",
     "path": "/sites/Spyrou_IEEE_Flexibility_Options_Paper__V2025_01_07.html",
-    "generated": "2025-04-17T07:52:02.209775"
+    "generated": "2025-04-17T07:52:02.209775",
+    "title": "Flexibility Options: Hedging Risk in Modern Power Grids"
   }
 ]

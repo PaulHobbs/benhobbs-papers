@@ -114,7 +114,7 @@
       {#each data.sites as site}
         <div class="card">
           <a href={site.path} class="paper-title" target="_blank" rel="noopener">
-            {formatTitle(site.paper)}
+            {site.title}
           </a>
           <div class="date">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"

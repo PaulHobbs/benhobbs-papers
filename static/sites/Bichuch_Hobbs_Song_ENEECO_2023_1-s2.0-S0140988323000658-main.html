@@ -413,7 +413,6 @@
              drawMeritOrder();
         });
 
-
         // --- Supplier Investment Decision ---
         const investCostSlider = document.getElementById('investCostSlider');
         const investCostValue = document.getElementById('investCostValue');
@@ -427,7 +426,7 @@
         const simPriceCapValue = document.getElementById('simPriceCapValue');
         const avgDemandSlider = document.getElementById('avgDemandSlider');
         const avgDemandValue = document.getElementById('avgDemandValue');
-        const optimalK Span = document.getElementById('optimalK');
+        const optimalK = document.getElementById('optimalK');
         const supplierUtilityCtx = document.getElementById('supplierUtilityChart').getContext('2d');
         let supplierUtilityChart;
 
@@ -526,7 +525,7 @@
                 }
             }
 
-            optimalK Span.textContent = optimalK.toFixed(0);
+            optimalK.textContent = optimalK.toFixed(0);
 
             const chartData = {
                 labels: kValues,

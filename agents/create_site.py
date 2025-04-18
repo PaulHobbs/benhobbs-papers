@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+from bs4 import BeautifulSoup
 from google import genai  # type: ignore
 from google.genai import types  # type: ignore
 from pathlib import Path
@@ -88,9 +89,11 @@ def main():
             sites = json.load(f)
 
         # Add new entry if not exists
+        title = extract_title(html)
         new_entry = {
             "paper": papername,
             "path": f"/sites/{papername}.html",
+            "title": title,
             "generated": datetime.datetime.now().isoformat()
         }
       
@@ -163,6 +166,14 @@ def _parse_html(output: str) -> str:
     
     return match.group(1).strip()
 
+
+def extract_title(html: str) -> str:
+    """Extract the page title from the first h1 element in HTML content."""
+    soup = BeautifulSoup(html, "html.parser")
+    h1 = soup.find("h1")
+    if not h1:
+        raise ValueError("No h1 element found in HTML content")
+    return h1.get_text().strip()
 
 
 # Expected response:
