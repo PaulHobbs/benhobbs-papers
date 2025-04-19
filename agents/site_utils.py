@@ -40,7 +40,7 @@ def extract_publication_date(pdf_path: Path) -> str:
                         pub_date = f"{year}-{month}-{day}"
     except Exception as e:
         print(f"Warning: Could not extract publication date from {pdf_path}: {e}")
-        # Keep pub_date as ""
+        # Keep pub_dagg/genite as ""
     return pub_date
 
 
@@ -56,7 +56,7 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
                 return ["Unknown author"]
 
         # Use a specific, efficient model for this task
-        model = client().get_generative_model('gemini-1.5-flash-latest')
+        model = client().get_generative_model('gemini-2.5-flash-preview-04-17')
         prompt = f"""
         Extract the list of authors from the following text, which is the first page of a PDF document.
         Return only the author names, separated by semicolons. For example: "Author One; Author Two; Author Three".
@@ -69,6 +69,7 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
         Authors:
         """ # Limit text length to avoid exceeding token limits
 
+        # This should probably use structured josn output AI!
         response = model.generate_content(prompt)
         
         # Check for safety ratings or blocks
