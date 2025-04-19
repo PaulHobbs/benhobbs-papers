@@ -1,6 +1,7 @@
 import pytest
+import PyPDF2
 from pathlib import Path
-from agents.create_site import extract_title
+from agents.create_site import extract_title, extract_metadata
 
 SAMPLE_HTML = """
 <!DOCTYPE html>
@@ -44,3 +45,33 @@ def test_extract_title_missing_h1():
     with pytest.raises(ValueError) as exc_info:
         extract_title(NO_H1_HTML)
     assert "No h1 element found" in str(exc_info.value)
+
+
+@pytest.fixture
+def sample_pdf(tmp_path):
+    pdf_path = tmp_path / "test.pdf"
+    with open(pdf_path, "wb") as f:
+        writer = PyPDF2.PdfWriter()
+        writer.add_blank_page(612, 792)
+        writer.add_metadata({
+            "/Author": "John Doe; Jane Smith",
+            "/CreationDate": "D:20240102130405"
+        })
+        writer.write(f)
+    return pdf_path
+
+def test_extract_metadata_valid(sample_pdf):
+    authors, date = extract_metadata(sample_pdf)
+    assert authors == ["John Doe", "Jane Smith"]
+    assert date == "2024-01-02"
+
+def test_extract_metadata_missing_fields(tmp_path):
+    pdf_path = tmp_path / "empty.pdf"
+    with open(pdf_path, "wb") as f:
+        writer = PyPDF2.PdfWriter()
+        writer.add_blank_page(612, 792)
+        writer.write(f)
+    
+    authors, date = extract_metadata(pdf_path)
+    assert authors == ["Unknown author"]
+    assert date == ""

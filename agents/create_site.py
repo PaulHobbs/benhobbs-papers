@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 from __future__ import annotations
+import PyPDF2
 from bs4 import BeautifulSoup
 from google import genai  # type: ignore
+from src.lib.site_utils import create_site_entry
 from google.genai import types  # type: ignore
 from pathlib import Path
 from tqdm import tqdm
@@ -81,13 +83,7 @@ def main():
             f.write(html)
 
         # Add new entry if not exists
-        title = extract_title(html)
-        new_entry = {
-            "paper": papername,
-            "path": f"/sites/{papername}.html",
-            "title": title,
-            "generated": datetime.datetime.now().isoformat()
-        }
+        new_entry = create_site_entry(papername, html, pdf_path)
       
         if not any(entry["paper"] == papername for entry in sites):
             sites.append(new_entry)
@@ -198,15 +194,6 @@ def _parse_html(output: str) -> str:
         )
     
     return match.group(1).strip()
-
-
-def extract_title(html: str) -> str:
-    """Extract the page title from the first h1 element in HTML content."""
-    soup = BeautifulSoup(html, "html.parser")
-    h1 = soup.find("h1")
-    if not h1:
-        raise ValueError("No h1 element found in HTML content")
-    return h1.get_text().strip()
 
 
 # Expected response:
