@@ -56,34 +56,56 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
                 return ["Unknown author"]
 
         # Use a specific, efficient model for this task
-        model = client().get_generative_model('gemini-2.5-flash-preview-04-17')
+        # Use a specific, efficient model for this task and enable JSON output
+        model = client().get_generative_model('gemini-1.5-flash-latest')
         prompt = f"""
         Extract the list of authors from the following text, which is the first page of a PDF document.
-        Return only the author names, separated by semicolons. For example: "Author One; Author Two; Author Three".
-        If no authors can be identified, return "Unknown author".
+        Return the result as a JSON object with a single key "authors" which is a list of strings.
+        For example: {{"authors": ["Author One", "Author Two", "Author Three"]}}.
+        If no authors can be identified, return {{"authors": ["Unknown author"]}}.
 
         Text:
         ---
-        {first_page_text[:4000]} 
+        {first_page_text[:4000]}
         ---
-        Authors:
+        JSON Output:
         """ # Limit text length to avoid exceeding token limits
 
-        # This should probably use structured josn output AI!
-        response = model.generate_content(prompt)
-        
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                response_mime_type="application/json"
+            )
+        )
+
         # Check for safety ratings or blocks
         if not response.candidates or not response.candidates[0].content.parts:
-             print(f"Warning: AI response blocked or empty for {pdf_path}. Reason: {response.prompt_feedback.block_reason}")
+             print(f"Warning: AI response blocked or empty for {pdf_path}. Reason: {response.prompt_feedback.block_reason if response.prompt_feedback else 'Unknown'}")
              return ["Unknown author"]
 
-        ai_authors = response.text.strip()
+        try:
+            # Parse the JSON response
+            result = json.loads(response.text)
+            authors = result.get("authors", ["Unknown author"])
 
-        if ai_authors.lower() == "unknown author" or not ai_authors:
+            # Ensure it's a list and handle empty list case
+            if not isinstance(authors, list) or not authors:
+                return ["Unknown author"]
+            
+            # Filter out any empty strings just in case
+            authors = [a for a in authors if isinstance(a, str) and a.strip()]
+            if not authors:
+                 return ["Unknown author"]
+
+            return authors
+
+        except json.JSONDecodeError as e:
+            print(f"Warning: Failed to parse JSON response from AI for {pdf_path}: {e}")
+            print(f"Raw AI response: {response.text}")
             return ["Unknown author"]
-        else:
-            # Split the semicolon-separated string into a list of authors
-            return [a.strip() for a in ai_authors.split(';') if a.strip()]
+        except Exception as e:
+             print(f"Warning: Error processing AI response for {pdf_path}: {e}")
+             return ["Unknown author"]
 
     except Exception as e:
         print(f"Warning: Could not extract authors using AI from {pdf_path}: {e}")
