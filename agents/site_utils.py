@@ -33,15 +33,18 @@ def extract_publication_date(pdf_path: Path) -> str:
             date = meta.get("/CreationDate", "")
             if date:
                 # Convert PDF date format (D:YYYYMMDDHHmmSS[+-]...) to ISO format YYYY-MM-DD
-            try:
+                try:
                     # Example PDF date format: D:20230418153000Z or D:20230501100000+01'00'
                     match = re.search(r"(\d{4})(\d{2})(\d{2})", date)
                     if match:
                         year, month, day = match.groups()
                         pub_date = f"{year}-{month}-{day}"
-    except Exception as e:
+                except Exception as e: # Catch potential errors during regex/date processing within the 'if date:' block
+                    print(f"Warning: Could not parse date string '{date}' from {pdf_path}: {e}")
+                    # Keep pub_date as "" if parsing fails
+    except Exception as e: # Catch errors from file opening or metadata access
         print(f"Warning: Could not extract publication date from {pdf_path}: {e}")
-        # Keep pub_dagg/genite as ""
+        # Keep pub_date as ""
     return pub_date
 
 
