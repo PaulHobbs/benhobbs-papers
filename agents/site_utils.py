@@ -48,19 +48,10 @@ def extract_publication_date(pdf_path: Path) -> str:
     return pub_date
 
 
-def extract_authors_with_ai(pdf_path: Path) -> list[str]:
-    """Extract authors from the first page of the PDF using AI."""
+def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> genai.types.GenerateContentResponse | None:
+    """Calls the Gemini API to extract authors from text, requesting JSON."""
     try:
-        with open(pdf_path, "rb") as f:
-            pdf = PyPDF2.PdfReader(f)
-            # Extract text from the first page, as authors are usually listed there.
-            first_page_text = pdf.pages[0].extract_text()
-            if not first_page_text:
-                print(f"Warning: No text extracted from the first page of {pdf_path}")
-                return ["Unknown author"]
-
-        # Pull the genai usage out into a separate function AI!
-        # Use a specific, efficient model for this task
+        # Use a specific, efficient model for this task and enable JSON output
         model = client().get_generative_model('gemini-1.5-flash-latest')
         prompt = f"""
         Extract the list of authors from the following text, which is the first page of a PDF document.
@@ -82,13 +73,38 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
             )
         )
 
-        # Check for safety ratings or blocks
+        # Check for safety ratings or blocks before returning
         if not response.candidates or not response.candidates[0].content.parts:
              print(f"Warning: AI response blocked or empty for {pdf_path}. Reason: {response.prompt_feedback.block_reason if response.prompt_feedback else 'Unknown'}")
-             return ["Unknown author"]
+             return None
+        
+        return response
+
+    except Exception as e:
+        print(f"Warning: Error during Gemini API call for {pdf_path}: {e}")
+        return None
+
+
+def extract_authors_with_ai(pdf_path: Path) -> list[str]:
+    """Extract authors from the first page of the PDF using AI."""
+    try:
+        with open(pdf_path, "rb") as f:
+            pdf = PyPDF2.PdfReader(f)
+            # Extract text from the first page, as authors are usually listed there.
+            first_page_text = pdf.pages[0].extract_text()
+            if not first_page_text:
+                print(f"Warning: No text extracted from the first page of {pdf_path}")
+                return ["Unknown author"]
+
+        # Call the helper function to interact with the Gemini API
+        response = _call_gemini_for_authors(first_page_text, pdf_path)
+
+        if response is None:
+            # Error occurred during API call or response was blocked/empty
+            return ["Unknown author"]
 
         try:
-            # Parse the JSON response
+            # Parse the JSON response from the successful API call
             result = json.loads(response.text)
             authors = result.get("authors", ["Unknown author"])
 
