@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import json
 from pathlib import Path
-from src.lib.site_utils import create_site_entry
+from site_utils import create_site_entry
 
 
 def main():

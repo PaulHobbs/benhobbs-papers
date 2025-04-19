@@ -2,19 +2,14 @@
 from __future__ import annotations
 import PyPDF2
 from bs4 import BeautifulSoup
-from google import genai  # type: ignore
-from src.lib.site_utils import create_site_entry
+from site_utils import create_site_entry, client
 from google.genai import types  # type: ignore
 from pathlib import Path
 from tqdm import tqdm
 from typing import Optional
-from functools import cache
 import base64
 import datetime
-import datetime
 import json
-import json
-import os
 import re
 import sys
 
@@ -92,10 +87,6 @@ def main():
 
         print(f"Successfully wrote to {output_path}")
 
-
-@cache
-def client() -> genai.Client:
-    return genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 
 def generate(pdf: str):
