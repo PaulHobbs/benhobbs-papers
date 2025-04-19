@@ -59,8 +59,8 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
                 print(f"Warning: No text extracted from the first page of {pdf_path}")
                 return ["Unknown author"]
 
+        # Pull the genai usage out into a separate function AI!
         # Use a specific, efficient model for this task
-        # Use a specific, efficient model for this task and enable JSON output
         model = client().get_generative_model('gemini-1.5-flash-latest')
         prompt = f"""
         Extract the list of authors from the following text, which is the first page of a PDF document.
