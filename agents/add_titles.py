@@ -5,16 +5,46 @@ import sys
 from pathlib import Path
 from site_utils import create_site_entry
 
-
 def main():
+    parser = argparse.ArgumentParser(description="Update site metadata in src/lib/sites.json.")
+    parser.add_argument(
+        "--select-site",
+        action="store_true",
+        help="Interactively select a single site to update.",
+    )
+    args = parser.parse_args()
+
     sites_path = Path(__file__).parent.parent / "src/lib/sites.json"
-    # We should optionally allow interactively selecting a site to modify when passed the --select-site flag AI!
 
     with open(sites_path, "r", encoding="utf-8") as f:
-        sites = json.load(f)
+        all_sites = json.load(f)
 
-    root = Path(__file__).parent.parent 
-    for entry in sites:
+    sites_to_process = all_sites
+
+    if args.select_site:
+        print("Available sites:")
+        for i, site in enumerate(all_sites):
+            # Use title if available, otherwise paper name
+            display_name = site.get("title", site.get("paper", f"Entry {i+1}"))
+            print(f"{i + 1}. {display_name}")
+
+        while True:
+            try:
+                selection = input(f"Select a site number to update (1-{len(all_sites)}): ")
+                index = int(selection) - 1
+                if 0 <= index < len(all_sites):
+                    sites_to_process = [all_sites[index]]
+                    break
+                else:
+                    print("Invalid selection. Please enter a number within the range.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+            except (EOFError, KeyboardInterrupt):
+                print("\nSelection cancelled.")
+                sys.exit(0) # Exit gracefully if user cancels
+
+    root = Path(__file__).parent.parent
+    for entry in sites_to_process:
         html_path = root / "static" / entry["path"].lstrip("/")
 
         try:
