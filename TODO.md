@@ -5,9 +5,9 @@
 - [x] Add a link to your jhu.edu site
 
 For each card:
-- [ ] Add citation with full names & link to article
-  - [ ] Use google search tool and gemini 2.5 flash (gemini-2.5-flash-preview-04-17) to generate links to article
+- [x] Add citation with full names & link to article
 - [x] Add publish date
+- [ ] Regenerate metadata
 
 ## Subpage
 
@@ -16,4 +16,6 @@ For each card:
 
 ## Improved generated sites
 
-- [ ] Generate a screenshot and add to the context for revisions
+- [ ] Fix **markdown** formatting in HTML. Maybe remove it from the prompt, instead using <strong>emphasis</strong> with HTML tags to prime the model to stop generating it in the first place?
+  - [ ] Alternatively, do a pass-over with gemini to specifically fix markdown issues.
+- [ ] Generate a screenshot and add to the context for revisions.
