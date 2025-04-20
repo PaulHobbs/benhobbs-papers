@@ -50,72 +50,81 @@ def extract_publication_date(pdf_path: Path) -> str:
     return pub_date
 
 
-def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> list[str] | None:
+class PDFMeta(BaseModel):
+    authors: list[str]
+    title: str
+
+
+def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> PDFMeta | None:
     """Calls the Gemini API to extract authors from text, requesting JSON."""
-    try:
-        # Use a specific, efficient model for this task and enable JSON output
-        prompt = f"""
-        Extract the list of authors from the following text, which is the first page of a PDF document.
-        Return the result as a JSON object with a single key "authors" which is a list of strings.
-        For example: {{"authors": ["Author One", "Author Two", "Author Three"]}}.
-        If no authors can be identified, return {{"authors": ["Unknown author"]}}.
+    # Use a specific, efficient model for this task and enable JSON output
+    prompt = f"""
+    Extract the list of authors and title from the following text, which is
+    the first page of a PDF document. Return the result as a JSON object
+    with a key "authors" which is a list of strings, and key "title" which
+    is as string.
+    
+    For example:
+        {{
+        "authors": ["Author One", "Author Two", "Author Three"],
+        "title": "Distributional outcomes of urban heat island reduction pathways under climate extremes"
+        }}.
 
-        Text:
-        ---
-        {first_page_text[:4000]}
-        ---
-        JSON Output:
-        """ # Limit text length to avoid exceeding token limits
-
-        class Author(BaseModel):
-            authors: list[str]
-
-        response = client().models.generate_content(
-            model='gemini-2.0-flash-001',
-            contents=types.Content(role="user", parts=[
-                types.Part.from_text(text=prompt)
-            ]),
-            config={
-                'response_mime_type':'application/json',
-                'response_schema': Author
-            }
-        )
-        return response.parsed.authors
-
-    except Exception as e:
-        print(f"Warning: Error during Gemini API call for {pdf_path}: {e}")
-        return None
+    Text:
+    ---
+    {first_page_text[:4000]}
+    ---
+    JSON Output:
+    """ # Limit text length to avoid exceeding token limits
+    response = client().models.generate_content(
+        model='gemini-2.0-flash-001',
+        contents=types.Content(role="user", parts=[
+            types.Part.from_text(text=prompt)
+        ]),
+        config={
+            'response_mime_type':'application/json',
+            'response_schema': PDFMeta
+        }
+    )
+    return response.parsed
 
 
-def extract_authors_with_ai(pdf_path: Path) -> list[str]:
+def extract_pdf_meta_with_gemini(pdf_path: Path) -> PDFMeta
     """Extract authors from the first page of the PDF using AI."""
-    try:
-        with open(pdf_path, "rb") as f:
-            pdf = PyPDF2.PdfReader(f)
-            # Extract text from the first page, as authors are usually listed there.
-            first_page_text = pdf.pages[0].extract_text()
-            if not first_page_text:
-                print(f"Warning: No text extracted from the first page of {pdf_path}")
-                return ["Unknown author"]
+    with open(pdf_path, "rb") as f:
+        pdf = PyPDF2.PdfReader(f)
+        # Extract text from the first page, as authors are usually listed there.
+        first_page_text = pdf.pages[0].extract_text()
+        if not first_page_text:
+            print(f"Warning: No text extracted from the first page of {pdf_path}")
+            return ["Unknown author"]
 
-        # Call the helper function to interact with the Gemini API
-        return _call_gemini_for_authors(first_page_text, pdf_path) or ["Unknown"]
+    # Call the helper function to interact with the Gemini API
+    return _call_gemini_for_authors(first_page_text, pdf_path)
 
-    except Exception as e:
-        print(f"Warning: Could not extract authors using AI from {pdf_path}: {e}")
-        return ["Unknown author"]
+
+_PDF_SITE_PATH = re.compile(r'/static/([^/]\.pdf)$')
+
+
+def _pdf_site_path(pdf_path: Path) -> str:
+    """Converts the absolute path into a relative path used for the site."""
+    m = _PDF_SITE_PATH.search(str(pdf_path))
+    if not m:
+        raise ValueError(f"Pdf path {str(pdf_path)} does not match static/*.pdf")
+    return m.group(1)
 
 
 def create_site_entry(papername: str, html_content: str, pdf_path: Path) -> dict:
     """Creates a dictionary entry for sites.json."""
-    title = extract_title(html_content)
-    authors = extract_authors_with_ai(pdf_path)
     pub_date = extract_publication_date(pdf_path)
+    meta = extract_pdf_meta_with_gemini(pdf_path)
     return {
         "paper": papername,
         "path": f"/sites/{papername}.html",
-        "title": title,
-        "authors": authors,
+        "title": extract_title(html_content),
+        "authors": meta.authors,
+        "pdf_title": meta.title,
+        "pdf_site": _pdf_site_path(pdf_path),
         "publication_date": pub_date,
         "generated": datetime.datetime.now().isoformat()
     }
