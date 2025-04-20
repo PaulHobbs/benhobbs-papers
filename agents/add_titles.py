@@ -6,6 +6,7 @@ from site_utils import create_site_entry
 
 def main():
     sites_path = Path(__file__).parent.parent / "src/lib/sites.json"
+    # We should optionally allow interactively selecting a site to modify when passed the --select-site flag AI!
 
     with open(sites_path, "r", encoding="utf-8") as f:
         sites = json.load(f)
