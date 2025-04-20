@@ -1,12 +1,14 @@
 from bs4 import BeautifulSoup
 from functools import cache
 from google import genai  # type: ignore
+from google.genai import types  # type: ignore
 from pathlib import Path
 import datetime
 import os
 import PyPDF2
 import re
 import json
+from pydantic import BaseModel
 
 
 @cache
@@ -48,11 +50,10 @@ def extract_publication_date(pdf_path: Path) -> str:
     return pub_date
 
 
-def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> genai.types.GenerateContentResponse | None:
+def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> list[str] | None:
     """Calls the Gemini API to extract authors from text, requesting JSON."""
     try:
         # Use a specific, efficient model for this task and enable JSON output
-        model = client().get_generative_model('gemini-1.5-flash-latest')
         prompt = f"""
         Extract the list of authors from the following text, which is the first page of a PDF document.
         Return the result as a JSON object with a single key "authors" which is a list of strings.
@@ -66,19 +67,20 @@ def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> genai.type
         JSON Output:
         """ # Limit text length to avoid exceeding token limits
 
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                response_mime_type="application/json"
-            )
-        )
+        class Author(BaseModel):
+            authors: list[str]
 
-        # Check for safety ratings or blocks before returning
-        if not response.candidates or not response.candidates[0].content.parts:
-             print(f"Warning: AI response blocked or empty for {pdf_path}. Reason: {response.prompt_feedback.block_reason if response.prompt_feedback else 'Unknown'}")
-             return None
-        
-        return response
+        response = client().models.generate_content(
+            model='gemini-2.0-flash-001',
+            contents=types.Content(role="user", parts=[
+                types.Part.from_text(text=prompt)
+            ]),
+            config={
+                'response_mime_type':'application/json',
+                'response_schema': Author
+            }
+        )
+        return response.parsed.authors
 
     except Exception as e:
         print(f"Warning: Error during Gemini API call for {pdf_path}: {e}")
@@ -97,35 +99,7 @@ def extract_authors_with_ai(pdf_path: Path) -> list[str]:
                 return ["Unknown author"]
 
         # Call the helper function to interact with the Gemini API
-        response = _call_gemini_for_authors(first_page_text, pdf_path)
-
-        if response is None:
-            # Error occurred during API call or response was blocked/empty
-            return ["Unknown author"]
-
-        try:
-            # Parse the JSON response from the successful API call
-            result = json.loads(response.text)
-            authors = result.get("authors", ["Unknown author"])
-
-            # Ensure it's a list and handle empty list case
-            if not isinstance(authors, list) or not authors:
-                return ["Unknown author"]
-            
-            # Filter out any empty strings just in case
-            authors = [a for a in authors if isinstance(a, str) and a.strip()]
-            if not authors:
-                 return ["Unknown author"]
-
-            return authors
-
-        except json.JSONDecodeError as e:
-            print(f"Warning: Failed to parse JSON response from AI for {pdf_path}: {e}")
-            print(f"Raw AI response: {response.text}")
-            return ["Unknown author"]
-        except Exception as e:
-             print(f"Warning: Error processing AI response for {pdf_path}: {e}")
-             return ["Unknown author"]
+        return _call_gemini_for_authors(first_page_text, pdf_path) or ["Unknown"]
 
     except Exception as e:
         print(f"Warning: Could not extract authors using AI from {pdf_path}: {e}")

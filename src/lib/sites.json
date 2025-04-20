@@ -5,7 +5,13 @@
     "generated": "2025-04-16T23:27:26.100248",
     "title": "Untangling Urban Heat Adaptation: Costs, Benefits, and Fairness",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/2025_urban_heat_island.pdf",
-    "authors": ["Unknown author"],
+    "authors": [
+      "Ali Eyni",
+      "Benjamin F. Zaitchik",
+      "Benjamin F. Hobbs",
+      "Antonia Hadjimichael",
+      "Rui Shi"
+    ],
     "publication_date": "2025-03-20"
   },
   {
@@ -15,7 +21,9 @@
     "generated": "2025-04-17T23:19:01.955874",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Bichuch Hobbs Song ENEECO_2023_1-s2.0-S0140988323000658-main.pdf",
     "authors": [
-      "Unknown author"
+      "Maxim Bichuch",
+      "Benjamin F. Hobbs",
+      "Xinyue Song"
     ],
     "publication_date": "2023-02-17"
   },
@@ -26,7 +34,8 @@
     "generated": "2025-04-17T23:22:34.512540",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Bothwell Hobbs 2023 IEEE How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.pdf",
     "authors": [
-      "Unknown author"
+      "Cynthia D. Bothwell",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2023-05-31"
   },
@@ -37,7 +46,11 @@
     "generated": "2025-04-17T23:25:51.366292",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/IEEE Indu Applic Mehrtash 2024 Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.pdf",
     "authors": [
-      "Unknown author"
+      "David Sehloff",
+      "Jonghwan Kwon",
+      "Mahdi Mehrtash",
+      "Todd Levin",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2024-08-13"
   },
@@ -59,7 +72,9 @@
     "generated": "2025-04-17T23:35:10.552285",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/IET Generation Trans Dist - 2016 - Ibrahim Shayesteh - Scenario reduction network aggregation and DC linearisation.pdf",
     "authors": [
-      "Unknown author"
+      "Ebrahim Shayesteh",
+      "Benjamin F. Hobbs",
+      "Mikael Amelin"
     ],
     "publication_date": "2020-12-05"
   },
@@ -70,7 +85,12 @@
     "generated": "2025-04-17T23:38:48.160694",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Kwon_Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
     "authors": [
-      "Jonghwan Kwon"
+      "Jonghwan Kwon",
+      "Todd Levin",
+      "Zhi Zhou",
+      "Audun Botterud",
+      "Mahdi Mehrtash",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2023-10-06"
   },
@@ -81,7 +101,9 @@
     "generated": "2025-04-17T23:42:50.671947",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Mehrtash Hobbs Ela_ORDC_2023_06.pdf",
     "authors": [
-      "Mahdi Mehrtash"
+      "Mahdi Mehrtash",
+      "Benjamin F. Hobbs",
+      "Erik Ela"
     ],
     "publication_date": "2023-07-17"
   },
@@ -92,7 +114,21 @@
     "generated": "2025-04-17T23:46:50.531342",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Nature Energy Storage 2023 s41560-023-01340-6.pdf",
     "authors": [
-      "Todd Levin"
+      "Todd Levin",
+      "John Bistline",
+      "Ramteen Sioshansi",
+      "Wesley J. Cole",
+      "Jonghwan Kwon",
+      "Scott P. Burger",
+      "George W. Crabtree",
+      "Jesse D. Jenkins",
+      "Rebecca O\u2019Neil",
+      "Magnus Korp\u00e5s",
+      "Sonja Wogrin",
+      "Benjamin F. Hobbs",
+      "Robert Rosner",
+      "Venkat Srinivasan",
+      "Audun Botterud"
     ],
     "publication_date": "2023-09-05"
   },
@@ -103,7 +139,12 @@
     "generated": "2025-04-17T23:53:09.727369",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
     "authors": [
-      "Jonghwan Kwon"
+      "Jonghwan Kwon",
+      "Todd Levin",
+      "Zhi Zhou",
+      "Audun Botterud",
+      "Mahdi Mehrtash",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2023-11-30"
   },
@@ -114,7 +155,10 @@
     "generated": "2025-04-17T23:56:51.787259",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL.pdf",
     "authors": [
-      "Shen Wang"
+      "Shen Wang",
+      "Hanzhi Wang",
+      "J. Hugh Ellis",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2024-12-03"
   },
@@ -125,7 +169,10 @@
     "generated": "2025-04-17T23:59:57.748424",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Song Wang Mehrtash Hobbs SoftwareX 2024 published 1-s2.0-S2352711024003522-main.pdf",
     "authors": [
-      "Shen Wang"
+      "Shen Wang",
+      "Ziying Song",
+      "Mahdi Mehrtash",
+      "Benjamin F. Hobbs"
     ],
     "publication_date": "2024-11-21"
   },
@@ -136,7 +183,10 @@
     "generated": "2025-04-18T00:04:14.566989",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
     "authors": [
-      "Elina Spyrou"
+      "Elina Spyrou",
+      "Ben Hobbs",
+      "Deb Chattopadhyay",
+      "Neha Mukhi"
     ],
     "publication_date": "2024-02-12"
   },
@@ -147,7 +197,13 @@
     "generated": "2025-04-18T00:07:30.817406",
     "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Spyrou IEEE_Flexibility_Options_Paper__V2025_01_07.pdf",
     "authors": [
-      "Unknown author"
+      "Elina Spyrou",
+      "Qiwei Zhang",
+      "Robin B. Hytowitz",
+      "Benjamin F. Hobbs",
+      "Siddharth Tyagi",
+      "Mengmeng Cai",
+      "Michael Blonsky"
     ],
     "publication_date": "2025-01-07"
   }
