@@ -59,9 +59,9 @@ def main():
             print(f"Warning: HTML file not found at {html_path}: {e}")
         except ValueError as e:
             print(f"Error processing {html_path}: {str(e)}")
-
+    # Write the potentially modified all_sites list back to the JSON file
     with open(sites_path, "w", encoding="utf-8") as f:
-        json.dump(sites, f, indent=2)
+        json.dump(all_sites, f, indent=2)
 
 
 if __name__ == "__main__":
