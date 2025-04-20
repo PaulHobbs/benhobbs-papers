@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import argparse
 import json
+import sys
 from pathlib import Path
 from site_utils import create_site_entry
 
