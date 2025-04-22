@@ -19,3 +19,5 @@ For each card:
 - [ ] Fix **markdown** formatting in HTML. Maybe remove it from the prompt, instead using <strong>emphasis</strong> with HTML tags to prime the model to stop generating it in the first place?
   - [ ] Alternatively, do a pass-over with gemini to specifically fix markdown issues.
 - [ ] Generate a screenshot and add to the context for revisions.
+  - [ ] [Use a browser MCP for this?](https://www.reddit.com/r/ClaudeAI/comments/1k0f3vs/musthave_mcp_servers_for_coding_and_beyond/)
+  - [ ] Would need an agent library to use MCPs. Maybe [fast-agent](https://fast-agent.ai/mcp/)?
