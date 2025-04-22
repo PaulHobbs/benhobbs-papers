@@ -64,11 +64,14 @@
     "title": "Power Grid Planning: Why Building Together is Better",
     "generated": "2025-04-17T23:31:05.360333",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/IEEE Mehrtash 2023 Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning.pdf",
-    "pdf_site": "/papers/IEEE Mehrtash 2023 Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning.pdf",
+    "pdf_site": "papers/IEEE Mehrtash 2023 Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning.pdf",
     "authors": [
-      "Unknown author"
+      "Mahdi Mehrtash",
+      "Benjamin F. Hobbs",
+      "Reza Mahroo"
     ],
-    "publication_date": "2023-03-21"
+    "publication_date": "2023-03-21",
+    "pdf_title": "Necessity of Joint Resource and Transmission Expansion — Planning in Presence of System and Policy Uncertainties"
   },
   {
     "paper": "IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation",

@@ -47,10 +47,14 @@ def main():
     for entry in sites_to_process:
         html_path = root / "static" / entry["path"].lstrip("/")
 
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
         try:
-            with open(html_path, "r", encoding="utf-8") as f:
-                html_content = f.read()
-            pdf_path = next((root / 'papers').glob((entry['paper'] + '.pdf').replace('_', '*')))
+            pdf_path = next((root / 'static' / 'papers').glob((entry['paper'] + '.pdf').replace('_', '*')))
+        except StopIteration:
+            print(f'ERROR: Could not find paper for pdf {entry['paper']}')
+            raise
+        try:
             entry2 = create_site_entry(entry['paper'], html_content, pdf_path)
             del entry2['generated']
             entry.update(entry2)

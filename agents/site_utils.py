@@ -41,10 +41,14 @@ def extract_publication_date(pdf_path: Path) -> str:
                     if match:
                         year, month, day = match.groups()
                         pub_date = f"{year}-{month}-{day}"
-                except Exception as e: # Catch potential errors during regex/date processing within the 'if date:' block
-                    print(f"Warning: Could not parse date string '{date}' from {pdf_path}: {e}")
+                except (
+                    Exception
+                ) as e:  # Catch potential errors during regex/date processing within the 'if date:' block
+                    print(
+                        f"Warning: Could not parse date string '{date}' from {pdf_path}: {e}"
+                    )
                     # Keep pub_date as "" if parsing fails
-    except Exception as e: # Catch errors from file opening or metadata access
+    except Exception as e:  # Catch errors from file opening or metadata access
         print(f"Warning: Could not extract publication date from {pdf_path}: {e}")
         # Keep pub_date as ""
     return pub_date
@@ -75,35 +79,35 @@ def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> PDFMeta | 
     {first_page_text[:4000]}
     ---
     JSON Output:
-    """ # Limit text length to avoid exceeding token limits
+    """  # Limit text length to avoid exceeding token limits
     response = client().models.generate_content(
-        model='gemini-2.0-flash-001',
-        contents=types.Content(role="user", parts=[
-            types.Part.from_text(text=prompt)
-        ]),
-        config={
-            'response_mime_type':'application/json',
-            'response_schema': PDFMeta
-        }
+        model="gemini-2.0-flash-001",
+        contents=types.Content(role="user", parts=[types.Part.from_text(text=prompt)]),
+        config={"response_mime_type": "application/json", "response_schema": PDFMeta},
     )
     return response.parsed
 
 
-def extract_pdf_meta_with_gemini(pdf_path: Path) -> PDFMeta
+def extract_pdf_meta_with_gemini(pdf_path: Path) -> PDFMeta:
     """Extract authors from the first page of the PDF using AI."""
     with open(pdf_path, "rb") as f:
         pdf = PyPDF2.PdfReader(f)
-        # Extract text from the first page, as authors are usually listed there.
-        first_page_text = pdf.pages[0].extract_text()
+        # Extract text from the first two pages, as authors are usually listed there.
+        # Two pages are useful in case there's a filler page at the beginning.
+        first_page_text = '\n'.join(p.extract_text() for p in pdf.pages[:2])
         if not first_page_text:
-            print(f"Warning: No text extracted from the first page of {pdf_path}")
-            return ["Unknown author"]
+            raise ValueError(
+                f"Warning: No text extracted from the first page of {pdf_path}"
+            )
 
     # Call the helper function to interact with the Gemini API
-    return _call_gemini_for_authors(first_page_text, pdf_path)
+    meta = _call_gemini_for_authors(first_page_text, pdf_path)
+    if not meta:
+        return PDFMeta(authors=["Unknown Author"], title="Unknown title")
+    return meta
 
 
-_PDF_SITE_PATH = re.compile(r'/static/([^/]\.pdf)$')
+_PDF_SITE_PATH = re.compile(r"/static/([^/]*/[^/]*\.pdf)$")
 
 
 def _pdf_site_path(pdf_path: Path) -> str:
@@ -126,5 +130,5 @@ def create_site_entry(papername: str, html_content: str, pdf_path: Path) -> dict
         "pdf_title": meta.title,
         "pdf_site": _pdf_site_path(pdf_path),
         "publication_date": pub_date,
-        "generated": datetime.datetime.now().isoformat()
+        "generated": datetime.datetime.now().isoformat(),
     }
