@@ -50,7 +50,7 @@ def main():
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
         try:
-            pdf_path = next((root / 'static' / 'papers').glob((entry['paper'] + '.pdf').replace('_', '*')))
+            pdf_path = next((root / 'papers').glob((entry['paper'] + '.pdf').replace('_', '*')))
         except StopIteration:
             print(f'ERROR: Could not find paper for pdf {entry['paper']}')
             raise

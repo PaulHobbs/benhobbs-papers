@@ -47,7 +47,7 @@
       accessible through interactive visualizations and simulations. The source
       code for the generation script and the rest of this site can be found on
       <a
-        href="https://github.com/paulhobbs/bhobbs-papers"
+        href="https://github.com/paulhobbs/benhobbs-papers"
         target="_blank"
         rel="noopener">GitHub</a
       >.

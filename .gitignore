@@ -27,3 +27,6 @@ vite.config.ts.timestamp-*
 .venv
 *.pyc
 .aider*
+
+# Papers
+papers
