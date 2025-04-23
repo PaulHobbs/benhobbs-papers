@@ -5,7 +5,7 @@
     "generated": "2025-04-16T23:27:26.100248",
     "title": "Untangling Urban Heat Adaptation: Costs, Benefits, and Fairness",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/2025_urban_heat_island.pdf",
-    "pdf_site": "/papers/2025_urban_heat_island.pdf",
+    "pdf_site": "papers/2025_urban_heat_island.pdf",
     "authors": [
       "Ali Eyni",
       "Benjamin F. Zaitchik",
@@ -13,7 +13,8 @@
       "Antonia Hadjimichael",
       "Rui Shi"
     ],
-    "publication_date": "2025-03-20"
+    "publication_date": "2025-03-20",
+    "pdf_title": "Distributional outcomes of urban heat island reduction pathways under climate extremes"
   },
   {
     "paper": "Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main",
@@ -21,13 +22,14 @@
     "title": "Keeping the Lights On: Designing Smarter Electricity Markets",
     "generated": "2025-04-17T23:19:01.955874",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Bichuch Hobbs Song ENEECO_2023_1-s2.0-S0140988323000658-main.pdf",
-    "pdf_site": "/papers/Bichuch Hobbs Song ENEECO_2023_1-s2.0-S0140988323000658-main.pdf",
+    "pdf_site": "papers/Bichuch Hobbs Song ENEECO_2023_1-s2.0-S0140988323000658-main.pdf",
     "authors": [
       "Maxim Bichuch",
       "Benjamin F. Hobbs",
       "Xinyue Song"
     ],
-    "publication_date": "2023-02-17"
+    "publication_date": "2023-02-17",
+    "pdf_title": "Identifying optimal capacity expansion and differentiated capacity payments under risk aversion and market power: A financial Stackelberg game approach"
   },
   {
     "paper": "Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy",
@@ -35,12 +37,13 @@
     "title": "Sun, Wind, and the Grid: Why Old Data Can Lead to New Problems",
     "generated": "2025-04-17T23:22:34.512540",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Bothwell Hobbs 2023 IEEE How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.pdf",
-    "pdf_site": "/papers/Bothwell Hobbs 2023 IEEE How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.pdf",
+    "pdf_site": "papers/Bothwell Hobbs 2023 IEEE How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.pdf",
     "authors": [
       "Cynthia D. Bothwell",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2023-05-31"
+    "publication_date": "2023-05-31",
+    "pdf_title": "How Sampling and Averaging Historical Solar and Wind Data Can Distort Resource Adequacy"
   },
   {
     "paper": "IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset",
@@ -48,7 +51,7 @@
     "title": "Wires vs. Batteries: Upgrading Our Electric Grid",
     "generated": "2025-04-17T23:25:51.366292",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/IEEE Indu Applic Mehrtash 2024 Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.pdf",
-    "pdf_site": "/papers/IEEE Indu Applic Mehrtash 2024 Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.pdf",
+    "pdf_site": "papers/IEEE Indu Applic Mehrtash 2024 Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.pdf",
     "authors": [
       "David Sehloff",
       "Jonghwan Kwon",
@@ -56,7 +59,8 @@
       "Todd Levin",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2024-08-13"
+    "publication_date": "2024-08-13",
+    "pdf_title": "Assessing the Reliability Benefits of Energy Storage as a Transmission Asset"
   },
   {
     "paper": "IEEE_Mehrtash_2023_Necessity_of_Joint_Resource_and_Transmission_Expansion_Planning",
@@ -79,13 +83,14 @@
     "title": "Making Sense of Complexity: Simplifying Power Grid Simulations",
     "generated": "2025-04-17T23:35:10.552285",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/IET Generation Trans Dist - 2016 - Ibrahim Shayesteh - Scenario reduction network aggregation and DC linearisation.pdf",
-    "pdf_site": "/papers/IET Generation Trans Dist - 2016 - Ibrahim Shayesteh - Scenario reduction network aggregation and DC linearisation.pdf",
+    "pdf_site": "papers/IET Generation Trans Dist - 2016 - Ibrahim Shayesteh - Scenario reduction network aggregation and DC linearisation.pdf",
     "authors": [
       "Ebrahim Shayesteh",
       "Benjamin F. Hobbs",
       "Mikael Amelin"
     ],
-    "publication_date": "2020-12-05"
+    "publication_date": "2020-12-05",
+    "pdf_title": "Scenario reduction, network aggregation, and DC linearisation: which simplifications matter most in operations and planning optimisation?"
   },
   {
     "paper": "Kwon_Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
@@ -93,7 +98,7 @@
     "title": "Untangling the Grid: How Market Rules Shape Our Energy Future",
     "generated": "2025-04-17T23:38:48.160694",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Kwon_Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
-    "pdf_site": "/papers/Kwon_Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
+    "pdf_site": "papers/Kwon_Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
     "authors": [
       "Jonghwan Kwon",
       "Todd Levin",
@@ -102,7 +107,8 @@
       "Mahdi Mehrtash",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2023-10-06"
+    "publication_date": "2023-10-06",
+    "pdf_title": "The impact of market design and clean energy incentives on strategic \ngeneration investments and resource adequacy in low-carbon \nelectricity markets"
   },
   {
     "paper": "Mehrtash_Hobbs_Ela_ORDC_2023_06",
@@ -110,13 +116,14 @@
     "title": "Keeping the Lights On: When Electricity Gets Scarce",
     "generated": "2025-04-17T23:42:50.671947",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Mehrtash Hobbs Ela_ORDC_2023_06.pdf",
-    "pdf_site": "/papers/Mehrtash Hobbs Ela_ORDC_2023_06.pdf",
+    "pdf_site": "papers/Mehrtash Hobbs Ela_ORDC_2023_06.pdf",
     "authors": [
       "Mahdi Mehrtash",
       "Benjamin F. Hobbs",
       "Erik Ela"
     ],
-    "publication_date": "2023-07-17"
+    "publication_date": "2023-07-17",
+    "pdf_title": "Reserve and energy scarcity pricing in United States power markets: A comparative review of principles and practices"
   },
   {
     "paper": "Nature_Energy_Storage_2023_s41560-023-01340-6",
@@ -124,7 +131,7 @@
     "title": "Powering the Future: How Energy Storage Shapes Our Grid",
     "generated": "2025-04-17T23:46:50.531342",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Nature Energy Storage 2023 s41560-023-01340-6.pdf",
-    "pdf_site": "/papers/Nature Energy Storage 2023 s41560-023-01340-6.pdf",
+    "pdf_site": "papers/Nature Energy Storage 2023 s41560-023-01340-6.pdf",
     "authors": [
       "Todd Levin",
       "John Bistline",
@@ -136,13 +143,14 @@
       "Jesse D. Jenkins",
       "Rebecca O\u2019Neil",
       "Magnus Korp\u00e5s",
-      "ja Wogrin",
+      "Sonja Wogrin",
       "Benjamin F. Hobbs",
       "Robert Rosner",
       "Venkat Srinivasan",
       "Audun Botterud"
     ],
-    "publication_date": "2023-09-05"
+    "publication_date": "2023-09-05",
+    "pdf_title": "Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling"
   },
   {
     "paper": "Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
@@ -150,7 +158,7 @@
     "title": "Interactive Exploration: How Market Rules Shape Our Power Grid",
     "generated": "2025-04-17T23:53:09.727369",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
-    "pdf_site": "/papers/Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
+    "pdf_site": "papers/Renewable Energy Focus 2023 1-s2.0-S1755008423000911-main.pdf",
     "authors": [
       "Jonghwan Kwon",
       "Todd Levin",
@@ -159,7 +167,8 @@
       "Mahdi Mehrtash",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2023-11-30"
+    "publication_date": "2023-11-30",
+    "pdf_title": "The impact of market design and clean energy incentives on strategic \ngeneration investments and resource adequacy in low-carbon \nelectricity markets"
   },
   {
     "paper": "Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL",
@@ -167,14 +176,15 @@
     "title": "Bridging the Gap: Why Hourly Power Emissions Matter",
     "generated": "2025-04-17T23:56:51.787259",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL.pdf",
-    "pdf_site": "/papers/Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL.pdf",
+    "pdf_site": "papers/Shen_Wang_temporal_downscaling_EST_2024_10_06_revised_FINAL.pdf",
     "authors": [
       "Shen Wang",
       "Hanzhi Wang",
       "J. Hugh Ellis",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2024-12-03"
+    "publication_date": "2024-12-03",
+    "pdf_title": "Linking  Electricity  and Air Quality  Models  by Downscaling: Weather- Informed  Hourly  Dispatch  of Generation Accounting for Renewable and  Load  Temporal  Variability  Scenarios"
   },
   {
     "paper": "Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main",
@@ -182,14 +192,15 @@
     "title": "HOPE: Planning Our Electric Future",
     "generated": "2025-04-17T23:59:57.748424",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Song Wang Mehrtash Hobbs SoftwareX 2024 published 1-s2.0-S2352711024003522-main.pdf",
-    "pdf_site": "/papers/Song Wang Mehrtash Hobbs SoftwareX 2024 published 1-s2.0-S2352711024003522-main.pdf",
+    "pdf_site": "papers/Song Wang Mehrtash Hobbs SoftwareX 2024 published 1-s2.0-S2352711024003522-main.pdf",
     "authors": [
       "Shen Wang",
       "Ziying Song",
       "Mahdi Mehrtash",
       "Benjamin F. Hobbs"
     ],
-    "publication_date": "2024-11-21"
+    "publication_date": "2024-11-21",
+    "pdf_title": "HOPE: Holistic Optimization Program for Electricity"
   },
   {
     "paper": "Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft",
@@ -197,14 +208,15 @@
     "title": "Interactive Power Planning: Navigating an Uncertain Future",
     "generated": "2025-04-18T00:04:14.566989",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
-    "pdf_site": "/papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
+    "pdf_site": "papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
     "authors": [
       "Elina Spyrou",
       "Ben Hobbs",
       "Deb Chattopadhyay",
       "Neha Mukhi"
     ],
-    "publication_date": "2024-02-12"
+    "publication_date": "2024-02-12",
+    "pdf_title": "How to Assess Uncertainty-Aware Frameworks for Power System Planning?"
   },
   {
     "paper": "Spyrou_IEEE_Flexibility_Options_Paper__V2025_01_07",
@@ -212,7 +224,7 @@
     "title": "Flexibility Options: Making Grids Ready for Renewables",
     "generated": "2025-04-18T00:07:30.817406",
     "pdf": "/Users/phobbs/code/bhobbs-papers/static/papers/Spyrou IEEE_Flexibility_Options_Paper__V2025_01_07.pdf",
-    "pdf_site": "/papers/Spyrou IEEE_Flexibility_Options_Paper__V2025_01_07.pdf",
+    "pdf_site": "papers/Spyrou IEEE_Flexibility_Options_Paper__V2025_01_07.pdf",
     "authors": [
       "Elina Spyrou",
       "Qiwei Zhang",
@@ -222,6 +234,7 @@
       "Mengmeng Cai",
       "Michael Blonsky"
     ],
-    "publication_date": "2025-01-07"
+    "publication_date": "2025-01-07",
+    "pdf_title": "Flexibility Options: A Proposed Product for Managing Imbalance Risk"
   }
 ]
