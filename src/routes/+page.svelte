@@ -57,7 +57,7 @@
   <div class="grid">
     {#each data.sites as site}
       <div class="card">
-        <a href={site.path} class="paper-title" target="_blank" rel="noopener">
+        <a href="/sites/{site.paper}" class="paper-title">
           {site.title}
         </a>
         <div class="date">

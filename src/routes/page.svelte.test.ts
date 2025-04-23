@@ -5,7 +5,10 @@ import Page from './+page.svelte';
 
 describe('/+page.svelte', () => {
 	test('should render h1', () => {
-		render(Page);
+		const mockData = {
+			sites: [] // Provide a mock sites array
+		};
+		render(Page, { props: { data: mockData } });
 		expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
 	});
 });
