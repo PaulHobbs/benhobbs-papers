@@ -82,7 +82,7 @@
           {@html formatAuthors(site.authors)}
         </div>
         <div style="font-size: 0.8rem">
-          Paper: <a href="{site.pdf_site}">{site.pdf_title}</a>
+          Paper: <a href="https://scholar.google.com/scholar?q={site.pdf_title}">{site.pdf_title}</a>
         </div>
       </div>
     {/each}
