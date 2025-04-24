@@ -1,51 +1,1021 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation.html" title="Site IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Power System Simplifications</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+      </script>
+    <!-- MathJax Library -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script"></script>
+    <!-- p5.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <!-- D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa; /* Light gray background */
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 900px;
+            background-color: #ffffff; /* White background for content */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Subtle shadow */
+        }
+        h1, h2, h3 {
+            color: #0056b3; /* Dark blue headings */
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #dee2e6; /* Light gray underline */
+            padding-bottom: 0.5rem;
+        }
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.4rem; }
+        p, li {
+            margin-bottom: 1rem;
+            color: #495057; /* Slightly lighter text color */
+        }
+        strong {
+            color: #212529; /* Darker color for emphasis */
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        code {
+            background-color: #e9ecef;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 90%;
+        }
+        .interactive-viz {
+            border: 1px solid #ced4da; /* Light gray border */
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #f8f9fa; /* Very light gray background for viz */
+            min-height: 200px; /* Ensure space for visualizations */
+            position: relative; /* For absolute positioning of labels */
+        }
+        .viz-controls {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .viz-controls label {
+            font-weight: bold;
+            margin-right: 5px;
+            color: #495057;
+        }
+        .viz-controls input[type="range"] {
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        .viz-controls output {
+            font-weight: bold;
+            color: #0056b3;
+            min-width: 30px;
+            text-align: right;
+        }
+        .math-block {
+            background-color: #eef;
+            padding: 15px;
+            border-left: 5px solid #0056b3;
+            margin-bottom: 1rem;
+            overflow-x: auto; /* Handle potential overflow */
+        }
+        .conclusion-box {
+            background-color: #d4edda; /* Light green background */
+            border: 1px solid #c3e6cb; /* Green border */
+            color: #155724; /* Dark green text */
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .warning-box {
+            background-color: #fff3cd; /* Light yellow background */
+            border: 1px solid #ffeeba; /* Yellow border */
+            color: #856404; /* Dark yellow text */
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 5px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .node {
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+        }
+        .aggregated-node {
+            stroke: black;
+            stroke-width: 2px;
+        }
+        .bus-label {
+            font-size: 10px;
+            fill: black;
+            pointer-events: none; /* So labels don't interfere with node interactions */
+        }
+        .axis path,
+        .axis line {
+          fill: none;
+          stroke: #000;
+          shape-rendering: crispEdges;
+        }
+        .axis text {
+          font: 10px sans-serif;
+        }
+        .line {
+          fill: none;
+          stroke-width: 2px;
+        }
+        .ac-line { stroke: steelblue; }
+        .dc-line { stroke: red; }
+        .ac-point { fill: steelblue; }
+        .dc-point { fill: red; }
 
-					const element = document.currentScript.parentElement;
+    </style>
+</head>
+<body>
+    <div class="container">
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+        <h1>Making Sense of Complexity: Simplifying Power Grid Simulations</h1>
+        <p class="lead">Modern power grids are vast, complex, and increasingly unpredictable. How can we make smart decisions about operating and expanding them without getting bogged down in endless calculations? This post explores common simplification techniques, inspired by the findings of Shayesteh, Hobbs, and Amelin (2016).</p>
+
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">Introduction</li>
+            <li class="breadcrumb-item"><a href="#challenge">The Challenge</a></li>
+            <li class="breadcrumb-item"><a href="#simplification1">Scenario Reduction</a></li>
+            <li class="breadcrumb-item"><a href="#simplification2">Network Aggregation</a></li>
+            <li class="breadcrumb-item"><a href="#simplification3">DC Linearization</a></li>
+            <li class="breadcrumb-item"><a href="#tradeoffs">Trade-offs</a></li>
+            <li class="breadcrumb-item"><a href="#conclusion">Conclusion</a></li>
+          </ol>
+        </nav>
+
+        <hr>
+
+        <h2 id="challenge">The Challenge: Scale and Uncertainty</h2>
+        <p>Imagine trying to plan the daily operations of a power grid. You need to decide which power plants (<a href="https://en.wikipedia.org/wiki/Generator_(circuit_theory)" target="_blank">generators</a>) to turn on, how much power each should produce, and ensure the electricity flows reliably through the network of transmission lines and substations (<a href="https://en.wikipedia.org/wiki/Node_(circuits)" target="_blank">buses</a>) to meet customer demand (<a href="https://en.wikipedia.org/wiki/Electrical_load" target="_blank">load</a>). This is already a complex optimization problem.</p>
+        <p>Now, add two major complications:</p>
+        <ol>
+            <li><strong>Scale:</strong> Real grids can have thousands of buses, hundreds of generators, and intricate network connections.</li>
+            <li><strong>Uncertainty:</strong> The future is unknown! How much electricity will people use? How much power will wind turbines and solar panels generate (which depends on weather)? What if a power line unexpectedly fails? Planners often consider hundreds or thousands of possible future "scenarios" to make robust decisions.</li>
+        </ol>
+        <p>Solving the full, detailed problem for every possible scenario is often computationally impossible or takes far too long. This is where simplification comes in.</p>
+        <p>The paper investigates three common techniques:</p>
+        <ul>
+            <li>Reducing the number of scenarios.</li>
+            <li>Simplifying the network representation (aggregation).</li>
+            <li>Using simplified physics equations (DC linearization).</li>
+        </ul>
+        <p>Let's explore each one interactively.</p>
+
+        <hr>
+
+        <h2 id="simplification1">Simplification 1: Scenario Reduction</h2>
+        <p>Instead of analyzing thousands of possible future conditions (e.g., combinations of wind power output and customer demand), can we select a smaller, representative subset?</p>
+        <p>Imagine each scenario is a point on a graph. Scenario reduction aims to pick a few points that capture the overall spread and density of the original cloud. The paper uses a method called "forward selection," which iteratively adds the scenario that minimizes the average distance to the remaining unselected scenarios.</p>
+        <p><strong>Interact below:</strong> Adjust the slider to see how selecting fewer scenarios might represent the original possibilities. The selected points (blue) try to cover the space defined by all potential scenarios (gray).</p>
+
+        <div class="interactive-viz">
+            <div class="viz-controls">
+                <label for="scenarioSlider">Number of Scenarios to Select:</label>
+                <input type="range" id="scenarioSlider" min="1" max="50" value="10" class="form-range">
+                <output id="scenarioValue">10</output>
+            </div>
+            <div id="scenarioViz"></div>
+            <div class="warning-box"><strong>Note:</strong> This is a simplified 2D visualization. Real scenarios involve many more dimensions (wind/load at many locations, over time).</div>
+        </div>
+
+        <p>The paper finds that for problems like <a href="https://en.wikipedia.org/wiki/Optimal_power_flow" target="_blank">Optimal Power Flow (OPF)</a>, which optimizes power generation for a snapshot in time, reducing scenarios works well *if you keep enough* (e.g., 5 or more in their tests). Costs and generator outputs weren't drastically wrong. However, for <a href="https://en.wikipedia.org/wiki/Unit_commitment_problem_in_electrical_power_generation" target="_blank">Stochastic Unit Commitment (SUC)</a>, which decides which generators to turn on/off over a day considering uncertainty, reducing scenarios too much was more problematic and didn't save as much relative computation time.</p>
+
+        <hr>
+
+        <h2 id="simplification2">Simplification 2: Network Aggregation</h2>
+        <p>Can we simplify the map of the power grid itself? Network aggregation combines multiple buses (nodes) that are "electrically close" or behave similarly into single, larger "aggregate" buses.</p>
+        <p>Imagine grouping nearby houses in a city into neighborhoods. Instead of tracking power flow to each house, you track flow to the neighborhood. The paper uses a method based on <a href="https://en.wikipedia.org/wiki/Available_transfer_capability" target="_blank">Available Transfer Capability (ATC)</a>, a measure of how much *additional* power can be transferred between buses, to decide which ones to group.</p>
+        <p><strong>Interact below:</strong> Use the slider to change the "aggregation level." Nodes with similar colors are candidates for aggregation. As you increase the level, nodes merge, reducing the network's complexity.</p>
+
+        <div class="interactive-viz">
+            <div class="viz-controls">
+                <label for="aggregationSlider">Aggregation Level:</label>
+                <input type="range" id="aggregationSlider" min="0" max="4" value="0" step="1" class="form-range">
+                <output id="aggregationValue">Original</output>
+                <span id="networkStats">Nodes: 14, Edges: 20</span>
+            </div>
+            <div id="aggregationViz"></div>
+             <div class="warning-box"><strong>Note:</strong> This visual uses arbitrary "similarity" for grouping. The paper's method is more complex, based on power transfer capabilities (ATC).</div>
+        </div>
+
+        <p>The paper found that network aggregation can significantly reduce computation time, sometimes more than linearization for OPF. However, errors can become large if the aggregation is too coarse (too few resulting buses), especially when evaluating the benefits of new transmission lines. The impact also depended on the number of scenarios considered – aggregation caused less error when many scenarios were still being used.</p>
+
+        <hr>
+
+        <h2 id="simplification3">Simplification 3: DC Linearization</h2>
+        <p>The physics of electricity flow (<a href="https://en.wikipedia.org/wiki/Power_flow_study" target="_blank">AC power flow</a>) are described by non-linear equations involving voltage magnitudes, voltage angles, and both real (<a href="https://en.wikipedia.org/wiki/AC_power#Active,_reactive,_and_apparent_power" target="_blank">active power</a>, $P$) and reactive power ($Q$). These equations are complex to solve, especially within large optimization problems.</p>
+        <p><strong>DC Linearization</strong> is a common simplification that makes several assumptions:</p>
+        <ul>
+            <li>Network resistances are negligible compared to reactances.</li>
+            <li>Voltage magnitudes ($|V|$) are fixed (usually at 1.0 per unit).</li>
+            <li>Differences in voltage angles ($\theta$) between connected buses are small, allowing $\sin(\theta_k - \theta_i) \approx \theta_k - \theta_i$.</li>
+            <li>Reactive power ($Q$) flows are ignored.</li>
+        </ul>
+        <p>This results in a much simpler set of *linear* equations relating active power ($P$) injections and flows to voltage angles ($\theta$).</p>
+        <p>The core AC power flow equations for active and reactive power injection at a bus $k$ are:</p>
+        <div class="math-block">
+        $$ P_k = \sum_{i=1}^{N} |V_k| |V_i| (G_{ki} \cos(\theta_k - \theta_i) + B_{ki} \sin(\theta_k - \theta_i)) $$
+        $$ Q_k = \sum_{i=1}^{N} |V_k| |V_i| (G_{ki} \sin(\theta_k - \theta_i) - B_{ki} \cos(\theta_k - \theta_i)) $$
+        Where $|V_k|$ is voltage magnitude at bus $k$, $\theta_k$ is voltage angle, and $Y_{ki} = G_{ki} + jB_{ki}$ is the admittance between buses $k$ and $i$.
+        </div>
+        <p>The simplified DC power flow equation for active power injection at bus $k$ becomes:</p>
+        <div class="math-block">
+        $$ P_k \approx \sum_{i=1}^{N} -B_{ki} (\theta_k - \theta_i) $$
+        (Assuming $|V_k| \approx |V_i| \approx 1$ and $G_{ki} \approx 0$).
+        </div>
+
+        <p>A major consequence of DC linearization is that it ignores transmission losses (power dissipated as heat in the lines). AC power flow accounts for these losses.</p>
+        <p><strong>Interact below:</strong> This simplified 3-bus system compares AC and DC power flow calculations. Adjust the generation at Bus 1. Notice how the DC model shows power flowing without loss, while the AC model shows losses (Total Generation > Total Load + Losses).</p>
+
+        <div class="interactive-viz">
+             <div class="viz-controls">
+                <label for="genSlider">Generation at Bus 1 (MW):</label>
+                <input type="range" id="genSlider" min="50" max="250" value="150" step="10" class="form-range">
+                <output id="genValue">150</output>
+            </div>
+            <div id="dcAcViz" style="position: relative; height: 300px;"></div>
+            <div id="flowResults" style="margin-top: 10px;"></div>
+            <div class="warning-box"><strong>Note:</strong> This uses simplified AC calculations for illustration. Real AC power flow is more complex. Assumed fixed loads: Bus 2: 80 MW, Bus 3: 100 MW. Line parameters are illustrative.</div>
+        </div>
+
+        <p>The paper confirms this intuition: DC linearization significantly underestimates total costs in OPF because it ignores the cost of generating power just to cover losses. However, the errors in individual generator outputs might not be as severe. Crucially, for the complex SUC problem, the authors found DC linearization to be almost essential for tractability, as solving the full AC SUC was often impossible. Furthermore, the *relative* decisions (which generators to commit) in SUC were often predicted reasonably well by the DC model compared to the few AC SUC cases they could solve.</p>
+
+        <hr>
+
+        <h2 id="tradeoffs">The Trade-offs: Accuracy vs. Computation Time</h2>
+        <p>All these simplifications trade accuracy for speed. The key question is: which simplification gives the biggest speed-up for the least loss of accuracy?</p>
+        <p>The paper's results suggest the answer is nuanced and depends heavily on the problem:</p>
+        <ul>
+            <li><strong>For OPF:</strong> Scenario reduction (if not too extreme) was very effective at reducing time with moderate error. Network aggregation also saved time but could introduce larger errors if too aggressive. DC linearization saved the least time (in their tests) and significantly miscalculated total costs/losses, though individual generator dispatch might be less affected.</li>
+            <li><strong>For SUC:</strong> DC linearization was often necessary to even get a solution, and its results were surprisingly accurate compared to the few solvable AC cases. Scenario reduction was less effective here, causing larger distortions in commitment decisions and costs. Network aggregation offered time savings with relatively small errors.</li>
+            <li><strong>For Planning (GEP/TEP):</strong> Similar trends held. DC linearization was acceptable for comparing generation/transmission investments if losses weren't the primary driver. Aggregation could distort the value of new lines if too coarse. Scenario reduction needed care.</li>
+        </ul>
+
+        <p><strong>Conceptual Trade-off:</strong> The chart below illustrates the general idea. As simplification increases (moving right), computation time decreases (blue line), but the error in the results tends to increase (red line). The shape of these curves differs for OPF and SUC, and for each simplification method.</p>
+
+        <div class="interactive-viz">
+            <div class="viz-controls">
+                <label for="tradeoffSlider">Level of Simplification:</label>
+                <input type="range" id="tradeoffSlider" min="0" max="100" value="20" class="form-range">
+                <output id="tradeoffValue">20</output>
+                <select id="problemType" class="form-select" style="width: auto;">
+                    <option value="opf">OPF Focus</option>
+                    <option value="suc">SUC Focus</option>
+                </select>
+            </div>
+            <div id="tradeoffViz"></div>
+            <div class="warning-box"><strong>Note:</strong> This chart is purely conceptual, illustrating the *idea* of the trade-off based qualitatively on the paper's findings. Actual curves are complex and system-dependent.</div>
+        </div>
+
+        <hr>
+
+        <h2 id="conclusion">Conclusion: Which Simplification Matters Most? It Depends!</h2>
+        <p>The study by Shayesteh, Hobbs, and Amelin highlights that there's no single "best" way to simplify power system models. The most appropriate technique depends critically on:</p>
+        <ul>
+            <li><strong>The type of study:</strong> Is it short-term operations (OPF), day-ahead planning with uncertainty (SUC), or long-term investment planning (GEP/TEP)?</li>
+            <li><strong>The specific system:</strong> The size and characteristics of the network matter.</li>
+            <li><strong>What you care about most:</strong> Are accurate total costs crucial? Or are relative rankings of generators/lines more important? Is computational time the biggest bottleneck?</li>
+        </ul>
+
+        <div class="conclusion-box">
+        <strong>Key Takeaways (from the paper's examples):</strong>
+        <ul>
+            <li>Ignoring losses via <strong>DC Linearization</strong> significantly impacts OPF total costs but might be acceptable (or necessary) for SUC tractability.</li>
+            <li><strong>Scenario Reduction</strong> is powerful for speeding up OPF if done moderately, but riskier for SUC commitment decisions.</li>
+            <li><strong>Network Aggregation</strong> offers computation savings but needs caution, especially if evaluating network investments or if aggregation is very coarse.</li>
+        </ul>
+        </div>
+
+        <p>Ultimately, modelers need to be aware of these trade-offs and, where possible, test the impact of their chosen simplifications on the conclusions relevant to their specific problem. Interactive tools and conceptual understanding, like those explored here, can help build intuition about how these mathematical shortcuts shape our view of complex systems.</p>
+
+        <hr>
+        <p><small><em>Reference: Shayesteh, E., Hobbs, B. F., & Amelin, M. (2016). Scenario reduction, network aggregation, and DC linearisation: which simplifications matter most in operations and planning optimisation?. IET Generation, Transmission & Distribution, 10(11), 2748-2755. <a href="https://doi.org/10.1049/iet-gtd.2015.1404" target="_blank">doi:10.1049/iet-gtd.2015.1404</a></em></small></p>
+        <p><small><em>Interactive explanation created based on the paper's concepts. Visualizations are illustrative.</em></small></p>
+
+    </div>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom Javascript for Visualizations -->
+    <script>
+        // --- Scenario Reduction Visualization (p5.js) ---
+        let scenarioSketch = function(p) {
+            let scenarios = [];
+            let selectedScenarios = [];
+            const numTotalScenarios = 200;
+            let numSelected = 10;
+            const canvasWidth = document.getElementById('scenarioViz').offsetWidth;
+            const canvasHeight = 300;
+            const padding = 30;
+
+            p.setup = function() {
+                p.createCanvas(canvasWidth, canvasHeight);
+                // Generate random scenarios (representing e.g., Wind vs Load)
+                for (let i = 0; i < numTotalScenarios; i++) {
+                    scenarios.push(p.createVector(p.random(p.width), p.random(p.height)));
+                }
+                selectScenarios();
+
+                // Slider interaction
+                const slider = document.getElementById('scenarioSlider');
+                const valueLabel = document.getElementById('scenarioValue');
+                slider.addEventListener('input', () => {
+                    numSelected = parseInt(slider.value);
+                    valueLabel.textContent = numSelected;
+                    selectScenarios();
+                });
+                 // Ensure initial value is displayed
+                 valueLabel.textContent = slider.value;
+            };
+
+            function selectScenarios() {
+                // Simple selection: just take the first 'numSelected' for visualization simplicity
+                // A real implementation would use a distance metric as described in paper.
+                selectedScenarios = scenarios.slice(0, numSelected);
+                p.redraw(); // Request redraw when selection changes
+            }
+
+             p.draw = function() {
+                p.background(248, 249, 250); // Match viz background
+
+                // Draw all scenarios (gray)
+                p.fill(150);
+                p.noStroke();
+                for (let s of scenarios) {
+                    p.ellipse(s.x, s.y, 5, 5);
+                }
+
+                // Draw selected scenarios (blue)
+                p.fill(0, 123, 255); // Bootstrap primary blue
+                p.stroke(255);
+                p.strokeWeight(1);
+                 for (let s of selectedScenarios) {
+                    p.ellipse(s.x, s.y, 8, 8);
+                }
+
+                // Add labels (optional)
+                p.fill(0);
+                p.noStroke();
+                p.textAlign(p.CENTER, p.CENTER);
+                // p.text("Dimension 1 (e.g., Avg Wind)", p.width / 2, p.height - 10);
+                // p.rotate(-p.PI / 2);
+                // p.text("Dimension 2 (e.g., Avg Load)", -p.height / 2, 15);
+                // p.rotate(p.PI / 2);
+
+            };
+
+             p.windowResized = function() {
+                 const newWidth = document.getElementById('scenarioViz').offsetWidth;
+                 p.resizeCanvas(newWidth, canvasHeight);
+                 // Regenerate points based on new width? Or just rescale? For simplicity, keep points.
+                 // May need adjustment if points were generated based on width/height.
+                 p.redraw();
+             }
+        };
+        new p5(scenarioSketch, 'scenarioViz');
+
+        // --- Network Aggregation Visualization (D3.js) ---
+        function networkAggregationViz() {
+            const container = d3.select("#aggregationViz");
+            container.selectAll("*").remove(); // Clear previous viz
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 350;
+
+            const svg = container.append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            const levels = [
+                // Level 0: Original IEEE 14 bus system (simplified layout)
+                { nodes: 14, links: 20, description: "Original (14 buses)" },
+                // Level 1: Aggregate some closely connected nodes
+                { nodes: 10, links: 15, description: "Level 1 Agg. (10 buses)" },
+                // Level 2: Further aggregation
+                { nodes: 7, links: 10, description: "Level 2 Agg. (7 buses)" },
+                // Level 3: More aggregation
+                { nodes: 5, links: 7, description: "Level 3 Agg. (5 buses)" },
+                 // Level 4: Highly aggregated
+                { nodes: 3, links: 3, description: "Level 4 Agg. (3 buses)" }
+            ];
+
+            let currentLevel = 0;
+
+            // Color scale for potential aggregation groups (conceptual)
+            const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+            // Basic node data for initial level (positions are arbitrary for layout)
+            let nodesData = d3.range(levels[0].nodes).map(i => ({
+                id: i,
+                group: Math.floor(i / 3) // Assign initial groups conceptually
+            }));
+
+            // Basic link data (simplified connections for viz)
+             let linksData = [
+                 {source: 0, target: 1}, {source: 0, target: 4}, {source: 1, target: 2},
+                 {source: 1, target: 3}, {source: 1, target: 4}, {source: 2, target: 3},
+                 {source: 3, target: 4}, {source: 4, target: 5}, {source: 5, target: 6},
+                 {source: 5, target: 10}, {source: 5, target: 11},{source: 6, target: 7},
+                 {source: 6, target: 8}, {source: 6, target: 9}, {source: 8, target: 9},
+                 {source: 9, target: 10}, {source: 9, target: 13},{source: 11, target: 12},
+                 {source: 12, target: 13},{source: 10, target: 13}
+             ].slice(0, levels[0].links); // Ensure correct number of links
+
+
+            const simulation = d3.forceSimulation(nodesData)
+                .force("link", d3.forceLink(linksData).id(d => d.id).distance(50))
+                .force("charge", d3.forceManyBody().strength(-150))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            let link = svg.append("g")
+                .attr("class", "links")
+                .selectAll("line");
+
+            let node = svg.append("g")
+                .attr("class", "nodes")
+                .selectAll("circle");
+
+            let label = svg.append("g")
+                .attr("class", "labels")
+                .selectAll("text");
+
+            function updateVisualization(level) {
+                currentLevel = level;
+                const levelData = levels[level];
+                document.getElementById('aggregationValue').textContent = levelData.description;
+                document.getElementById('networkStats').textContent = `Nodes: ${levelData.nodes}, Edges: ${levelData.links}`;
+
+                // --- Aggregation Logic (Simplified Example) ---
+                // In a real scenario, this would involve complex grouping based on ATC or other metrics.
+                // Here, we just reduce the number of nodes/links conceptually.
+                // We'll simulate aggregation by hiding nodes/links and maybe resizing others.
+
+                // Create a map of which original nodes belong to which aggregated node
+                const aggregationMap = new Map();
+                const aggregatedNodesData = [];
+                const aggregatedLinksData = [];
+                const nodeRadius = 6;
+                const aggregatedNodeRadius = 10;
+
+                if (level === 0) {
+                    nodesData = d3.range(levels[0].nodes).map(i => ({ id: i, group: Math.floor(i / 3), fx: null, fy: null, isAggregated: false, radius: nodeRadius }));
+                    linksData = [ {source: 0, target: 1}, {source: 0, target: 4}, {source: 1, target: 2}, {source: 1, target: 3}, {source: 1, target: 4}, {source: 2, target: 3}, {source: 3, target: 4}, {source: 4, target: 5}, {source: 5, target: 6}, {source: 5, target: 10}, {source: 5, target: 11},{source: 6, target: 7}, {source: 6, target: 8}, {source: 6, target: 9}, {source: 8, target: 9}, {source: 9, target: 10}, {source: 9, target: 13},{source: 11, target: 12}, {source: 12, target: 13},{source: 10, target: 13} ];
+                } else {
+                    // Example aggregation logic: group nodes based on initial 'group' property
+                    const groups = new Map();
+                     nodesData.forEach(n => {
+                         let aggId;
+                         if (level === 1) aggId = n.group > 2 ? n.group : Math.floor(n.group / 2); // Simple grouping rule 1
+                         else if (level === 2) aggId = n.group > 1 ? n.group : 0; // Rule 2
+                         else if (level === 3) aggId = n.group > 0 ? 1 : 0; // Rule 3
+                         else aggId = 0; // Rule 4
+
+                         if (!groups.has(aggId)) groups.set(aggId, []);
+                         groups.get(aggId).push(n.id);
+                         aggregationMap.set(n.id, `agg-${aggId}`);
+                     });
+
+                    // Create aggregated nodes
+                    let aggNodeIdCounter = 0;
+                    groups.forEach((originalIds, aggId) => {
+                        aggregatedNodesData.push({ id: `agg-${aggId}`, originalIds: originalIds, isAggregated: true, radius: aggregatedNodeRadius + level * 2, group: aggId }); // Make nodes bigger
+                    });
+
+                    // Create aggregated links (connect aggregated nodes if original nodes were connected)
+                    const existingAggLinks = new Set();
+                     linksData.forEach(l => {
+                        const sourceAggId = aggregationMap.get(l.source.id !== undefined ? l.source.id : l.source);
+                        const targetAggId = aggregationMap.get(l.target.id !== undefined ? l.target.id : l.target);
+                        const linkKey1 = `${sourceAggId}-${targetAggId}`;
+                        const linkKey2 = `${targetAggId}-${sourceAggId}`;
+
+                        if (sourceAggId !== targetAggId && !existingAggLinks.has(linkKey1) && !existingAggLinks.has(linkKey2) ) {
+                            aggregatedLinksData.push({ source: sourceAggId, target: targetAggId });
+                            existingAggLinks.add(linkKey1);
+                        }
+                    });
+                    nodesData = aggregatedNodesData;
+                    linksData = aggregatedLinksData;
+                }
+
+
+                 // Update simulation data
+                simulation.nodes(nodesData);
+                simulation.force("link").links(linksData);
+
+                // Update links
+                link = link.data(linksData, d => `${d.source.id}-${d.target.id}`);
+                link.exit().remove();
+                link = link.enter().append("line")
+                    .attr("class", "link")
+                    .merge(link);
+
+                // Update nodes
+                node = node.data(nodesData, d => d.id);
+                node.exit().remove();
+                node = node.enter().append("circle")
+                    .attr("class", "node")
+                    .call(d3.drag() // Add drag behavior
+                          .on("start", dragstarted)
+                          .on("drag", dragged)
+                          .on("end", dragended))
+                    .merge(node)
+                    .attr("r", d => d.radius)
+                    .attr("fill", d => color(d.group))
+                     .classed("aggregated-node", d => d.isAggregated); // Style aggregated nodes
+
+                // Update labels
+                label = label.data(nodesData, d => d.id);
+                label.exit().remove();
+                label = label.enter().append("text")
+                    .attr("class", "bus-label")
+                    .attr("dx", 12)
+                    .attr("dy", ".35em")
+                    .merge(label)
+                    .text(d => d.id); // Show original IDs or aggregated IDs
+
+                // Restart simulation
+                simulation.alpha(0.5).restart(); // Give it a boost to rearrange
+            }
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                 label
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            });
+
+             // Drag functions
+            function dragstarted(event, d) {
+              if (!event.active) simulation.alphaTarget(0.3).restart();
+              d.fx = d.x;
+              d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+              d.fx = event.x;
+              d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+              if (!event.active) simulation.alphaTarget(0);
+              // Keep position fixed after drag unless it's level 0
+              if (currentLevel === 0) {
+                 d.fx = null;
+                 d.fy = null;
+              }
+            }
+
+            // Slider interaction
+            const slider = document.getElementById('aggregationSlider');
+            slider.addEventListener('input', () => {
+                updateVisualization(parseInt(slider.value));
+            });
+
+            // Initial visualization
+            updateVisualization(0);
+        }
+        networkAggregationViz(); // Initial call
+        window.addEventListener('resize', networkAggregationViz); // Redraw on resize
+
+
+        // --- DC vs AC Linearization Visualization (Simple 3-Bus Example) ---
+        function dcAcViz() {
+            const container = d3.select("#dcAcViz");
+            container.selectAll("*").remove(); // Clear previous
+            const resultsContainer = d3.select("#flowResults");
+            resultsContainer.html(""); // Clear results
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 300; // Fixed height
+            const padding = { top: 20, right: 20, bottom: 40, left: 40 };
+
+            const svg = container.append("svg")
+                .attr("width", width)
+                .attr("height", height);
+
+            // Define bus positions
+            const busPositions = {
+                1: { x: width * 0.15, y: height / 2 },
+                2: { x: width * 0.5, y: height * 0.3 },
+                3: { x: width * 0.85, y: height / 2 }
+            };
+
+            // Define lines (impedance: R + jX) - simplified values
+            const lines = [
+                { source: 1, target: 2, R: 0.01, X: 0.1, B: 0.02 }, // B is line charging admittance
+                { source: 1, target: 3, R: 0.015, X: 0.15, B: 0.03 },
+                { source: 2, target: 3, R: 0.008, X: 0.08, B: 0.015 }
+            ];
+            lines.forEach(l => {
+                l.Z = Math.sqrt(l.R**2 + l.X**2);
+                l.Y = 1/l.Z; // Magnitude of series admittance
+                l.G = l.R / (l.R**2 + l.X**2); // Series conductance
+                l.B_series = -l.X / (l.R**2 + l.X**2); // Series susceptance (negative sign included)
+            });
+
+
+            // Fixed Loads (MW)
+            const loads = { 2: 80, 3: 100 };
+
+            // Initial Generation (MW)
+            let gen1 = 150;
+
+            function calculateFlows() {
+                // --- Simplified DC Power Flow ---
+                // Assume Bus 1 is slack bus (theta1 = 0)
+                // Solve for theta2, theta3 using Pk = sum(-Bki * (theta_k - theta_i))
+                // Here Bki is approx 1/X for DC flow
+                const B_dc = {
+                    '1-2': 1 / lines[0].X,
+                    '1-3': 1 / lines[1].X,
+                    '2-3': 1 / lines[2].X
+                };
+                 // Matrix form: [B_sub] * [theta_sub] = [P_sub]
+                 // [[B21+B23, -B23], [-B32, B31+B32]] * [theta2, theta3]' = [P2, P3]'
+                const P2_inj = -loads[2]; // Net injection at bus 2
+                const P3_inj = -loads[3]; // Net injection at bus 3
+
+                const B22 = B_dc['1-2'] + B_dc['2-3'];
+                const B33 = B_dc['1-3'] + B_dc['2-3'];
+                const B23 = -B_dc['2-3']; // Off-diagonal is negative
+                const B32 = -B_dc['2-3'];
+
+                const det = B22 * B33 - B23 * B32;
+                const theta2_dc = (B33 * P2_inj - B23 * P3_inj) / det;
+                const theta3_dc = (-B32 * P2_inj + B22 * P3_inj) / det;
+                const theta1_dc = 0;
+
+                const flows_dc = {
+                    '1-2': B_dc['1-2'] * (theta1_dc - theta2_dc),
+                    '1-3': B_dc['1-3'] * (theta1_dc - theta3_dc),
+                    '2-3': B_dc['2-3'] * (theta2_dc - theta3_dc)
+                };
+                const gen1_dc = flows_dc['1-2'] + flows_dc['1-3']; // Should roughly balance total load
+                const losses_dc = gen1_dc - (loads[2] + loads[3]); // Should be near zero
+
+                // --- Simplified AC Power Flow (Illustrative - Not a full solver) ---
+                // This is highly simplified for visualization. A real AC flow needs iteration.
+                // We'll estimate losses based on DC flows and line resistances.
+                const flows_ac = {};
+                let totalLosses_ac = 0;
+                Object.keys(flows_dc).forEach(key => {
+                    const [s, t] = key.split('-');
+                    const line = lines.find(l => (l.source == s && l.target == t) || (l.source == t && l.target == s));
+                    const flow = flows_dc[key];
+                    // Loss approx I^2 * R. Assume V=1, so P=I. Loss approx P^2 * R / V^2 = P^2 * R
+                    const loss = Math.abs(flow)**2 * line.R;
+                    totalLosses_ac += loss;
+                    // AC flow might be slightly different, but use DC flow for direction
+                    flows_ac[key] = flow; // Keep magnitude same as DC for simplicity here
+                });
+
+                const gen1_ac = loads[2] + loads[3] + totalLosses_ac; // Generation must cover load + losses
+
+                return { dc: { flows: flows_dc, gen1: gen1_dc, losses: losses_dc },
+                         ac: { flows: flows_ac, gen1: gen1_ac, losses: totalLosses_ac } };
+            }
+
+            function updateVisualization() {
+                gen1 = parseFloat(document.getElementById('genSlider').value);
+                document.getElementById('genValue').textContent = gen1;
+
+                 // Clear previous elements
+                svg.selectAll(".line").remove();
+                svg.selectAll(".bus").remove();
+                svg.selectAll(".bus-label").remove();
+                svg.selectAll(".flow-arrow").remove();
+                resultsContainer.html(""); // Clear results text
+
+                const flowData = calculateFlows();
+
+                // Draw lines
+                svg.selectAll(".line")
+                    .data(lines)
+                    .enter().append("line")
+                    .attr("class", "line")
+                    .attr("x1", d => busPositions[d.source].x)
+                    .attr("y1", d => busPositions[d.source].y)
+                    .attr("x2", d => busPositions[d.target].x)
+                    .attr("y2", d => busPositions[d.target].y)
+                    .style("stroke", "#aaa")
+                    .style("stroke-width", 2);
+
+                // Draw buses
+                 svg.selectAll(".bus")
+                    .data(d3.entries(busPositions))
+                    .enter().append("circle")
+                    .attr("class", "bus")
+                    .attr("cx", d => d.value.x)
+                    .attr("cy", d => d.value.y)
+                    .attr("r", 10)
+                    .style("fill", d => (d.key == 1) ? "orange" : "lightblue"); // Gen vs Load bus
+
+                // Draw bus labels
+                svg.selectAll(".bus-label")
+                   .data(d3.entries(busPositions))
+                   .enter().append("text")
+                   .attr("class", "bus-label")
+                   .attr("x", d => d.value.x)
+                   .attr("y", d => d.value.y - 15)
+                   .attr("text-anchor", "middle")
+                   .text(d => `Bus ${d.key}`);
+
+                 // Add Generation/Load labels
+                 svg.append("text").attr("x", busPositions[1].x).attr("y", busPositions[1].y + 25).attr("text-anchor", "middle").style("font-size", "11px").text(`Gen: ${gen1.toFixed(0)} MW`);
+                 svg.append("text").attr("x", busPositions[2].x).attr("y", busPositions[2].y + 25).attr("text-anchor", "middle").style("font-size", "11px").text(`Load: ${loads[2]} MW`);
+                 svg.append("text").attr("x", busPositions[3].x).attr("y", busPositions[3].y + 25).attr("text-anchor", "middle").style("font-size", "11px").text(`Load: ${loads[3]} MW`);
+
+
+                // Draw flow arrows (simplified representation)
+                const arrowSize = 6;
+                const offset = 15; // Offset from line center for arrows
+                lines.forEach(line => {
+                    const key = `${line.source}-${line.target}`;
+                    const revKey = `${line.target}-${line.source}`;
+                    const dcFlow = flowData.dc.flows[key] || -flowData.dc.flows[revKey] || 0;
+                    const acFlow = flowData.ac.flows[key] || -flowData.ac.flows[revKey] || 0; // Use AC flow magnitude if needed
+
+                    const x1 = busPositions[line.source].x;
+                    const y1 = busPositions[line.source].y;
+                    const x2 = busPositions[line.target].x;
+                    const y2 = busPositions[line.target].y;
+                    const midX = (x1 + x2) / 2;
+                    const midY = (y1 + y2) / 2;
+                    const angle = Math.atan2(y2 - y1, x2 - x1);
+                    const perpAngle = angle + Math.PI / 2; // Angle perpendicular to line
+
+                    // DC Arrow (Red) - Offset slightly
+                    const dcArrowX = midX + offset * Math.cos(perpAngle);
+                    const dcArrowY = midY + offset * Math.sin(perpAngle);
+                    if (Math.abs(dcFlow) > 1) { // Only draw if flow is significant
+                         drawArrow(svg, dcArrowX, dcArrowY, angle + (dcFlow > 0 ? 0 : Math.PI), arrowSize, "red");
+                         svg.append("text").attr("x", dcArrowX + 10*Math.cos(perpAngle)).attr("y", dcArrowY + 10*Math.sin(perpAngle)).text(`${dcFlow.toFixed(0)}`).style("fill", "red").style("font-size", "10px");
+                    }
+
+                    // AC Arrow (Blue) - Offset other way
+                    const acArrowX = midX - offset * Math.cos(perpAngle);
+                    const acArrowY = midY - offset * Math.sin(perpAngle);
+                     if (Math.abs(acFlow) > 1) {
+                         drawArrow(svg, acArrowX, acArrowY, angle + (acFlow > 0 ? 0 : Math.PI), arrowSize, "steelblue");
+                         svg.append("text").attr("x", acArrowX - 20*Math.cos(perpAngle)).attr("y", acArrowY - 10*Math.sin(perpAngle)).text(`${acFlow.toFixed(0)}`).style("fill", "steelblue").style("font-size", "10px");
+                     }
+                });
+
+                // Display results
+                 resultsContainer.html(`
+                    <p><strong>DC Model Results:</strong><br/>
+                       Calculated Gen 1: ${flowData.dc.gen1.toFixed(1)} MW<br/>
+                       Total Load: ${loads[2] + loads[3]} MW<br/>
+                       Losses: ${flowData.dc.losses.toFixed(1)} MW (Should be near zero)
+                    </p>
+                     <p><strong>AC Model Results (Simplified):</strong><br/>
+                       Required Gen 1 (Load + Losses): ${flowData.ac.gen1.toFixed(1)} MW<br/>
+                       Total Load: ${loads[2] + loads[3]} MW<br/>
+                       Estimated Losses: ${flowData.ac.losses.toFixed(1)} MW
+                    </p>
+                `);
+            }
+
+             // Helper to draw an arrow marker
+            function drawArrow(svg, x, y, angle, size, color) {
+                const points = [
+                    {x: 0, y: 0},
+                    {x: -size, y: -size / 2},
+                    {x: -size, y: size / 2}
+                ];
+                const rotatedPoints = points.map(p => ({
+                    x: p.x * Math.cos(angle) - p.y * Math.sin(angle) + x,
+                    y: p.x * Math.sin(angle) + p.y * Math.cos(angle) + y
+                }));
+
+                svg.append("polygon")
+                    .attr("points", rotatedPoints.map(p => `${p.x},${p.y}`).join(" "))
+                    .style("fill", color)
+                    .attr("class", "flow-arrow");
+            }
+
+            // Slider interaction
+            const slider = document.getElementById('genSlider');
+            slider.addEventListener('input', updateVisualization);
+
+            // Initial visualization
+            updateVisualization();
+        }
+        dcAcViz(); // Initial call
+        window.addEventListener('resize', dcAcViz); // Redraw on resize
+
+
+        // --- Trade-off Visualization (D3.js) ---
+        function tradeoffViz() {
+            const container = d3.select("#tradeoffViz");
+            container.selectAll("*").remove(); // Clear previous
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 250;
+            const margin = { top: 20, right: 50, bottom: 30, left: 50 };
+            const plotWidth = width - margin.left - margin.right;
+            const plotHeight = height - margin.top - margin.bottom;
+
+            const svg = container.append("svg")
+                .attr("width", width)
+                .attr("height", height)
+                .append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const xScale = d3.scaleLinear().domain([0, 100]).range([0, plotWidth]);
+            const yTimeScale = d3.scaleLinear().domain([0, 100]).range([plotHeight, 0]); // Time decreases
+            const yErrorScale = d3.scaleLinear().domain([0, 100]).range([plotHeight, 0]); // Error increases (inverted visually)
+
+            // Axes
+            svg.append("g")
+               .attr("class", "axis")
+               .attr("transform", `translate(0,${plotHeight})`)
+               .call(d3.axisBottom(xScale).ticks(5).tickFormat(d => d + "% Simp.")); // Simplification %
+
+            const yAxisTime = svg.append("g")
+               .attr("class", "axis axis-time")
+               .call(d3.axisLeft(yTimeScale).ticks(5).tickFormat(d => d + "% Time"));
+
+             const yAxisError = svg.append("g")
+               .attr("class", "axis axis-error")
+               .attr("transform", `translate(${plotWidth},0)`)
+               .call(d3.axisRight(yErrorScale).ticks(5).tickFormat(d => d + "% Error"));
+
+            // Axis labels
+             svg.append("text")
+                .attr("transform", `translate(${plotWidth / 2},${plotHeight + margin.bottom - 5})`)
+                .style("text-anchor", "middle")
+                .text("Simplification Level");
+
+             svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x", 0 - (plotHeight / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("fill", "steelblue")
+                .text("Computation Time (%)");
+
+            svg.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", plotWidth + margin.right - 10 ) // Adjusted position for right axis
+                .attr("x", 0 - (plotHeight / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("fill", "red")
+                .text("Accuracy Error (%)");
+
+
+            // Line generators
+            const timeLine = d3.line()
+                .x(d => xScale(d.simp))
+                .y(d => yTimeScale(d.time));
+
+            const errorLine = d3.line()
+                .x(d => xScale(d.simp))
+                .y(d => yErrorScale(d.error)); // Use error scale
+
+            // Data generation function (conceptual curves)
+            function generateData(problemType) {
+                const data = [];
+                for (let i = 0; i <= 100; i += 5) {
+                    let time, error;
+                    if (problemType === 'opf') {
+                        // OPF: Time drops relatively fast, error rises moderately initially
+                        time = 100 * Math.exp(-i / 30); // Faster drop
+                        error = 100 * (1 - Math.exp(-i / 70)); // Slower initial rise
+                    } else { // SUC
+                         // SUC: Time drops slower (might be dominated by MILP part), error might rise faster with scenario reduction/aggregation
+                         time = 100 * Math.exp(-i / 50); // Slower drop
+                         error = 100 * (1 - Math.exp(-i / 50)); // Faster rise
+                    }
+                     // Ensure bounds
+                    time = Math.max(0, Math.min(100, time));
+                    error = Math.max(0, Math.min(100, error));
+                    data.push({ simp: i, time: time, error: error });
+                }
+                return data;
+            }
+
+            // Paths for lines
+            const timePath = svg.append("path")
+                .attr("class", "line ac-line") // Use blue for time
+                .style("stroke", "steelblue");
+
+            const errorPath = svg.append("path")
+                .attr("class", "line dc-line") // Use red for error
+                .style("stroke", "red");
+
+            // Circles for current point
+            const timeCircle = svg.append("circle")
+                .attr("r", 5)
+                .style("fill", "steelblue");
+            const errorCircle = svg.append("circle")
+                .attr("r", 5)
+                .style("fill", "red");
+
+            // Update function
+            function updateTradeoff(simplificationLevel, problemType) {
+                const data = generateData(problemType);
+                timePath.datum(data).attr("d", timeLine);
+                errorPath.datum(data).attr("d", errorLine);
+
+                // Find interpolated values at current simplification level
+                const bisect = d3.bisector(d => d.simp).left;
+                const index = bisect(data, simplificationLevel);
+                const d0 = data[index - 1] || data[0];
+                const d1 = data[index] || data[data.length - 1];
+                 // Simple linear interpolation
+                const t = (simplificationLevel - d0.simp) / (d1.simp - d0.simp || 1);
+                const currentTime = d0.time * (1 - t) + d1.time * t;
+                const currentError = d0.error * (1 - t) + d1.error * t;
+
+
+                timeCircle.attr("cx", xScale(simplificationLevel)).attr("cy", yTimeScale(currentTime));
+                errorCircle.attr("cx", xScale(simplificationLevel)).attr("cy", yErrorScale(currentError));
+
+                document.getElementById('tradeoffValue').textContent = simplificationLevel;
+            }
+
+            // Slider and Select interaction
+            const slider = document.getElementById('tradeoffSlider');
+            const select = document.getElementById('problemType');
+
+            slider.addEventListener('input', () => {
+                updateTradeoff(parseInt(slider.value), select.value);
+            });
+            select.addEventListener('change', () => {
+                 updateTradeoff(parseInt(slider.value), select.value);
+            });
+
+            // Initial visualization
+            updateTradeoff(parseInt(slider.value), select.value);
+        }
+        tradeoffViz(); // Initial call
+        window.addEventListener('resize', tradeoffViz); // Redraw on resize
+
+    </script>
+
+</body>
 </html>

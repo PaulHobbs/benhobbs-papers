@@ -1,51 +1,710 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: 2025_urban_heat_island</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/2025_urban_heat_island.html" title="Site 2025_urban_heat_island" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untangling Urban Heat Adaptation: Costs, Benefits, and Fairness</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- MathJax -->
+    <script type="text/javascript" id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 8px;
+            /* box-shadow: 0 2px 10px rgba(0,0,0,0.1); */
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        h1 { font-size: 2.5rem; border-bottom: 2px solid #3498db; padding-bottom: 0.5rem; }
+        h2 { font-size: 1.8rem; color: #3498db; }
+        h3 { font-size: 1.4rem; color: #16a085; }
+        p, li {
+            margin-bottom: 1rem;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .interactive-visualization {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative; /* Needed for absolute positioning of tooltips */
+        }
+        .slider-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        label { margin-right: 10px; }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 5px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-size: 11px;
+        }
+        .grid line {
+            stroke: lightgrey;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+        .grid path {
+            stroke-width: 0;
+        }
+        .neighborhood-rect {
+            stroke: #ccc;
+            stroke-width: 0.5px;
+            cursor: pointer;
+        }
+        .neighborhood-rect:hover {
+            stroke: black;
+            stroke-width: 1.5px;
+        }
+        .highlighted {
+            stroke: #f00 !important;
+            stroke-width: 2px !important;
+        }
+        .strategy-dot {
+            cursor: pointer;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+        .disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Untangling Urban Heat Adaptation: Costs, Benefits, and Fairness</h1>
+        <p class="lead">Cities are getting hotter, posing risks to residents. How can we cool them down effectively and equitably? Exploring the trade-offs using a computational approach based on the paper: <a href="https://doi.org/10.1038/s41598-025-93896-4" target="_blank">"Distributional outcomes of urban heat island reduction pathways under climate extremes"</a>.</p>
 
-					const element = document.currentScript.parentElement;
+        <section id="introduction">
+            <h2>The Heat is On (Especially in Cities)</h2>
+            <p>We know the planet is warming. But cities often experience even higher temperatures than surrounding rural areas due to the <a href="https://en.wikipedia.org/wiki/Urban_heat_island" target="_blank">Urban Heat Island (UHI)</a> effect. Buildings and pavements absorb and retain heat, while lack of vegetation reduces cooling through evaporation. This extra heat isn't just uncomfortable; it can be deadly, especially during heatwaves.</p>
+            <p>Furthermore, the burden of this heat isn't shared equally. Within a city, some neighborhoods are hotter than others, often due to historical factors like less green space or more dense construction. Residents in these areas, particularly the elderly, low-income populations, or those with pre-existing health conditions, are often more vulnerable.</p>
+            <p>The paper uses Baltimore, USA, as a case study – a city known for its significant UHI effect and social inequalities. The map below shows simplified representations of Baltimore's neighborhoods (called Community Statistical Areas or CSAs in the paper), highlighting key differences.</p>
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+            <div class="interactive-visualization">
+                <h3>Baltimore Neighborhood Snapshot (Simplified)</h3>
+                <p>Click buttons to see how different characteristics vary across simplified neighborhoods. Hover over a square for details.</p>
+                <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-primary active" onclick="updateMapMetric('tempDeviation')">Temperature Deviation (°C)</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="updateMapMetric('povertyRate')">Poverty Rate (%)</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="updateMapMetric('canopyCover')">Tree Canopy Cover (%)</button>
+                    <button class="btn btn-sm btn-outline-primary" onclick="updateMapMetric('elderlyRate')">Population Over 65 (%)</button>
+                </div>
+                <div id="baltimore-map"></div>
+                <div id="map-tooltip" class="tooltip"></div>
+            </div>
+        </section>
+
+        <section id="challenge">
+            <h2>The Adaptation Puzzle: Many Goals, Many Options</h2>
+            <p>Cities want to adapt to this heat, but it's complicated. There isn't one single "best" solution. Planners face a complex puzzle with several competing goals:</p>
+            <ul>
+                <li><strong>Reduce Overall Deaths:</strong> Save as many lives as possible across the city.</li>
+                <li><strong>Minimize Cost:</strong> Implement solutions affordably, given limited budgets.</li>
+                <li><strong>Improve Equity:</strong> Reduce the *difference* in heat risk between the most and least vulnerable neighborhoods. Fairness matters.</li>
+                <li><strong>Environmental Co-benefits:</strong> Some solutions, like planting trees, also absorb CO2.</li>
+                <li><strong>Reliability:</strong> Ensure strategies work well even in the worst heatwaves or under uncertain future climate conditions.</li>
+            </ul>
+            <p>These goals often conflict. The cheapest option might not save the most lives or be the fairest. The strategy that saves the most lives might be incredibly expensive or worsen inequality.</p>
+
+            <p>Cities also have various tools (adaptation strategies) at their disposal:</p>
+            <ul>
+                <li><strong>Greening:</strong> Planting trees provides shade and cooling through evapotranspiration.</li>
+                <li><strong>Cool Infrastructure:</strong> Using reflective materials for roofs ("cool roofs") and pavements bounces sunlight back.</li>
+                <li><strong>Cooling Centers:</strong> Providing air-conditioned public spaces during heat waves offers immediate relief.</li>
+            </ul>
+            <p>The paper uses a computational tool called <strong>City-HEAT</strong> to explore these trade-offs. It models the city, simulates different investment strategies over 50 years under various future climate scenarios, and evaluates them against the objectives.</p>
+        </section>
+
+        <section id="optimization">
+            <h2>Finding Good (But Not Perfect) Solutions: Trade-offs</h2>
+            <p>Because goals conflict, there's no single "perfect" strategy that's best at everything. Instead, City-HEAT identifies a set of <a href="https://en.wikipedia.org/wiki/Pareto_efficiency" target="_blank">Pareto-optimal</a> strategies. A strategy is Pareto-optimal if you can't improve one objective (e.g., reduce cost) without making another objective worse (e.g., increasing deaths).</p>
+            <p>These solutions represent the best possible *trade-offs*. Decision-makers then need to choose from this set based on their priorities. The chart below illustrates this concept using data inspired by the paper's findings (Figure 2b/c). Each dot represents a potential 50-year adaptation pathway.</p>
+
+            <div class="interactive-visualization">
+                <h3>Exploring the Trade-offs</h3>
+                <p>Compare pathways based on total cost vs. lives saved, and lives saved vs. inequality (lower inequality score is better). Hover over dots for details. Click a dot to highlight it across both charts and see its strategy type below.</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 style="font-size: 1.2rem; text-align: center;">Cost vs. Lives Saved</h4>
+                        <div id="tradeoff-plot-cost-lives"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <h4 style="font-size: 1.2rem; text-align: center;">Lives Saved vs. Inequality</h4>
+                        <div id="tradeoff-plot-lives-equity"></div>
+                    </div>
+                </div>
+                 <div class="mt-3" id="strategy-legend">
+                    <h4 style="font-size: 1.2rem;">Strategy Types (Simplified):</h4>
+                     <div class="legend-item"><div class="legend-color" style="background-color: #1f77b4;"></div><span>Infrastructure Focus (Cool Roofs/Pavements)</span></div>
+                     <div class="legend-item"><div class="legend-color" style="background-color: #2ca02c;"></div><span>Greening Focus (Trees)</span></div>
+                     <div class="legend-item"><div class="legend-color" style="background-color: #ff7f0e;"></div><span>Balanced Mix</span></div>
+                     <div class="legend-item"><div class="legend-color" style="background-color: #9467bd;"></div><span>High Investment Mix</span></div>
+                     <div class="legend-item"><div class="legend-color" style="background-color: #d3d3d3;"></div><span>Other Mixes</span></div>
+                 </div>
+                <div id="tradeoff-tooltip" class="tooltip"></div>
+                <div id="selected-strategy-info" class="mt-3 alert alert-info" style="display: none;">Selected Strategy: ...</div>
+            </div>
+        </section>
+
+        <section id="equity">
+            <h2>The Equity Challenge: Why Planting Trees Isn't Always Fair</h2>
+            <p>A surprising finding from the paper relates to equity. While planting trees ("greening") is often seen as a powerful tool, strategies focusing heavily on it didn't perform well in reducing the *difference* in heat-related deaths between neighborhoods (inequality). Why?</p>
+            <ol>
+                <li><strong>Planting Site Availability:</strong> The model considered where trees could *easily* be planted based on existing land cover (parks, open spaces). These areas are often more abundant in wealthier, less densely populated neighborhoods, which might already have lower heat vulnerability compared to dense, inner-city areas.</li>
+                <li><strong>Cost of Difficult Planting:</strong> Planting trees in highly paved urban cores (e.g., removing concrete, creating tree pits) is much more expensive and complex than planting in existing green spaces. A purely cost-driven or "easy-win" tree planting strategy might naturally favor affluent areas.</li>
+                <li><strong>Vulnerability Factors:</strong> The model considered vulnerability factors like age and poverty. While some greener, wealthier areas might have older populations (increasing vulnerability), the extreme heat and lack of resources in poorer, denser neighborhoods often create higher baseline risks that tree-focused strategies might neglect if they follow the path of least resistance for planting.</li>
+            </ol>
+            <p>The visualization below (inspired by Figure 3) shows where investment *might* hypothetically go under different simplified strategies. Notice how "Greening Focus" might concentrate investment differently than "Infrastructure Focus" or a "Balanced" approach.</p>
+
+            <div class="interactive-visualization">
+                <h3>Where Does the Money Go? (Hypothetical Investment)</h3>
+                <p>Select a strategy type to see a simplified representation of where investment might be concentrated across neighborhoods (darker means more investment).</p>
+                 <div class="mb-3">
+                    <button class="btn btn-sm btn-outline-secondary active" onclick="updateInvestmentMap('Balanced Mix')">Balanced Mix</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="updateInvestmentMap('Greening Focus')">Greening Focus</button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="updateInvestmentMap('Infrastructure Focus')">Infrastructure Focus</button>
+                 </div>
+                <div id="investment-map"></div>
+                <div id="investment-tooltip" class="tooltip"></div>
+                <p><small>Note: This is a highly simplified representation for illustrative purposes.</small></p>
+            </div>
+
+            <p>This doesn't mean trees are bad! It means that achieving *equitable* outcomes with greening requires deliberate, targeted efforts, potentially focusing on more difficult and expensive planting in underserved areas, rather than just maximizing the number of trees planted overall.</p>
+        </section>
+
+        <section id="uncertainty">
+            <h2>Planning for an Unknown Future: Robustness and Adaptation</h2>
+            <p>The future is uncertain. How much will temperatures rise? How effective will cool roofs be in 30 years? How will populations change? City-HEAT tackles this <a href="https://en.wikipedia.org/wiki/Robust_decision-making" target="_blank">Deep Uncertainty</a> by testing strategies against thousands of possible future scenarios ("States of the World" or SOWs).</p>
+            <p>The goal is to find strategies that are <strong>robust</strong> – performing reasonably well across a wide range of possible futures, not just optimized for one specific prediction.</p>
+            <p>Furthermore, the strategies identified aren't fixed 50-year plans. They use <a href="https://en.wikipedia.org/wiki/Reinforcement_learning#Direct_policy_search" target="_blank">Direct Policy Search (DPS)</a> to create *adaptive* rules. Think of it like a thermostat: "If the average heatwave intensity increases by X amount over the last 5 years, then increase investment in cooling centers by Y%." This allows the strategy to adjust over time based on observed conditions.</p>
+            <p>The paper uses a logistic function to model this adaptive investment:</p>
+            $$ \text{Investment} = \text{MaxCapacity} \times \frac{L}{1 + e^{-k \times (\text{SystemState} - x_0)}} $$
+            <p>Where $L$, $k$, and $x_0$ are parameters the optimization algorithm tunes to define the policy rule based on the current `SystemState` (like temperature trends). The interactive element below lets you explore how such a rule might work.</p>
+
+            <div class="interactive-visualization">
+                <h3>Adaptive Investment Rule (Illustrative)</h3>
+                <p>Adjust the "Observed Heat Trend" slider (representing the system state) to see how investment might change based on a pre-defined adaptive rule (logistic curve).</p>
+                <label for="heat-trend-slider" class="slider-label">Observed Heat Trend (Arbitrary Units): <span id="heat-trend-value">0</span></label>
+                <input type="range" id="heat-trend-slider" class="form-range" min="-5" max="5" step="0.1" value="0" oninput="updateAdaptivePolicy()">
+                <div id="adaptive-policy-plot" style="height: 200px;"></div>
+                <p><small>This shows one possible adaptive rule. The optimization finds the best parameters ($L, k, x_0$) for these rules across all strategies and neighborhoods.</small></p>
+            </div>
+
+            <p>Interestingly, the paper found that the optimal strategies were relatively robust to climate uncertainty. Pathways designed assuming high future warming performed similarly well even if warming turned out to be low, and vice-versa. This suggests that the core structure of good adaptation strategies (the *types* and *relative balance* of interventions) might be less sensitive to the exact degree of future warming than initially thought, especially when using adaptive rules.</p>
+
+        </section>
+
+        <section id="conclusion">
+            <h2>Key Takeaways</h2>
+            <p>Adapting cities to extreme heat is a critical but complex challenge. This computational approach highlights several key points:</p>
+            <ul>
+                <li><strong>Trade-offs are Unavoidable:</strong> There's no silver bullet. Planners must weigh competing objectives like cost, overall effectiveness, and fairness.</li>
+                <li><strong>Equity Requires Intentionality:</strong> Strategies that seem beneficial overall (like large-scale tree planting) can inadvertently worsen inequality if not carefully designed and targeted to vulnerable neighborhoods. Assumptions about where and how interventions are implemented matter greatly.</li>
+                <li><strong>Diversification Can Be Beneficial:</strong> Balanced approaches combining greening, cool infrastructure, and potentially other measures often performed better on equity and cost than strategies focused solely on one type of intervention.</li>
+                <li><strong>Adaptive Planning is Key:</strong> Strategies that can adjust over time based on observed conditions are crucial for dealing with deep uncertainty about the future.</li>
+                <li><strong>Robustness is Possible:</strong> Well-designed adaptive strategies can be surprisingly resilient to uncertainties like the exact pace of future climate change.</li>
+            </ul>
+            <p>Tools like City-HEAT don't provide definitive answers, but they offer powerful ways for decision-makers and communities to explore potential futures, understand the consequences of different choices, and navigate the complex path towards cooler, safer, and more equitable cities.</p>
+        </section>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Inline Javascript for visualizations -->
+    <script>
+        // --- Data (Simplified & Inspired by Paper) ---
+        // Representing 25 simplified neighborhoods (CSAs)
+        const numNeighborhoods = 25;
+        let neighborhoodsData = [];
+        for (let i = 0; i < numNeighborhoods; i++) {
+            neighborhoodsData.push({
+                id: i,
+                name: `Neighborhood ${i + 1}`,
+                // Random data following plausible distributions inspired by Fig 1
+                tempDeviation: (Math.random() * 3 - 1.5).toFixed(1), // -1.5 to 1.5
+                povertyRate: (Math.random() * 45 + 5).toFixed(1),   // 5 to 50
+                canopyCover: (Math.random() * 60 + 5).toFixed(1),   // 5 to 65
+                elderlyRate: (Math.random() * 16 + 4).toFixed(1),   // 4 to 20
+                // Hypothetical investment levels for different strategies
+                investment: {
+                    'Balanced Mix': (Math.random() * 15 + 5).toFixed(1),
+                    'Greening Focus': (Math.random() * (i < 10 ? 10 : 30) + 5).toFixed(1), // More in outer areas
+                    'Infrastructure Focus': (Math.random() * (i < 15 ? 25 : 10) + 5).toFixed(1) // More in inner areas
+                }
+            });
+        }
+
+        // Representing ~50 simplified adaptation pathways (Pareto solutions)
+        let pathwaysData = [];
+        const strategyTypes = ['Infrastructure Focus', 'Greening Focus', 'Balanced Mix', 'High Investment Mix', 'Other Mixes'];
+        const typeColors = {'Infrastructure Focus': '#1f77b4', 'Greening Focus': '#2ca02c', 'Balanced Mix': '#ff7f0e', 'High Investment Mix': '#9467bd', 'Other Mixes': '#d3d3d3'};
+
+        for (let i = 0; i < 50; i++) {
+            let cost = Math.random() * 1000 + 20; // 20 to 1020 M$
+            let mortalityReduction = Math.max(0, Math.min(650, 700 - cost * (0.4 + Math.random() * 0.4))); // Higher cost -> higher reduction, with noise
+            let equity = 400 + (cost / 1000) * 50 + Math.random() * 100 - mortalityReduction * (0.1 + Math.random() * 0.1); // Complex relationship
+            equity = Math.max(380, Math.min(550, equity)); // Bound equity score
+            let typeIndex = Math.floor(Math.random() * strategyTypes.length);
+             // Bias types based on cost/equity roughly inspired by paper trends
+            if (cost < 300 && equity < 450 && Math.random() < 0.6) typeIndex = 0; // Low cost, good equity -> Infra
+            if (cost > 600 && equity > 480 && Math.random() < 0.5) typeIndex = 1; // High cost, worse equity -> Greening
+            if (cost > 800 && Math.random() < 0.7) typeIndex = 3; // Very high cost -> High Investment Mix
+            if (cost > 400 && cost < 700 && equity < 480 && Math.random() < 0.4) typeIndex = 2; // Mid cost/equity -> Balanced
+
+            pathwaysData.push({
+                id: i,
+                cost: cost.toFixed(0),
+                mortalityReduction: mortalityReduction.toFixed(0),
+                equity: equity.toFixed(0), // Lower is better (smaller difference)
+                type: strategyTypes[typeIndex]
+            });
+        }
+
+        // --- Visualization Setup ---
+        const svgWidth = 400;
+        const svgHeight = 300; // Adjusted height for maps
+        const mapMargin = { top: 10, right: 10, bottom: 10, left: 10 };
+        const mapPlotWidth = svgWidth - mapMargin.left - mapMargin.right;
+        const mapPlotHeight = svgHeight - mapMargin.top - mapMargin.bottom;
+
+        const plotMargin = { top: 30, right: 20, bottom: 40, left: 50 };
+        const plotWidth = svgWidth - plotMargin.left - plotMargin.right;
+        const plotHeight = svgHeight - plotMargin.top - plotMargin.bottom; // Use same svgHeight
+
+        const tooltip = d3.select("body").append("div")
+            .attr("id", "general-tooltip") // Use a general tooltip
+            .attr("class", "tooltip");
+
+        let selectedMetric = 'tempDeviation';
+        let selectedInvestmentStrategy = 'Balanced Mix';
+        let selectedPathwayId = null;
+
+        // Color Scales
+        const tempColor = d3.scaleSequential(d3.interpolateRdYlBu).domain([1.5, -1.5]); // Hot=Red, Cold=Blue
+        const povertyColor = d3.scaleSequential(d3.interpolateYlOrRd).domain([5, 50]);
+        const canopyColor = d3.scaleSequential(d3.interpolateGreens).domain([5, 65]);
+        const elderlyColor = d3.scaleSequential(d3.interpolatePurples).domain([4, 20]);
+        const investmentColor = d3.scaleSequential(d3.interpolateBlues).domain([5, 40]); // Adjust domain based on data
+
+        // --- Baltimore Map Visualization ---
+        const mapSvg = d3.select("#baltimore-map")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .append("g")
+            .attr("transform", `translate(${mapMargin.left},${mapMargin.top})`);
+
+        const mapTooltip = d3.select("#map-tooltip");
+
+        const cols = 5;
+        const rows = 5;
+        const cellWidth = mapPlotWidth / cols;
+        const cellHeight = mapPlotHeight / rows;
+
+        function drawMap() {
+            const metricData = neighborhoodsData.map(d => +d[selectedMetric]);
+            let colorScale;
+            switch (selectedMetric) {
+                case 'tempDeviation': colorScale = tempColor; break;
+                case 'povertyRate': colorScale = povertyColor; break;
+                case 'canopyCover': colorScale = canopyColor; break;
+                case 'elderlyRate': colorScale = elderlyColor; break;
+                default: colorScale = d3.scaleSequential(d3.interpolateBlues).domain(d3.extent(metricData));
+            }
+
+            mapSvg.selectAll(".neighborhood-rect")
+                .data(neighborhoodsData, d => d.id)
+                .join("rect")
+                .attr("class", "neighborhood-rect")
+                .attr("x", (d, i) => (i % cols) * cellWidth)
+                .attr("y", (d, i) => Math.floor(i / cols) * cellHeight)
+                .attr("width", cellWidth)
+                .attr("height", cellHeight)
+                .transition().duration(500) // Add transition
+                .attr("fill", d => colorScale(+d[selectedMetric]))
+                .attr("data-id", d => d.id); // Store id for tooltips
+
+            mapSvg.selectAll(".neighborhood-rect")
+                 .on("mouseover", function(event, d) {
+                    mapTooltip.style("opacity", 1);
+                    d3.select(this).style("stroke", "black").style("stroke-width", 1.5);
+                 })
+                 .on("mousemove", function(event, d) {
+                     const [mx, my] = d3.pointer(event, d3.select("body").node());
+                     mapTooltip.html(`${d.name}<br>${selectedMetric}: ${d[selectedMetric]}`)
+                         .style("left", (mx + 15) + "px")
+                         .style("top", (my - 20) + "px");
+                 })
+                 .on("mouseout", function(event, d) {
+                    mapTooltip.style("opacity", 0);
+                    d3.select(this).style("stroke", "#ccc").style("stroke-width", 0.5);
+                 });
+        }
+
+        function updateMapMetric(metric) {
+            selectedMetric = metric;
+            // Update button active states
+            d3.selectAll("#baltimore-map + div button").classed("active", false);
+            d3.select(event.target).classed("active", true);
+            drawMap();
+        }
+
+        // --- Investment Map Visualization ---
+         const investmentMapSvg = d3.select("#investment-map")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .append("g")
+            .attr("transform", `translate(${mapMargin.left},${mapMargin.top})`);
+
+        const investmentTooltip = d3.select("#investment-tooltip");
+
+        function drawInvestmentMap() {
+            const investmentData = neighborhoodsData.map(d => +d.investment[selectedInvestmentStrategy]);
+            investmentColor.domain(d3.extent(investmentData)); // Update domain based on current strategy
+
+            investmentMapSvg.selectAll(".neighborhood-rect")
+                .data(neighborhoodsData, d => d.id)
+                .join("rect")
+                .attr("class", "neighborhood-rect")
+                .attr("x", (d, i) => (i % cols) * cellWidth)
+                .attr("y", (d, i) => Math.floor(i / cols) * cellHeight)
+                .attr("width", cellWidth)
+                .attr("height", cellHeight)
+                .transition().duration(500)
+                .attr("fill", d => investmentColor(+d.investment[selectedInvestmentStrategy]))
+                .attr("data-id", d => d.id);
+
+             investmentMapSvg.selectAll(".neighborhood-rect")
+                 .on("mouseover", function(event, d) {
+                    investmentTooltip.style("opacity", 1);
+                    d3.select(this).style("stroke", "black").style("stroke-width", 1.5);
+                 })
+                 .on("mousemove", function(event, d) {
+                     const [mx, my] = d3.pointer(event, d3.select("body").node());
+                     investmentTooltip.html(`${d.name}<br>Investment: ${d.investment[selectedInvestmentStrategy]} M$`)
+                         .style("left", (mx + 15) + "px")
+                         .style("top", (my - 20) + "px");
+                 })
+                 .on("mouseout", function(event, d) {
+                    investmentTooltip.style("opacity", 0);
+                    d3.select(this).style("stroke", "#ccc").style("stroke-width", 0.5);
+                 });
+        }
+
+         function updateInvestmentMap(strategy) {
+            selectedInvestmentStrategy = strategy;
+             // Update button active states
+            d3.selectAll("#investment-map + div button").classed("active", false);
+            d3.select(event.target).classed("active", true);
+            drawInvestmentMap();
+         }
+
+
+        // --- Tradeoff Plots Visualization ---
+        const costScale = d3.scaleLinear().domain([0, 1050]).range([0, plotWidth]);
+        const livesScale = d3.scaleLinear().domain([0, 700]).range([plotHeight, 0]); // Inverted for y-axis
+        const equityScale = d3.scaleLinear().domain([350, 550]).range([plotHeight, 0]); // Inverted, lower is better
+
+        const costAxis = d3.axisBottom(costScale);
+        const livesAxisLeft = d3.axisLeft(livesScale); // For Cost-Lives plot
+        const livesAxisBottom = d3.axisBottom(livesScale).ticks(5); // For Lives-Equity plot
+        const equityAxis = d3.axisLeft(equityScale);
+
+        const tradeoffTooltip = d3.select("#tradeoff-tooltip");
+
+        // Plot 1: Cost vs Lives
+        const svgCostLives = d3.select("#tradeoff-plot-cost-lives")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .append("g")
+            .attr("transform", `translate(${plotMargin.left},${plotMargin.top})`);
+
+        svgCostLives.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0,${plotHeight})`)
+            .call(costAxis);
+        svgCostLives.append("text") // X axis label
+            .attr("transform", `translate(${plotWidth / 2},${plotHeight + plotMargin.bottom - 5})`)
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text("Total Cost (M$)");
+
+        svgCostLives.append("g")
+            .attr("class", "y axis")
+            .call(livesAxisLeft);
+         svgCostLives.append("text") // Y axis label
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - plotMargin.left)
+            .attr("x", 0 - (plotHeight / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+             .style("font-size", "12px")
+            .text("Lives Saved (over 50 years)");
+
+        // Plot 2: Lives vs Equity
+        const svgLivesEquity = d3.select("#tradeoff-plot-lives-equity")
+            .append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight)
+            .append("g")
+            .attr("transform", `translate(${plotMargin.left},${plotMargin.top})`);
+
+        // Create X axis using lives saved scale
+        const livesScaleX = d3.scaleLinear().domain([0, 700]).range([0, plotWidth]);
+        const livesAxisX = d3.axisBottom(livesScaleX).ticks(7);
+
+        svgLivesEquity.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0,${plotHeight})`)
+            .call(livesAxisX);
+         svgLivesEquity.append("text") // X axis label
+            .attr("transform", `translate(${plotWidth / 2},${plotHeight + plotMargin.bottom - 5})`)
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text("Lives Saved (over 50 years)");
+
+
+        svgLivesEquity.append("g")
+            .attr("class", "y axis")
+            .call(equityAxis);
+         svgLivesEquity.append("text") // Y axis label
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - plotMargin.left)
+            .attr("x", 0 - (plotHeight / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+             .style("font-size", "12px")
+            .text("Inequality Score (Lower is Better)");
+
+        function drawTradeoffPlots() {
+            // Draw dots on Cost-Lives plot
+            svgCostLives.selectAll(".strategy-dot")
+                .data(pathwaysData, d => d.id)
+                .join("circle")
+                .attr("class", "strategy-dot")
+                .attr("cx", d => costScale(+d.cost))
+                .attr("cy", d => livesScale(+d.mortalityReduction))
+                .attr("r", 4)
+                .attr("fill", d => typeColors[d.type])
+                .attr("opacity", 0.7)
+                .attr("data-id", d => d.id)
+                .on("mouseover", handleMouseOver)
+                .on("mousemove", handleMouseMove)
+                .on("mouseout", handleMouseOut)
+                .on("click", handleClick);
+
+            // Draw dots on Lives-Equity plot
+            svgLivesEquity.selectAll(".strategy-dot")
+                .data(pathwaysData, d => d.id)
+                .join("circle")
+                .attr("class", "strategy-dot")
+                 .attr("cx", d => livesScaleX(+d.mortalityReduction)) // Use the new X scale
+                .attr("cy", d => equityScale(+d.equity))
+                .attr("r", 4)
+                .attr("fill", d => typeColors[d.type])
+                .attr("opacity", 0.7)
+                .attr("data-id", d => d.id)
+                .on("mouseover", handleMouseOver)
+                .on("mousemove", handleMouseMove)
+                .on("mouseout", handleMouseOut)
+                .on("click", handleClick);
+        }
+
+        function handleMouseOver(event, d) {
+            tradeoffTooltip.style("opacity", 1);
+            d3.selectAll(`.strategy-dot[data-id='${d.id}']`).attr("r", 6).attr("opacity", 1).style("stroke", "black");
+        }
+
+        function handleMouseMove(event, d) {
+            const [mx, my] = d3.pointer(event, d3.select("body").node());
+            tradeoffTooltip.html(`Strategy Type: ${d.type}<br>Cost: ${d.cost} M$<br>Lives Saved: ${d.mortalityReduction}<br>Inequality: ${d.equity}`)
+                .style("left", (mx + 15) + "px")
+                .style("top", (my - 20) + "px");
+        }
+
+        function handleMouseOut(event, d) {
+            tradeoffTooltip.style("opacity", 0);
+             if (selectedPathwayId !== d.id) { // Don't shrink if selected
+                 d3.selectAll(`.strategy-dot[data-id='${d.id}']`).attr("r", 4).attr("opacity", 0.7).style("stroke", "none");
+             }
+        }
+
+        function handleClick(event, d) {
+            // Reset previous selection
+            if (selectedPathwayId !== null) {
+                 d3.selectAll(`.strategy-dot[data-id='${selectedPathwayId}']`).attr("r", 4).attr("opacity", 0.7).style("stroke", "none");
+            }
+            // Set new selection
+            selectedPathwayId = d.id;
+            d3.selectAll(`.strategy-dot[data-id='${d.id}']`).attr("r", 6).attr("opacity", 1).style("stroke", "black"); // Highlight selected
+
+            // Display info
+            const infoBox = d3.select("#selected-strategy-info");
+            infoBox.html(`<b>Selected Strategy (ID: ${d.id}):</b> Type: ${d.type}, Cost: ${d.cost}M$, Lives Saved: ${d.mortalityReduction}, Inequality Score: ${d.equity}`)
+                   .style("display", "block");
+        }
+
+
+        // --- Adaptive Policy Plot ---
+        const policySvg = d3.select("#adaptive-policy-plot")
+            .append("svg")
+            .attr("width", "100%") // Make responsive
+            .attr("height", 200) // Fixed height
+            .attr("viewBox", `0 0 ${svgWidth} 200`) // Use viewBox for scaling
+            .attr("preserveAspectRatio", "xMidYMid meet");
+
+        const policyGroup = policySvg.append("g")
+             .attr("transform", `translate(${plotMargin.left},${plotMargin.top - 10})`); // Adjust top margin
+
+        const policyXScale = d3.scaleLinear().domain([-5, 5]).range([0, plotWidth]);
+        const policyYScale = d3.scaleLinear().domain([0, 1]).range([plotHeight - 40, 0]); // Scale 0 to 1 (fraction)
+
+        const policyXAxis = d3.axisBottom(policyXScale).ticks(5);
+        const policyYAxis = d3.axisLeft(policyYScale).ticks(5).tickFormat(d3.format(".0%"));
+
+        policyGroup.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(0,${plotHeight - 40})`)
+            .call(policyXAxis);
+         policyGroup.append("text") // X axis label
+            .attr("transform", `translate(${plotWidth / 2},${plotHeight - 5})`) // Adjusted position
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .text("Observed Heat Trend");
+
+        policyGroup.append("g")
+            .attr("class", "y axis")
+            .call(policyYAxis);
+         policyGroup.append("text") // Y axis label
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - plotMargin.left + 10) // Adjusted position
+            .attr("x", 0 - (plotHeight - 40) / 2)
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+             .style("font-size", "12px")
+            .text("Investment (% of Max)");
+
+        const policyLine = d3.line()
+            .x(d => policyXScale(d.x))
+            .y(d => policyYScale(d.y));
+
+        const L = 1.0; // Max fraction
+        const k = 1.5; // Steepness
+        const x0 = 0; // Inflection point
+
+        function logistic(x) {
+            return L / (1 + Math.exp(-k * (x - x0)));
+        }
+
+        const policyCurveData = policyXScale.ticks(50).map(x => ({ x: x, y: logistic(x) }));
+
+        policyGroup.append("path")
+            .datum(policyCurveData)
+            .attr("fill", "none")
+            .attr("stroke", "#3498db")
+            .attr("stroke-width", 2)
+            .attr("d", policyLine);
+
+        const policyIndicator = policyGroup.append("circle")
+            .attr("r", 5)
+            .attr("fill", "#e74c3c");
+
+        const policyValueText = policyGroup.append("text")
+             .attr("x", plotWidth - 10)
+             .attr("y", 10)
+             .attr("text-anchor", "end")
+             .style("font-weight", "bold");
+
+
+        function updateAdaptivePolicy() {
+            const heatTrend = +d3.select("#heat-trend-slider").property("value");
+            d3.select("#heat-trend-value").text(heatTrend.toFixed(1));
+
+            const investmentLevel = logistic(heatTrend);
+            policyIndicator
+                .attr("cx", policyXScale(heatTrend))
+                .attr("cy", policyYScale(investmentLevel));
+
+            policyValueText.text(`Investment: ${(investmentLevel * 100).toFixed(0)}%`);
+        }
+
+
+        // --- Initial Draws ---
+        drawMap();
+        drawInvestmentMap();
+        drawTradeoffPlots();
+        updateAdaptivePolicy(); // Initialize policy plot indicator
+
+    </script>
+
+</body>
 </html>

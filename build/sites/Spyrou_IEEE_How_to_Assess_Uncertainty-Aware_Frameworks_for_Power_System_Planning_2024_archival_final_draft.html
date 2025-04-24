@@ -1,51 +1,713 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft.html" title="Site Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Power Planning: Navigating an Uncertain Future</title>
+    <!-- Bootstrap CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+        </script>
+    <!-- MathJax Script -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- D3.js via CDN -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Custom CSS (Minimal) -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+        }
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.4rem; }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .interactive-viz {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            overflow: hidden; /* Clear floats */
+        }
+        .viz-controls {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .viz-controls label {
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        .viz-controls input[type="range"] {
+            flex-grow: 1;
+            min-width: 150px;
+        }
+        .viz-output {
+            font-weight: bold;
+            min-width: 80px; /* Prevent layout shifts */
+            text-align: right;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .scenario-cell {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .plan-point {
+            cursor: pointer;
+            transition: r 0.2s, fill 0.2s;
+        }
+        .plan-point:hover {
+            stroke: black;
+            stroke-width: 2px;
+        }
+        .axis-label {
+            font-size: 0.8em;
+            fill: #555;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Power Planning: Navigating an Uncertain Future</h1>
+        <p class="lead">How can we make smart decisions about tomorrow's energy systems when the future is so unpredictable? Let's explore techniques that help, inspired by the paper "How to Assess Uncertainty-Aware Frameworks for Power System Planning?".</p>
 
-					const element = document.currentScript.parentElement;
+        <p>Imagine you're in charge of planning your country's electricity supply for the next 25 years. You need to decide which power plants to build (coal, gas, solar, wind?), where to put them, and what transmission lines are needed. These decisions involve billions of dollars and will shape the energy landscape for decades. Easy, right?</p>
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+        <p>Not quite. The future is incredibly fuzzy. Will electricity <a href="https://en.wikipedia.org/wiki/Energy_demand_management" target="_blank">demand</a> soar or stagnate? What will fuel (like natural gas or imported coal) cost? How quickly will renewable technology improve and get cheaper? What new environmental policies will emerge? How will <a href="https://en.wikipedia.org/wiki/Climate_change" target="_blank">climate change</a> itself affect power generation (e.g., through floods impacting plants or temperature affecting demand)? This is what planners call <strong>deep uncertainty</strong>: we don't just lack precise forecasts; we might not even agree on the best models or the range of possibilities.</p>
+
+        <h2>The Peril of Simple Plans</h2>
+        <p>Traditionally, planners might create a few "scenarios" (e.g., 'High Demand', 'Low Demand') and design a plan for each, or maybe pick a 'most likely' future and plan for that. But this can be risky. A plan optimized for one specific future might perform terribly if a different future unfolds. </p>
+
+        <p>Consider a simple choice: build a large, expensive coal plant (cheap fuel, high upfront cost) or smaller, flexible gas plants (expensive fuel, lower upfront cost). Your decision depends heavily on future fuel prices and demand.</p>
+
+        <div class="interactive-viz">
+            <h3>Simple Decision Under Uncertainty</h3>
+            <p>Adjust the sliders to see how future conditions change the 'best' simple investment. (Lower 'Net Cost' is better).</p>
+            <div class="viz-controls">
+                <label for="demand-slider">Future Demand:</label>
+                <input type="range" id="demand-slider" min="0" max="100" value="50">
+                <span class="viz-output" id="demand-value">Medium</span>
+            </div>
+            <div class="viz-controls">
+                <label for="fuel-price-slider">Future Fuel Price (Gas):</label>
+                <input type="range" id="fuel-price-slider" min="0" max="100" value="50">
+                <span class="viz-output" id="fuel-price-value">Medium</span>
+            </div>
+            <div id="simple-decision-viz" class="mt-3 row text-center">
+                 <div class="col">
+                    <strong>Plan A: Big Coal Plant</strong><br>
+                    Net Cost: <span id="plan-a-cost">?</span>
+                 </div>
+                 <div class="col">
+                     <strong>Plan B: Small Gas Plants</strong><br>
+                     Net Cost: <span id="plan-b-cost">?</span>
+                 </div>
+            </div>
+            <small class="d-block mt-2 text-muted">Note: This is a highly simplified illustration. Real costs involve many more factors.</small>
+        </div>
+
+        <p>As you can see, the "best" plan changes easily. Relying on a single prediction is dangerous. We need planning methods that embrace uncertainty and aim for solutions that are reasonably good across *many* possible futures.</p>
+
+        <h2>New Approaches: Embracing Uncertainty</h2>
+        <p>The academic paper explores frameworks designed for this challenge. These frameworks don't just pick one future; they consider a vast landscape of possibilities and seek plans that are <strong>robust</strong> (perform well in many futures) and <strong>adaptive</strong> (can be adjusted as the future unfolds).</p>
+
+        <p>The paper highlights two main "flavors" of these advanced frameworks, distinguished by what they ask planners and stakeholders to agree on upfront:</p>
+        <ol>
+            <li><strong>Agree-on-Plans Frameworks (like Robust Decision Making - RDM):</strong> Start with a set of potential investment plans. Then, simulate how each plan performs under hundreds or thousands of possible future scenarios. Analyze the results to find vulnerabilities (where does a plan fail?) and identify trade-offs. Use this understanding to refine existing plans or design new, more robust ones.</li>
+            <li><strong>Agree-on-Assumptions Frameworks (like Stochastic Programming - SP):</strong> Start by defining the uncertain factors, their possible ranges or probabilities, and the rules of the system (constraints, objectives). Then, use powerful <a href="https://en.wikipedia.org/wiki/Mathematical_optimization" target="_blank">optimization</a> algorithms to search through potentially *infinite* combinations of decisions to find a single investment strategy that performs best on average, or minimizes risk, across the modeled uncertainty.</li>
+        </ol>
+
+        <p>Let's visualize the conceptual difference.</p>
+
+        <h2>Visualizing RDM: Testing Many Plans</h2>
+        <p>RDM is like stress-testing multiple car designs on a wide variety of simulated road conditions. You start with specific designs (plans) and see how they hold up everywhere.</p>
+
+        <div class="interactive-viz">
+            <h3>RDM: Evaluating Predefined Plans</h3>
+            <p>Imagine 3 candidate plans (A, B, C) and 9 possible future scenarios (combinations of Demand and Fuel Prices). Click a plan to see its performance (cost, lower is better) across all scenarios. Plans that are consistently low-cost (light green) are more robust. Plans with high costs (red) in some scenarios are vulnerable there.</p>
+             <div class="row">
+                <div class="col-md-8">
+                    <div id="rdm-scenario-grid" class="scenario-grid mb-3">
+                        <!-- Scenario cells will be added by JS -->
+                    </div>
+                    <small class="text-muted">Scenarios: Combinations of Demand (Low, Med, High) and Fuel Price (Low, Med, High)</small>
+                </div>
+                <div class="col-md-4">
+                    <strong>Select Plan:</strong>
+                    <div class="list-group mt-2">
+                        <button type="button" class="list-group-item list-group-item-action" id="rdm-plan-a">Plan A</button>
+                        <button type="button" class="list-group-item list-group-item-action" id="rdm-plan-b">Plan B</button>
+                        <button type="button" class="list-group-item list-group-item-action" id="rdm-plan-c">Plan C</button>
+                    </div>
+                    <div class="mt-3">
+                        <strong>Legend (Cost):</strong>
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to right, lightgreen, yellow, red); padding: 5px; border-radius: 3px;">
+                            <span>Low</span>
+                            <span>Medium</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <p>RDM's strength lies in exploring the consequences of specific choices across a vast range of futures. It generates rich information about trade-offs and vulnerabilities, which is great for discussions with stakeholders. However, it relies on having good candidate plans to start with, and running potentially millions of simulations can be computationally intensive.</p>
+
+        <h2>Visualizing SP: Optimizing for Robustness</h2>
+        <p>SP is more like using a computer to design the single best car chassis that balances performance across expected conditions, given material constraints and physical laws. It searches a vast design space for an optimal solution based on a model of uncertainty.</p>
+
+        <div class="interactive-viz">
+            <h3>SP: Searching for the Optimal Strategy</h3>
+            <p>Imagine the possible first-stage investments as a space (e.g., how much to invest in Coal vs. Renewables). SP uses optimization to find the point ($L_{SP}$) in this space that yields the best expected outcome, considering simplified future scenarios and the ability to adapt later. RDM, in contrast, would evaluate predefined points ($L_A, L_B, L_C$) within this space.</p>
+            <div class="row">
+                <div class="col-md-8">
+                    <svg id="sp-decision-space-viz" width="100%" height="300"></svg>
+                </div>
+                 <div class="col-md-4">
+                    <strong>Legend:</strong>
+                    <div class="legend-item"><div class="legend-color" style="background-color: blue;"></div>SP Optimal Plan ($L_{SP}$)</div>
+                    <div class="legend-item"><div class="legend-color" style="background-color: orange;"></div>RDM Candidate Plans ($L_A, L_B, ...$)</div>
+                    <div class="legend-item"><div class="legend-color" style="background-color: #eee; border: 1px dashed #aaa;"></div>Feasible Investment Region</div>
+                    <p class="mt-3"><small>SP finds one plan optimizing an objective (e.g., minimize average cost across representative scenarios), considering future adjustments.</small></p>
+                     <div class="viz-controls flex-column align-items-start">
+                         <div>
+                            <label for="sp-prob-slider">Weight on 'High Demand' Scenario:</label>
+                            <input type="range" id="sp-prob-slider" min="10" max="90" value="33">
+                            <span class="viz-output" id="sp-prob-value">33%</span>
+                         </div>
+                         <small class="text-muted">Changing scenario probabilities (assumptions) can shift the SP optimal plan.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <p>SP's strength is its ability to directly find a potentially superior plan that explicitly balances near-term commitments with long-term flexibility. However, it requires defining uncertainty with probabilities (which can be hard under deep uncertainty) and often simplifies the problem (e.g., using fewer representative scenarios) to make the optimization computationally feasible. This is known as the <a href="https://en.wikipedia.org/wiki/Curse_of_dimensionality" target="_blank">curse of dimensionality</a>.</p>
+
+        <h2>The Bangladesh Case Study: A Real-World Test</h2>
+        <p>The paper applies both RDM and SP to a power planning problem in Bangladesh, facing uncertainty in:</p>
+        <ul>
+            <li>Electricity demand growth</li>
+            <li>Future fuel prices (coal, natural gas)</li>
+            <li>Availability of domestic natural gas and coal</li>
+            <li>Climate change impacts (temperature affecting demand, flooding affecting power plants)</li>
+        </ul>
+        <p>They generated 486 distinct future scenarios by combining different possibilities for these factors.</p>
+
+        <p><strong>For RDM:</strong> They started with 7 candidate investment plans (derived by clustering plans optimized for individual scenarios) and simulated each across all 486 scenarios.</p>
+        <p><strong>For SP:</strong> They formulated an optimization problem to find the least-cost investment plan, initially using only 7 representative scenarios (one from each cluster) with associated probabilities. The performance of the resulting SP plan was then evaluated across all 486 scenarios for a fair comparison.</p>
+
+        <h2>Comparing Performance: What is "Regret"?</h2>
+        <p>One way to compare plans is by looking at their <strong>regret</strong>. For a given scenario, a plan's regret is the difference between its cost and the cost of the *perfect foresight* plan (the best possible plan if you had known that specific future would happen). A robust plan has low average regret across all scenarios.</p>
+
+         <div class="interactive-viz">
+            <h3>Comparing Plan Regret (Illustrative)</h3>
+            <p>This chart shows the average regret for the SP plan and the 7 RDM candidate plans from the study. Lower bars are better, indicating more robustness on average.</p>
+            <svg id="regret-chart-viz" width="100%" height="350"></svg>
+             <div id="regret-tooltip" class="tooltip"></div>
+             <small class="d-block mt-2 text-muted">Data based on Figure 6 in the paper, showing SP and RDM1 (the RDM plan most similar to SP's choice) have lower average regret than other RDM candidates in this specific case study.</small>
+        </div>
+
+        <p>In the Bangladesh case, the SP framework identified a first-stage plan (similar to RDM Plan 1) that performed well, having slightly lower average regret than the best RDM candidate. This SP plan prioritized flexible options like interconnection with India and deferred large, potentially risky investments in domestic coal plants until uncertainty was resolved in the second stage.</p>
+
+        <h2>Beyond Cost: Exploring Trade-offs</h2>
+        <p>Decisions aren't just about minimizing average cost or regret. Planners care about multiple objectives: reliability (avoiding blackouts), environmental impact, energy independence (reliance on imports), equity, etc.</p>
+        <p>RDM, by simulating many plans across many scenarios, naturally produces data on various performance metrics, making it easy to visualize trade-offs. SP can also provide this information if the simulation model calculates these attributes, but its primary focus during optimization is usually a single objective (like cost).</p>
+
+        <div class="interactive-viz">
+            <h3>Visualizing Trade-offs (Illustrative)</h3>
+            <p>Explore how different plans balance competing objectives like cost (regret), reliance on energy imports, and reliability (penalty for unserved energy). Hover over points to see the plan ID.</p>
+            <svg id="tradeoff-chart-viz" width="100%" height="400"></svg>
+            <div id="tradeoff-tooltip" class="tooltip"></div>
+            <small class="d-block mt-2 text-muted">Based on Figure 8 in the paper. Different plans occupy different positions in this trade-off space. Stakeholders might prefer a plan that isn't the absolute lowest cost if it offers better performance on other dimensions they value.</small>
+        </div>
+
+        <h2>Key Takeaways: RDM vs. SP</h2>
+        <p>The paper concludes that neither framework is universally superior. The best choice depends on the specific problem, available resources, and stakeholder needs.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Robust Decision Making (RDM)</h5>
+                        <p class="card-text"><strong>Pros:</strong></p>
+                        <ul>
+                            <li>Explores performance of specific plans across vast uncertainty.</li>
+                            <li>Excellent for identifying vulnerabilities and understanding trade-offs.</li>
+                            <li>Facilitates stakeholder dialogue by showing consequences of different choices.</li>
+                            <li>Computationally intensive simulations, but often parallelizable.</li>
+                        </ul>
+                         <p class="card-text"><strong>Cons:</strong></p>
+                        <ul>
+                            <li>Performance depends on the initial set of candidate plans considered.</li>
+                            <li>Doesn't directly optimize; relies on analysis and iteration.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                 <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">Stochastic Programming (SP)</h5>
+                         <p class="card-text"><strong>Pros:</strong></p>
+                        <ul>
+                            <li>Directly searches for an optimal adaptive strategy.</li>
+                            <li>Explicitly incorporates flexibility and recourse actions.</li>
+                            <li>Can identify good strategies RDM might miss if not included initially.</li>
+                        </ul>
+                         <p class="card-text"><strong>Cons:</strong></p>
+                        <ul>
+                            <li>Requires quantifying uncertainty with probabilities.</li>
+                            <li>Suffers from the 'curse of dimensionality', often needing simplifications (e.g., scenario reduction).</li>
+                            <li>Optimization process can be a 'black box', harder to explain.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>Conclusion: Choosing the Right Tools</h2>
+        <p>Planning future power systems under deep uncertainty is a major challenge. Simple approaches are often inadequate. Frameworks like RDM and SP offer powerful ways to develop more robust and adaptive plans.</p>
+        <p>RDM excels at exploring the implications of chosen actions across many futures, fostering understanding and dialogue. SP excels at finding mathematically optimal strategies that balance costs and flexibility based on a model of uncertainty. As the paper suggests, understanding the strengths and weaknesses of each approach, using structured assessment criteria (considering modeling capability, practical application, and stakeholder engagement), allows planners to choose or combine methods effectively to navigate the uncertain path towards a sustainable energy future.</p>
+
+        <hr>
+        <footer class="text-muted small">
+            <p>This interactive explanation is inspired by the paper: E. Spyrou, B. Hobbs, D. Chattopadhyay, N. Mukhi, "How to Assess Uncertainty-Aware Frameworks for Power System Planning?", Accepted for publication in IEEE Transactions on Energy Markets, Policy, and Regulation, 2024. DOI: 10.1109/TEMPR.2024.3365977.</p>
+            <p>Visualizations are illustrative and simplified for educational purposes. Created using Bootstrap, D3.js, and MathJax.</p>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Inlined Javascript for Interactivity -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // --- Simple Decision Viz ---
+        const demandSlider = document.getElementById('demand-slider');
+        const fuelPriceSlider = document.getElementById('fuel-price-slider');
+        const demandValueSpan = document.getElementById('demand-value');
+        const fuelPriceValueSpan = document.getElementById('fuel-price-value');
+        const planACostSpan = document.getElementById('plan-a-cost');
+        const planBCostSpan = document.getElementById('plan-b-cost');
+
+        function updateSimpleDecision() {
+            const demand = parseInt(demandSlider.value); // 0-100
+            const fuelPrice = parseInt(fuelPriceSlider.value); // 0-100
+
+            // Simple labels
+            demandValueSpan.textContent = demand < 33 ? 'Low' : (demand > 66 ? 'High' : 'Medium');
+            fuelPriceValueSpan.textContent = fuelPrice < 33 ? 'Low' : (fuelPrice > 66 ? 'High' : 'Medium');
+
+            // Simplified cost functions (Illustrative)
+            // Plan A (Coal): High fixed cost, benefits from high demand, less sensitive to fuel price
+            const costA = 70 + (100 - demand) * 0.3 + fuelPrice * 0.1;
+            // Plan B (Gas): Lower fixed cost, less benefit from high demand, sensitive to fuel price
+            const costB = 40 + (100 - demand) * 0.1 + fuelPrice * 0.8;
+
+            planACostSpan.textContent = costA.toFixed(0);
+            planBCostSpan.textContent = costB.toFixed(0);
+
+            // Highlight the cheaper plan
+            planACostSpan.style.fontWeight = costA < costB ? 'bold' : 'normal';
+            planACostSpan.style.color = costA < costB ? 'green' : 'black';
+            planBCostSpan.style.fontWeight = costB < costA ? 'bold' : 'normal';
+            planBCostSpan.style.color = costB < costA ? 'green' : 'black';
+        }
+
+        demandSlider.addEventListener('input', updateSimpleDecision);
+        fuelPriceSlider.addEventListener('input', updateSimpleDecision);
+        updateSimpleDecision(); // Initial calculation
+
+        // --- RDM Viz ---
+        const rdmGrid = document.getElementById('rdm-scenario-grid');
+        const rdmPlanA = document.getElementById('rdm-plan-a');
+        const rdmPlanB = document.getElementById('rdm-plan-b');
+        const rdmPlanC = document.getElementById('rdm-plan-c');
+        const demandLevels = ['Low', 'Med', 'High'];
+        const fuelLevels = ['Low', 'Med', 'High'];
+        const scenarios = [];
+        const rdmCosts = { 'A': [], 'B': [], 'C': [] }; // Costs for each plan in each scenario
+
+        // Generate scenarios and random costs for illustration
+        let scenarioIndex = 0;
+        for (let d = 0; d < demandLevels.length; d++) {
+            for (let f = 0; f < fuelLevels.length; f++) {
+                const scenarioId = `s_${d}_${f}`;
+                scenarios.push({ id: scenarioId, demand: demandLevels[d], fuel: fuelLevels[f] });
+                const cell = document.createElement('div');
+                cell.classList.add('scenario-cell');
+                cell.id = scenarioId;
+                cell.textContent = `D:${demandLevels[d][0]}, F:${fuelLevels[f][0]}`; // Short label
+                rdmGrid.appendChild(cell);
+
+                // Assign illustrative costs (lower is better, 0-100)
+                // Plan A: Good in high demand, low fuel price
+                rdmCosts['A'][scenarioIndex] = 20 + (2-d)*20 + f*10 + Math.random()*10;
+                // Plan B: Good in medium demand, medium fuel price (more balanced)
+                rdmCosts['B'][scenarioIndex] = 30 + Math.abs(1-d)*15 + Math.abs(1-f)*15 + Math.random()*10;
+                 // Plan C: Good in low demand, high fuel price (opposite of A)
+                rdmCosts['C'][scenarioIndex] = 25 + d*20 + (2-f)*10 + Math.random()*10;
+                scenarioIndex++;
+            }
+        }
+
+        // Color scale for RDM costs
+        const rdmColorScale = d3.scaleLinear()
+            .domain([10, 50, 90]) // Min, Mid, Max illustrative costs
+            .range(['lightgreen', 'yellow', 'red']);
+
+        function updateRdmViz(selectedPlan) {
+            // Reset styles
+             [rdmPlanA, rdmPlanB, rdmPlanC].forEach(btn => btn.classList.remove('active'));
+             scenarios.forEach((scenario, index) => {
+                 const cell = document.getElementById(scenario.id);
+                 cell.style.backgroundColor = '#f8f9fa'; // Default background
+                 cell.textContent = `D:${scenario.demand[0]}, F:${scenario.fuel[0]}`;
+                 cell.style.transform = 'scale(1)';
+             });
+
+            // Apply styles for selected plan
+            document.getElementById(`rdm-plan-${selectedPlan.toLowerCase()}`).classList.add('active');
+            const costs = rdmCosts[selectedPlan];
+            scenarios.forEach((scenario, index) => {
+                const cell = document.getElementById(scenario.id);
+                const cost = costs[index];
+                cell.style.backgroundColor = rdmColorScale(cost);
+                cell.textContent = `${cost.toFixed(0)}`; // Show cost
+                cell.style.transform = 'scale(1.05)';
+            });
+        }
+
+        rdmPlanA.addEventListener('click', () => updateRdmViz('A'));
+        rdmPlanB.addEventListener('click', () => updateRdmViz('B'));
+        rdmPlanC.addEventListener('click', () => updateRdmViz('C'));
+        updateRdmViz('A'); // Start with Plan A selected
+
+
+        // --- SP Viz ---
+        const spVizSvg = d3.select("#sp-decision-space-viz");
+        const spProbSlider = document.getElementById('sp-prob-slider');
+        const spProbValueSpan = document.getElementById('sp-prob-value');
+        const spWidth = spVizSvg.node().getBoundingClientRect().width;
+        const spHeight = 300;
+        const spMargin = { top: 20, right: 20, bottom: 40, left: 50 };
+        const spXScale = d3.scaleLinear().domain([0, 100]).range([spMargin.left, spWidth - spMargin.right]);
+        const spYScale = d3.scaleLinear().domain([0, 100]).range([spHeight - spMargin.bottom, spMargin.top]);
+
+        // Draw axes
+        spVizSvg.append("g")
+            .attr("transform", `translate(0,${spHeight - spMargin.bottom})`)
+            .call(d3.axisBottom(spXScale).ticks(5));
+        spVizSvg.append("g")
+            .attr("transform", `translate(${spMargin.left},0)`)
+            .call(d3.axisLeft(spYScale).ticks(5));
+
+        // Axes labels
+         spVizSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", spWidth / 2)
+            .attr("y", spHeight - 5)
+            .text("Investment in Coal (%)");
+        spVizSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -spHeight / 2)
+            .attr("y", 15)
+            .text("Investment in Renewables (%)");
+
+        // Feasible region (illustrative triangle)
+        const feasibleRegion = [
+            {x: 10, y: 10}, {x: 90, y: 10}, {x: 10, y: 90}
+        ];
+        spVizSvg.append("polygon")
+            .attr("points", feasibleRegion.map(d => `${spXScale(d.x)},${spYScale(d.y)}`).join(" "))
+            .attr("fill", "#eee")
+            .attr("stroke", "#aaa")
+            .attr("stroke-dasharray", "4");
+
+        // RDM points (fixed)
+        const rdmPointsData = [ {id: 'A', x: 20, y: 70}, {id: 'B', x: 50, y: 50}, {id: 'C', x: 70, y: 20} ];
+        spVizSvg.selectAll(".rdm-point")
+            .data(rdmPointsData)
+            .enter().append("circle")
+            .attr("class", "rdm-point plan-point")
+            .attr("cx", d => spXScale(d.x))
+            .attr("cy", d => spYScale(d.y))
+            .attr("r", 6)
+            .attr("fill", "orange");
+
+        // SP point (movable)
+        const spPoint = spVizSvg.append("circle")
+            .attr("class", "sp-point plan-point")
+            .attr("r", 8)
+            .attr("fill", "blue");
+
+        function updateSpViz() {
+            const highDemandWeight = parseInt(spProbSlider.value) / 100; // 0.1 to 0.9
+            spProbValueSpan.textContent = `${(highDemandWeight * 100).toFixed(0)}%`;
+
+            // Illustrative movement: SP optimal point shifts based on probability weight
+            // Moves towards more renewables (higher Y) if high demand is more likely
+            const optimalX = 40 + highDemandWeight * 10; // Simple linear shift
+            const optimalY = 30 + highDemandWeight * 30; // Simple linear shift
+
+            spPoint.attr("cx", spXScale(optimalX))
+                   .attr("cy", spYScale(optimalY));
+        }
+
+        spProbSlider.addEventListener('input', updateSpViz);
+        updateSpViz(); // Initial position
+
+
+       // --- Regret Chart Viz ---
+        const regretData = [
+            { plan: "SP", regret: 1.5 }, // Made SP slightly better than RDM1 for illustration
+            { plan: "RDM1", regret: 1.7 },
+            { plan: "RDM2", regret: 2.5 },
+            { plan: "RDM3", regret: 3.0 },
+            { plan: "RDM4", regret: 2.2 },
+            { plan: "RDM5", regret: 3.5 },
+            { plan: "RDM6", regret: 2.8 },
+            { plan: "RDM7", regret: 4.0 }
+        ];
+
+        const regretSvg = d3.select("#regret-chart-viz");
+        const regretWidth = regretSvg.node().getBoundingClientRect().width;
+        const regretHeight = 350;
+        const regretMargin = { top: 20, right: 20, bottom: 50, left: 60 };
+
+        const regretXScale = d3.scaleBand()
+            .domain(regretData.map(d => d.plan))
+            .range([regretMargin.left, regretWidth - regretMargin.right])
+            .padding(0.2);
+
+        const regretYScale = d3.scaleLinear()
+            .domain([0, d3.max(regretData, d => d.regret) * 1.1]) // Add padding top
+            .range([regretHeight - regretMargin.bottom, regretMargin.top]);
+
+        // Tooltip
+        const regretTooltip = d3.select("#regret-tooltip");
+
+        // Draw axes
+        regretSvg.append("g")
+            .attr("transform", `translate(0,${regretHeight - regretMargin.bottom})`)
+            .call(d3.axisBottom(regretXScale))
+            .selectAll("text")
+                .style("text-anchor", "middle");
+
+        regretSvg.append("g")
+            .attr("transform", `translate(${regretMargin.left},0)`)
+            .call(d3.axisLeft(regretYScale));
+
+        // Axis labels
+        regretSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", regretWidth / 2)
+            .attr("y", regretHeight - 5)
+            .text("Plan");
+         regretSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(regretHeight / 2) + regretMargin.top/2)
+            .attr("y", 20)
+            .text("Average Regret (Billions $)");
+
+
+        // Draw bars
+        regretSvg.selectAll(".bar")
+            .data(regretData)
+            .enter().append("rect")
+            .attr("class", "bar")
+            .attr("x", d => regretXScale(d.plan))
+            .attr("y", d => regretYScale(d.regret))
+            .attr("width", regretXScale.bandwidth())
+            .attr("height", d => regretHeight - regretMargin.bottom - regretYScale(d.regret))
+            .attr("fill", d => (d.plan === "SP" || d.plan === "RDM1") ? "steelblue" : "lightgrey") // Highlight best ones
+            .on("mouseover", function(event, d) {
+                d3.select(this).attr("fill", "orange");
+                regretTooltip.transition().duration(200).style("opacity", .9);
+                regretTooltip.html(`Plan: ${d.plan}<br>Regret: ${d.regret.toFixed(2)} B$`)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function(event, d) {
+                 d3.select(this).attr("fill", d => (d.plan === "SP" || d.plan === "RDM1") ? "steelblue" : "lightgrey");
+                regretTooltip.transition().duration(500).style("opacity", 0);
+            });
+
+
+        // --- Tradeoff Chart Viz ---
+         const tradeoffData = [
+            // Data inspired by Fig 8, values adjusted for visual clarity
+            // Regret (lower better), ImportShare (lower better), UnservedPenalty (lower better)
+            { plan: "SP", regret: 1.5, import: 0.08, penalty: 650 },
+            { plan: "RDM1", regret: 1.7, import: 0.07, penalty: 700 },
+            { plan: "RDM2", regret: 2.5, import: 0.12, penalty: 800 },
+            { plan: "RDM3", regret: 3.0, import: 0.06, penalty: 1100 },
+            { plan: "RDM4", regret: 2.2, import: 0.10, penalty: 900 },
+            { plan: "RDM5", regret: 3.5, import: 0.13, penalty: 1200 },
+            { plan: "RDM6", regret: 2.8, import: 0.09, penalty: 1000 },
+            { plan: "RDM7", regret: 4.0, import: 0.11, penalty: 1300 }
+        ];
+
+        const tradeoffSvg = d3.select("#tradeoff-chart-viz");
+        const tradeoffWidth = tradeoffSvg.node().getBoundingClientRect().width;
+        const tradeoffHeight = 400;
+        const tradeoffMargin = { top: 30, right: 100, bottom: 50, left: 60 }; // Increased right margin for legend
+
+        // Using Import Share for X-axis, Regret for Y-axis, Penalty for Color/Size (simplified from 3D)
+        const tradeoffXScale = d3.scaleLinear()
+            .domain([0, d3.max(tradeoffData, d => d.import) * 1.1])
+            .range([tradeoffMargin.left, tradeoffWidth - tradeoffMargin.right]);
+
+        const tradeoffYScale = d3.scaleLinear()
+            .domain([0, d3.max(tradeoffData, d => d.regret) * 1.1])
+            .range([tradeoffHeight - tradeoffMargin.bottom, tradeoffMargin.top]);
+
+        const tradeoffColorScale = d3.scaleSequential(d3.interpolateYlOrRd) // Color by penalty (higher penalty = more red)
+            .domain([d3.max(tradeoffData, d => d.penalty), d3.min(tradeoffData, d => d.penalty)]); // Inverted domain for color scale
+
+        // Tooltip
+        const tradeoffTooltip = d3.select("#tradeoff-tooltip");
+
+        // Draw axes
+        tradeoffSvg.append("g")
+            .attr("transform", `translate(0,${tradeoffHeight - tradeoffMargin.bottom})`)
+            .call(d3.axisBottom(tradeoffXScale).ticks(5).tickFormat(d3.format(".0%"))); // Format as percentage
+
+        tradeoffSvg.append("g")
+            .attr("transform", `translate(${tradeoffMargin.left},0)`)
+            .call(d3.axisLeft(tradeoffYScale));
+
+        // Axis labels
+        tradeoffSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("x", (tradeoffWidth - tradeoffMargin.right + tradeoffMargin.left) / 2)
+            .attr("y", tradeoffHeight - 5)
+            .text("Import Share (Energy)");
+        tradeoffSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -(tradeoffHeight / 2) + tradeoffMargin.top / 2)
+            .attr("y", 20)
+            .text("Average Regret (Billions $)");
+         tradeoffSvg.append("text")
+            .attr("class", "axis-label")
+            .attr("text-anchor", "start")
+            .attr("x", tradeoffMargin.left)
+            .attr("y", tradeoffMargin.top - 10)
+            .text("Points colored by Unserved Energy Penalty (Red = High Penalty)");
+
+
+        // Draw points
+        tradeoffSvg.selectAll(".tradeoff-point")
+            .data(tradeoffData)
+            .enter().append("circle")
+            .attr("class", "tradeoff-point plan-point")
+            .attr("cx", d => tradeoffXScale(d.import))
+            .attr("cy", d => tradeoffYScale(d.regret))
+            .attr("r", 7)
+            .attr("fill", d => tradeoffColorScale(d.penalty))
+            .attr("stroke", "#333")
+            .attr("stroke-width", 1)
+            .attr("opacity", 0.8)
+             .on("mouseover", function(event, d) {
+                d3.select(this).attr("r", 10).attr("stroke-width", 2);
+                tradeoffTooltip.transition().duration(200).style("opacity", .9);
+                tradeoffTooltip.html(`Plan: ${d.plan}<br>Import: ${(d.import * 100).toFixed(1)}%<br>Regret: ${d.regret.toFixed(2)} B$<br>Penalty: ${d.penalty.toFixed(0)} M$`)
+                    .style("left", (event.pageX + 10) + "px")
+                    .style("top", (event.pageY - 20) + "px");
+            })
+            .on("mouseout", function(event, d) {
+                 d3.select(this).attr("r", 7).attr("stroke-width", 1);
+                tradeoffTooltip.transition().duration(500).style("opacity", 0);
+            });
+
+         // Add labels next to points
+         tradeoffSvg.selectAll(".tradeoff-label")
+            .data(tradeoffData)
+            .enter().append("text")
+            .attr("class", "tradeoff-label")
+            .attr("x", d => tradeoffXScale(d.import) + 10) // Offset label
+            .attr("y", d => tradeoffYScale(d.regret) + 4)
+            .text(d => d.plan)
+            .attr("font-size", "10px")
+            .attr("fill", "#555");
+
+
+    }); // End DOMContentLoaded
+    </script>
+
+</body>
 </html>

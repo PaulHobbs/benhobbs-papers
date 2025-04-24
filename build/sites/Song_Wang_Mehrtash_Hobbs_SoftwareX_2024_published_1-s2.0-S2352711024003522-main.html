@@ -1,51 +1,689 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main.html" title="Site Song_Wang_Mehrtash_Hobbs_SoftwareX_2024_published_1-s2.0-S2352711024003522-main" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOPE: Planning Our Electric Future</title>
+    <!-- Bootstrap CSS (via CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+        </script>
+    <!-- MathJax Library -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- Custom CSS (minimal) -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer space */
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        .container {
+            max-width: 900px;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .output-value {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        .cost-bar-container {
+            display: flex;
+            align-items: flex-end;
+            height: 150px;
+            margin-top: 15px;
+            border-bottom: 1px solid #ccc;
+        }
+        .cost-bar {
+            flex-grow: 1;
+            margin: 0 2px;
+            background-color: steelblue;
+            transition: height 0.3s ease-in-out;
+            position: relative;
+            text-align: center;
+            color: white;
+            font-size: 0.8em;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            white-space: nowrap;
+        }
+        .cost-bar span {
+             display: block;
+             position: absolute;
+             bottom: 5px;
+             left: 50%;
+             transform: translateX(-50%);
+             font-size: 0.9em;
+             color: black;
+             writing-mode: horizontal-tb;
+        }
 
-					const element = document.currentScript.parentElement;
+        .dispatch-container {
+            display: flex;
+            align-items: center;
+            height: 250px; /* Increased height */
+            border: 1px solid #ccc;
+            position: relative;
+            margin-top: 15px;
+            overflow: hidden; /* Hide overflow */
+        }
+        .dispatch-bar {
+            height: 100%;
+            transition: width 0.3s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9em;
+            text-align: center;
+            position: relative; /* Needed for pseudo-element */
+            overflow: hidden; /* Prevent text overflow */
+            white-space: nowrap;
+        }
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+        .dispatch-bar::after { /* Dashed line for capacity */
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            border-right: 2px dashed rgba(255, 255, 255, 0.7);
+        }
+
+        #demand-line {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background-color: red;
+            transition: right 0.3s ease-in-out;
+            z-index: 10; /* Ensure it's on top */
+        }
+        #demand-label {
+            position: absolute;
+            top: -25px; /* Position above the line */
+            color: red;
+            font-weight: bold;
+            font-size: 0.9em;
+            background: white;
+            padding: 0 3px;
+            transition: right 0.3s ease-in-out;
+            z-index: 11;
+        }
+        .btn-dispatch {
+            margin: 5px 2px;
+        }
+        .legend {
+             margin-top: 10px;
+             font-size: 0.9em;
+        }
+        .legend-item {
+            display: inline-block;
+            margin-right: 15px;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto; /* Adjust width automatically */
+            padding: 5px 8px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap; /* Prevent line breaks */
+        }
+        .paper-link {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .key-term {
+            font-style: italic;
+            border-bottom: 1px dotted #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="text-center my-4">
+            <h1 class="display-4">HOPE: Planning Our Electric Future</h1>
+            <p class="lead">Understanding the tools that help design tomorrow's power grid.</p>
+            <p class="paper-link">Based on the paper: Wang, S., Song, Z., Mehrtash, M., & Hobbs, B. F. (2025). HOPE: Holistic Optimization Program for Electricity. <i>SoftwareX</i>, <i>29</i>, 101982. <a href="https://doi.org/10.1016/j.softx.2024.101982" target="_blank">[Link to Paper]</a></p>
+        </div>
+
+        <h2>The Challenge: A Modern Power Grid</h2>
+        <p>Imagine the electric grid like the circulatory system of our society. It needs to deliver the right amount of energy, exactly when needed, reliably and affordably. But this system is undergoing a massive transformation. We want cleaner energy to combat <a href="https://en.wikipedia.org/wiki/Climate_change" target="_blank">climate change</a>, which means integrating more <a href="https://en.wikipedia.org/wiki/Variable_renewable_energy" target="_blank" class="key-term">variable renewable energy</a> sources like solar and wind. These sources are great for the environment, but they aren't always available – the sun doesn't always shine, and the wind doesn't always blow.</p>
+        <p>This creates huge challenges for grid planners. How do we build a future grid that is:</p>
+        <ul>
+            <li><strong>Reliable:</strong> Keeps the lights on, even when renewables aren't generating.</li>
+            <li><strong>Affordable:</strong> Doesn't break the bank for consumers.</li>
+            <li><strong>Clean:</strong> Meets environmental goals and reduces emissions.</li>
+        </ul>
+        <p>Making these decisions involves balancing complex trade-offs over decades. We need sophisticated tools to help explore different possibilities and make informed choices. This is where models like HOPE come in.</p>
+
+        <h2>What is HOPE?</h2>
+        <p>HOPE, which stands for <strong>Holistic Optimization Program for Electricity</strong>, is an open-source software tool designed to help researchers, policymakers, and planners tackle these challenges. Think of it as a highly detailed simulator and planner for the electricity system.</p>
+        <p>What makes HOPE special?</p>
+        <ul>
+            <li><strong>Holistic:</strong> It doesn't just look at one piece of the puzzle. It can simulate both long-term planning (what power plants and transmission lines to build over decades) and short-term operations (how to run the grid hour-by-hour). Crucially, it can link these two perspectives.</li>
+            <li><strong>Open-Source:</strong> Anyone can look at the code, use it, and modify it. This transparency builds trust and allows collaboration, especially between technical experts and policymakers.</li>
+            <li><strong>Policy-Aware:</strong> It's designed to model real-world policies like <a href="https://en.wikipedia.org/wiki/Renewable_portfolio_standard" target="_blank" class="key-term">Renewable Portfolio Standards (RPS)</a> or carbon caps, even when rules differ across regions within the same power market.</li>
+            <li><strong>Flexible:</strong> Users can turn different features on or off depending on the specific question they want to answer.</li>
+        </ul>
+
+        <h2>The Core Idea: Optimization</h2>
+        <p>At its heart, HOPE uses <a href="https://en.wikipedia.org/wiki/Mathematical_optimization" target="_blank" class="key-term">mathematical optimization</a>. This is a way of finding the *best* possible solution from a set of choices, given certain rules or limitations (called constraints). In power system planning, the "best" solution usually means the one with the <strong>lowest total cost</strong> (including building new infrastructure and running the system) while still meeting all the requirements.</p>
+        <p>The main goal is often expressed mathematically as:</p>
+        $$ \text{Minimize} \quad \sum (\text{Investment Costs} + \text{Operational Costs}) $$
+        <p>Subject to constraints like:</p>
+        <ul>
+            <li>Meeting electricity demand at all times.</li>
+            <li>Respecting the physical limits of power plants and transmission lines.</li>
+            <li>Meeting policy requirements (e.g., minimum renewable energy percentage).</li>
+            <li>Ensuring generators don't emit more than allowed.</li>
+        </ul>
+        <p>These problems involve potentially millions of variables (like how much power each plant produces each hour, or whether to build a new wind farm) and constraints. HOPE uses sophisticated algorithms (often <a href="https://en.wikipedia.org/wiki/Linear_programming" target="_blank" class="key-term">Linear Programming</a> or <a href="https://en.wikipedia.org/wiki/Integer_programming#Mixed-integer_linear_programming" target="_blank" class="key-term">Mixed-Integer Linear Programming</a>) provided by external "solvers" to find the optimal solution.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive: The Optimization Concept</h3>
+            <p>Let's visualize a highly simplified optimization problem. Imagine we need to decide how much Solar power ($x$) and Gas power ($y$) to build. Solar has zero emissions but higher upfront cost, while Gas has lower upfront cost but incurs operational costs and emissions. We want to minimize total cost while meeting a minimum energy target and staying within a budget.</p>
+            <p>Drag the point (representing your chosen mix) to find the lowest cost (darker blue) within the allowed region (unshaded area).</p>
+            <div id="optimization-vis" style="position: relative; width: 100%; max-width: 400px; height: 400px; margin: auto; border: 1px solid #ccc; background: #eee;"></div>
+            <div class="mt-2 text-center">
+                Cost at selected point: <span id="opt-cost" class="output-value">N/A</span><br>
+                (Constraints: Min Energy $\ge 6$, Max Budget $\le 15$)
+            </div>
+        </div>
+
+
+        <h2>Two Key Modes: Planning vs. Operating</h2>
+        <p>HOPE can operate in two main modes, reflecting the different time scales involved in grid management:</p>
+
+        <h3>1. Generation and Transmission Expansion Planning (GTEP)</h3>
+        <p>This mode looks at the long term: typically decades. The main question is: <strong>What new power plants and transmission lines should we build, and when, to meet future demand reliably and affordably, while respecting policies?</strong></p>
+        <p>It considers the <span class="key-term">investment costs</span> of building new facilities and the estimated <span class="key-term">operational costs</span> over their lifetime. It might decide to build more solar farms, offshore wind, battery storage, or new transmission lines connecting windy areas to cities.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive: Simple Capacity Planning</h3>
+            <p>Let's simulate a very basic GTEP decision. Imagine you need to add 1000 MW of new capacity. You can choose between Solar+Storage (clean but expensive upfront) and Natural Gas (cheaper upfront but has fuel costs and emissions). Adjust the sliders to see how changing cost assumptions might affect the "optimal" mix based purely on minimizing total estimated lifetime cost (a gross simplification!).</p>
+            <div>
+                <label for="solar-cost-slider">Solar+Storage Lifetime Cost ($/MW): <span id="solar-cost-value" class="output-value">5000</span></label>
+                <input type="range" id="solar-cost-slider" min="2000" max="8000" value="5000" step="100">
+            </div>
+            <div class="mt-2">
+                <label for="gas-cost-slider">Natural Gas Lifetime Cost ($/MW): <span id="gas-cost-value" class="output-value">4000</span></label>
+                <input type="range" id="gas-cost-slider" min="2000" max="8000" value="4000" step="100">
+            </div>
+             <div class="mt-2">
+                <label for="rps-slider">Renewable Mandate (% of new capacity): <span id="rps-value" class="output-value">0</span>%</label>
+                <input type="range" id="rps-slider" min="0" max="100" value="0" step="5">
+            </div>
+            <div class="mt-3">
+                <strong>Resulting Capacity Mix (Needs 1000 MW total):</strong>
+                <div class="progress" style="height: 30px;">
+                    <div id="solar-bar" class="progress-bar" role="progressbar" style="width: 50%; background-color: #ffc107;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Solar: 500 MW</div>
+                    <div id="gas-bar" class="progress-bar" role="progressbar" style="width: 50%; background-color: #6c757d;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">Gas: 500 MW</div>
+                </div>
+                <strong>Total Estimated Cost:</strong> $<span id="total-cost" class="output-value">4,500,000</span>
+            </div>
+        </div>
+
+        <h3>2. Production Cost Model (PCM)</h3>
+        <p>This mode simulates the short term: typically hour-by-hour operation of the grid *given* a specific set of power plants and transmission lines (which might come from a GTEP plan). The main question is: <strong>How should we operate the existing system most efficiently to meet demand at every moment?</strong></p>
+        <p>PCM involves detailed operational decisions:</p>
+        <ul>
+            <li><strong>Unit Commitment:</strong> Deciding which power plants to turn on or off (some plants take hours to start up).</li>
+            <li><strong>Economic Dispatch:</strong> Deciding how much power each *running* plant should produce, typically starting with the cheapest available sources.</li>
+            <li>Managing variability from wind and solar.</li>
+            <li>Charging and discharging energy storage (batteries).</li>
+        </ul>
+        <p>This helps assess if a planned system is actually operable and estimate its real-world operating costs and emissions.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive: Simple Hourly Dispatch</h3>
+            <p>Let's simulate dispatching power for one hour. You have existing generators with different capacities and costs. Adjust the demand level with the slider. Click buttons to "dispatch" (turn on) generators, starting with the cheapest, until supply meets or exceeds demand (the colored bars reach the red demand line). Observe the total operating cost for that hour.</p>
+            <div>
+                <label for="demand-slider">Electricity Demand (MW): <span id="demand-value" class="output-value">500</span> MW</label>
+                <input type="range" id="demand-slider" min="0" max="1500" value="500" step="50">
+            </div>
+            <div class="dispatch-container">
+                <div id="dispatch-vis">
+                    <!-- Bars will be added here by JS -->
+                </div>
+                <div id="demand-line"><div id="demand-label">Demand</div></div>
+            </div>
+             <div class="legend">
+                 <span class="legend-item"><span class="legend-color" style="background-color: #28a745;"></span>Hydro ($5/MWh)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #ffc107;"></span>Solar ($0/MWh - Variable)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #17a2b8;"></span>Wind ($0/MWh - Variable)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #6f42c1;"></span>Nuclear ($10/MWh)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #6c757d;"></span>Gas CC ($40/MWh)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #fd7e14;"></span>Gas CT ($80/MWh)</span>
+                 <span class="legend-item"><span class="legend-color" style="background-color: #dc3545; width: 3px; height: 15px; border: none;"></span>Demand Line</span>
+            </div>
+            <div class="mt-2">
+                <button id="dispatch-reset-btn" class="btn btn-secondary btn-sm">Reset Dispatch</button>
+                <button id="dispatch-hydro-btn" class="btn btn-success btn-sm btn-dispatch" data-gen="hydro">Dispatch Hydro (100MW)</button>
+                <button id="dispatch-solar-btn" class="btn btn-warning btn-sm btn-dispatch" data-gen="solar">Dispatch Solar (Variable)</button>
+                 <button id="dispatch-wind-btn" class="btn btn-info btn-sm btn-dispatch" data-gen="wind">Dispatch Wind (Variable)</button>
+                <button id="dispatch-nuclear-btn" class="btn btn-primary btn-sm btn-dispatch" data-gen="nuclear" style="background-color: #6f42c1; border-color: #6f42c1;">Dispatch Nuclear (300MW)</button>
+                <button id="dispatch-gascc-btn" class="btn btn-secondary btn-sm btn-dispatch" data-gen="gas_cc">Dispatch Gas CC (500MW)</button>
+                <button id="dispatch-gasct-btn" class="btn btn-warning btn-sm btn-dispatch" data-gen="gas_ct" style="background-color: #fd7e14; border-color: #fd7e14;">Dispatch Gas CT (200MW)</button>
+            </div>
+            <div class="mt-3">
+                <strong>Total Dispatched:</strong> <span id="total-dispatch" class="output-value">0</span> MW<br>
+                <strong>Total Operating Cost for this hour:</strong> $<span id="dispatch-cost" class="output-value">0</span>
+            </div>
+             <p class="mt-2" style="font-size: 0.8em;">Note: Solar/Wind output varies. For simplicity, we assume fixed amounts (Solar: 150MW, Wind: 100MW) when dispatched in this example. Real models use time-series data.</p>
+        </div>
+
+        <h2>Why "Holistic"? Linking Planning and Operations</h2>
+        <p>A key strength of HOPE is its ability to connect GTEP and PCM. Why is this important? A plan might look good on paper (low long-term cost in GTEP), but if the resulting system can't actually operate reliably hour-by-hour (e.g., too much solar without enough storage leads to blackouts or expensive emergency measures), then it's not a good plan.</p>
+        <p>HOPE allows users to:</p>
+        <ol>
+            <li>Run GTEP to generate a potential future grid plan.</li>
+            <li>Feed that plan into PCM to simulate its detailed operation under realistic conditions (like hourly weather patterns).</li>
+            <li>Analyze the PCM results: Are costs reasonable? Is the grid reliable? Are emissions targets met?</li>
+            <li>If needed, adjust the GTEP inputs (e.g., add more storage) and repeat the process.</li>
+        </ol>
+        <p>This iterative feedback loop helps ensure that the long-term plans are robust and operationally feasible.</p>
+
+        <h2>Case Study Insights (from the paper)</h2>
+        <p>The paper demonstrates HOPE's capabilities using case studies for Maryland and the wider PJM Interconnection (a regional grid operator in the Eastern US).</p>
+        <p>For example, in a scenario aiming for 100% clean energy in Maryland by 2035:</p>
+        <ul>
+            <li>HOPE projected significant deployment of solar PV and battery storage.</li>
+            <li>Existing natural gas plants might remain but potentially retrofitted with <a href="https://en.wikipedia.org/wiki/Carbon_capture_and_storage" target="_blank" class="key-term">Carbon Capture and Storage (CCS)</a> to meet emission goals.</li>
+            <li>The PCM simulation showed how batteries would charge during sunny periods and discharge during peak demand hours or when solar isn't available, confirming the operational viability.</li>
+        </ul>
+        <p>Below are visualizations based on Figures 4 and 5 from the paper, showing the kind of output HOPE can generate:</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <h4 class="text-center">Maryland Capacity Mix</h4>
+                 <figure class="figure text-center">
+                    <img src="https://raw.githubusercontent.com/m3hrtools/HOPE-Model-Project/main/docs/src/assets/MD_Cap_2022.png" class="figure-img img-fluid rounded" alt="Maryland Capacity Mix 2022 (Placeholder)">
+                    <figcaption class="figure-caption">Capacity in 2022 (Source: Modified Fig 4 left)</figcaption>
+                </figure>
+                 <figure class="figure text-center">
+                     <img src="https://raw.githubusercontent.com/m3hrtools/HOPE-Model-Project/main/docs/src/assets/MD_Cap_2035.png" class="figure-img img-fluid rounded" alt="Maryland Capacity Mix 2035 (Placeholder)">
+                    <figcaption class="figure-caption">Projected Capacity in 2035 (Clean Scenario) (Source: Modified Fig 4 right)</figcaption>
+                </figure>
+                <p style="font-size: 0.9em;">Notice the projected increase in Solar (yellow) and Battery (dark blue/purple) and decrease/retrofit of fossil fuels.</p>
+            </div>
+            <div class="col-md-6">
+                <h4 class="text-center">Simulated Hourly Generation (Summer Week 2035)</h4>
+                 <figure class="figure text-center">
+                    <img src="https://raw.githubusercontent.com/m3hrtools/HOPE-Model-Project/main/docs/src/assets/MD_Gen_Summer.png" class="figure-img img-fluid rounded" alt="Maryland Generation Summer Week (Placeholder)">
+                    <figcaption class="figure-caption">Sample Summer Week Generation (Source: Modified Fig 5 left)</figcaption>
+                </figure>
+                <p style="font-size: 0.9em;">This shows how different sources might operate. Note the daily cycle of Solar PV (yellow) and how Batteries (dark blue charge/discharge, often near peak demand) complement it.</p>
+            </div>
+        </div>
+
+
+        <h2>Conclusion: Tools for a Complex Transition</h2>
+        <p>Planning the future electricity grid is one of the most critical challenges of our time. We need to balance reliability, affordability, and environmental sustainability in the face of unprecedented change.</p>
+        <p>Tools like HOPE provide a powerful, transparent, and flexible framework for exploring different pathways. By combining long-term planning with detailed operational simulation, and by allowing policymakers and researchers to easily interact with and modify the model, HOPE helps us make more informed decisions to build the clean and reliable energy systems of tomorrow.</p>
+        <p>The open-source nature of HOPE is particularly important, fostering collaboration and ensuring that the assumptions and logic behind crucial energy planning decisions are accessible to a wider audience.</p>
+
+    </div> <!-- /container -->
+
+    <!-- Bootstrap JS Bundle (Popper included) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- D3.js (for potential future use, or complex vis) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <!-- Inline Javascript for Interactivity -->
+    <script>
+        // --- Optimization Concept Visualization ---
+        const optVis = document.getElementById('optimization-vis');
+        const optCostDisplay = document.getElementById('opt-cost');
+        const optWidth = optVis.clientWidth;
+        const optHeight = optVis.clientHeight;
+        const optSvg = d3.select(optVis).append("svg")
+            .attr("width", optWidth)
+            .attr("height", optHeight);
+
+        // Define scales (mapping data values to pixel coordinates)
+        const optXScale = d3.scaleLinear().domain([0, 10]).range([0, optWidth]); // Solar MW (hypothetical units)
+        const optYScale = d3.scaleLinear().domain([0, 10]).range([optHeight, 0]); // Gas MW (hypothetical units)
+
+        // Define the cost function (example: C = 3x + 2y) and constraints
+        const costFn = (x, y) => 3 * x + 2 * y;
+        const energyConstraint = (x, y) => x + y >= 6; // Min energy
+        const budgetConstraint = (x, y) => 2 * x + 1 * y <= 15; // Max budget (Solar=2/unit, Gas=1/unit)
+
+        // Create contour data for background
+        const contours = d3.contourDensity()
+            .x(d => optXScale(d.x))
+            .y(d => optYScale(d.y))
+            .size([optWidth, optHeight])
+            .bandwidth(20)
+            (generateGridPoints(100)); // Generate points for density estimation
+
+        // Draw contour background (visualizing cost levels)
+        optSvg.append("g")
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-linejoin", "round")
+            .selectAll("path")
+            .data(contours)
+            .join("path")
+            .attr("stroke-width", (d, i) => i % 5 ? 0.5 : 1) // Emphasize some lines
+            .attr("d", d3.geoPath());
+
+        // Draw constraint lines/regions
+        // Feasible region polygon (calculated manually based on constraints)
+        // Vertices: (6,0) -> (10,0) -> (10, -5 -> clip at 0) -> (5,5) -> (1,4) -> (0,6) -> (0,15 -> clip at 10) -> (6,0)
+        // Clipped vertices: (6,0), (7.5,0), (5,5), (0,6), (0,10), (X=0, Y=10) -> (X=6, Y=0) needs check
+        // Intersection of x+y=6 and 2x+y=15 => -x = -9 => x=9, y=-3 (outside)
+        // Intersection of x=0, y=0 with constraints: (6,0), (0,6), (7.5, 0), (0, 15) -> clips
+        // Let's shade the INFEASIBLE region for clarity
+        const infeasiblePoints = [ // Define boundary of infeasible regions
+             {x: 0, y: 0, type: 'energy'}, {x: 6, y: 0, type: 'energy'}, {x: 0, y: 6, type: 'energy'}, // Below energy line
+             {x: 7.5, y: 0, type: 'budget'}, {x: 0, y: 15, type: 'budget'}, {x: 10, y: -5, type:'budget'}, {x:10, y:0, type:'budget'} // Above budget line (approx)
+        ];
+         // Simplified shading: Shade below x+y=6 and above 2x+y=15
+         optSvg.append("polygon") // Below energy
+             .attr("points", `0,${optHeight} ${optXScale(6)},${optHeight} 0,${optYScale(6)}`)
+             .attr("fill", "rgba(255, 0, 0, 0.2)");
+         optSvg.append("polygon") // Above budget (approx line)
+              .attr("points", `${optXScale(7.5)},${optHeight} ${optWidth},${optHeight} ${optWidth},${optYScale(-5)} 0,${optYScale(15)}`) // Rough shape
+              .attr("fill", "rgba(255, 0, 0, 0.2)");
+         optSvg.append("line") // Energy constraint line
+            .attr("x1", optXScale(6)).attr("y1", optYScale(0))
+            .attr("x2", optXScale(0)).attr("y2", optYScale(6))
+            .attr("stroke", "red").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
+         optSvg.append("line") // Budget constraint line
+             .attr("x1", optXScale(7.5)).attr("y1", optYScale(0))
+             .attr("x2", optXScale(0)).attr("y2", optYScale(15)) // Extends beyond viewbox
+             .attr("stroke", "red").attr("stroke-width", 1.5).attr("stroke-dasharray", "4");
+
+
+        // Draggable point
+        const dragHandle = optSvg.append("circle")
+            .attr("cx", optXScale(4)) // Initial position
+            .attr("cy", optYScale(4))
+            .attr("r", 8)
+            .attr("fill", "blue")
+            .attr("stroke", "white")
+            .attr("stroke-width", 1.5)
+            .style("cursor", "pointer");
+
+        // Drag behavior
+        const drag = d3.drag()
+            .on("drag", function(event) {
+                let newX = Math.max(0, Math.min(optWidth, event.x)); // Clamp within bounds
+                let newY = Math.max(0, Math.min(optHeight, event.y));
+                d3.select(this).attr("cx", newX).attr("cy", newY);
+                updateOptCost(newX, newY);
+            });
+
+        dragHandle.call(drag);
+
+        // Function to update cost display and point color based on feasibility
+        function updateOptCost(px, py) {
+            const dataX = optXScale.invert(px);
+            const dataY = optYScale.invert(py);
+            const cost = costFn(dataX, dataY);
+            const isEnergyFeasible = energyConstraint(dataX, dataY);
+            const isBudgetFeasible = budgetConstraint(dataX, dataY);
+            const isFeasible = isEnergyFeasible && isBudgetFeasible;
+
+            optCostDisplay.textContent = cost.toFixed(1);
+            dragHandle.attr("fill", isFeasible ? "blue" : "red");
+        }
+
+        // Helper function to generate points for density plot (representing cost)
+        function generateGridPoints(n) {
+            const points = [];
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j < n; j++) {
+                    let x = (i / (n - 1)) * 10;
+                    let y = (j / (n - 1)) * 10;
+                    // Weight points by inverse cost to make low cost areas denser
+                    let weight = 1 / (costFn(x, y) + 1); // Add 1 to avoid division by zero
+                     // Add multiple points based on weight (simplified)
+                    for(let k = 0; k < Math.max(1, Math.round(weight * 5)); k++) {
+                       points.push({ x: x, y: y });
+                    }
+                }
+            }
+            return points;
+        }
+
+        // Initial cost calculation
+        updateOptCost(optXScale(4), optYScale(4));
+
+
+        // --- Simple Capacity Planning ---
+        const solarCostSlider = document.getElementById('solar-cost-slider');
+        const gasCostSlider = document.getElementById('gas-cost-slider');
+        const rpsSlider = document.getElementById('rps-slider');
+        const solarCostValue = document.getElementById('solar-cost-value');
+        const gasCostValue = document.getElementById('gas-cost-value');
+        const rpsValue = document.getElementById('rps-value');
+        const solarBar = document.getElementById('solar-bar');
+        const gasBar = document.getElementById('gas-bar');
+        const totalCostDisplay = document.getElementById('total-cost');
+        const totalCapacityNeeded = 1000; // MW
+
+        function updateCapacityPlan() {
+            const solarCost = parseFloat(solarCostSlider.value);
+            const gasCost = parseFloat(gasCostSlider.value);
+            const rpsPercent = parseFloat(rpsSlider.value);
+
+            solarCostValue.textContent = solarCost;
+            gasCostValue.textContent = gasCost;
+            rpsValue.textContent = rpsPercent;
+
+            // Calculate minimum required solar based on RPS
+            const minSolarMw = totalCapacityNeeded * (rpsPercent / 100);
+
+            let solarMw, gasMw;
+
+            // Simplified logic: meet RPS first, then fill remainder with cheapest option
+            if (solarCost <= gasCost) {
+                // Solar is cheaper or equal, try to build all solar unless RPS forces gas (which it doesn't)
+                solarMw = totalCapacityNeeded;
+                gasMw = 0;
+                 // Check if this meets RPS
+                 if (solarMw < minSolarMw) { // This case shouldn't happen if solar is cheaper, but included for completeness
+                     solarMw = minSolarMw;
+                     gasMw = totalCapacityNeeded - solarMw;
+                 }
+
+            } else {
+                // Gas is cheaper, build minimum solar required by RPS, fill rest with gas
+                solarMw = minSolarMw;
+                gasMw = totalCapacityNeeded - solarMw;
+            }
+
+             // Ensure total capacity is met (rounding might cause small errors)
+             if (solarMw + gasMw < totalCapacityNeeded) {
+                 // Add shortfall to the cheaper option (or solar if equal)
+                 let shortfall = totalCapacityNeeded - (solarMw + gasMw);
+                 if(solarCost <= gasCost) solarMw += shortfall;
+                 else gasMw += shortfall;
+             }
+              // Ensure components don't exceed total
+             solarMw = Math.min(solarMw, totalCapacityNeeded);
+             gasMw = totalCapacityNeeded - solarMw;
+
+
+            const solarShare = (solarMw / totalCapacityNeeded) * 100;
+            const gasShare = (gasMw / totalCapacityNeeded) * 100;
+
+            solarBar.style.width = `${solarShare}%`;
+            gasBar.style.width = `${gasShare}%`;
+            solarBar.textContent = `Solar: ${Math.round(solarMw)} MW`;
+            gasBar.textContent = `Gas: ${Math.round(gasMw)} MW`;
+            solarBar.setAttribute('aria-valuenow', solarShare);
+            gasBar.setAttribute('aria-valuenow', gasShare);
+
+
+            const totalCost = (solarMw * solarCost) + (gasMw * gasCost);
+            totalCostDisplay.textContent = totalCost.toLocaleString(); // Format with commas
+        }
+
+        solarCostSlider.addEventListener('input', updateCapacityPlan);
+        gasCostSlider.addEventListener('input', updateCapacityPlan);
+        rpsSlider.addEventListener('input', updateCapacityPlan);
+        updateCapacityPlan(); // Initial calculation
+
+
+        // --- Simple Hourly Dispatch ---
+        const demandSlider = document.getElementById('demand-slider');
+        const demandValue = document.getElementById('demand-value');
+        const demandLine = document.getElementById('demand-line');
+        const demandLabel = document.getElementById('demand-label');
+        const dispatchVis = document.getElementById('dispatch-vis');
+        const totalDispatchDisplay = document.getElementById('total-dispatch');
+        const dispatchCostDisplay = document.getElementById('dispatch-cost');
+        const dispatchButtons = document.querySelectorAll('.btn-dispatch');
+        const dispatchResetBtn = document.getElementById('dispatch-reset-btn');
+        const dispatchContainer = document.querySelector('.dispatch-container');
+
+
+        const generators = {
+            // Order roughly by merit (cost)
+             hydro: { name: 'Hydro', capacity: 100, cost: 5, color: '#28a745', dispatched: 0, on: false },
+             solar: { name: 'Solar', capacity: 150, cost: 0, color: '#ffc107', dispatched: 0, on: false }, // Variable, fixed for example
+             wind:  { name: 'Wind', capacity: 100, cost: 0, color: '#17a2b8', dispatched: 0, on: false }, // Variable, fixed for example
+             nuclear: { name: 'Nuclear', capacity: 300, cost: 10, color: '#6f42c1', dispatched: 0, on: false },
+             gas_cc: { name: 'Gas CC', capacity: 500, cost: 40, color: '#6c757d', dispatched: 0, on: false },
+             gas_ct: { name: 'Gas CT', capacity: 200, cost: 80, color: '#fd7e14', dispatched: 0, on: false },
+        };
+         const genOrder = ['hydro', 'solar', 'wind', 'nuclear', 'gas_cc', 'gas_ct']; // Define order for bars
+
+        let currentDemand = 500;
+        let totalDispatchedMw = 0;
+        let totalHourlyCost = 0;
+
+        function updateDispatchVisuals() {
+            const containerWidth = dispatchContainer.clientWidth;
+            const maxCapacity = Object.values(generators).reduce((sum, gen) => sum + gen.capacity, 0); // Total potential capacity
+             // Scale factor: map maxCapacity to container width. Add buffer? No, let demand line move.
+             const scaleFactor = containerWidth / maxCapacity;
+
+            dispatchVis.innerHTML = ''; // Clear previous bars
+            totalDispatchedMw = 0;
+            totalHourlyCost = 0;
+            let currentWidthOffset = 0;
+
+            genOrder.forEach(key => {
+                 const gen = generators[key];
+                 if (gen.on) {
+                      // Use full capacity when 'on' in this simplified model
+                      gen.dispatched = gen.capacity;
+                      totalDispatchedMw += gen.dispatched;
+                      totalHourlyCost += gen.dispatched * gen.cost;
+
+                      const bar = document.createElement('div');
+                      bar.className = 'dispatch-bar';
+                      const barWidth = gen.capacity * scaleFactor;
+                      bar.style.width = `${barWidth}px`;
+                      bar.style.backgroundColor = gen.color;
+                      bar.style.left = `${currentWidthOffset}px`; // Position bars side-by-side absolutely
+                      bar.style.position = 'absolute';
+                      bar.textContent = `${gen.name} (${gen.capacity}MW)`;
+                      dispatchVis.appendChild(bar);
+                      currentWidthOffset += barWidth;
+                 } else {
+                     gen.dispatched = 0;
+                 }
+            });
+
+
+            // Update total displays
+            totalDispatchDisplay.textContent = totalDispatchedMw;
+            dispatchCostDisplay.textContent = totalHourlyCost.toLocaleString();
+
+            // Update demand line position
+            const demandPosition = Math.min(containerWidth, currentDemand * scaleFactor); // Cap demand line at container width
+            demandLine.style.left = `${demandPosition}px`; // Position from left
+            demandLabel.style.left = `${demandPosition - demandLabel.offsetWidth / 2}px`; // Center label
+            demandLabel.textContent = `Demand: ${currentDemand} MW`;
+
+            // Update button states (optional: disable if already on)
+             dispatchButtons.forEach(button => {
+                const genKey = button.dataset.gen;
+                button.disabled = generators[genKey].on;
+            });
+        }
+
+
+        demandSlider.addEventListener('input', (e) => {
+            currentDemand = parseInt(e.target.value);
+            demandValue.textContent = currentDemand;
+            updateDispatchVisuals(); // Update line position immediately
+        });
+
+        dispatchButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const genKey = button.dataset.gen;
+                if (!generators[genKey].on) {
+                    generators[genKey].on = true;
+                    updateDispatchVisuals();
+                }
+            });
+        });
+
+         dispatchResetBtn.addEventListener('click', () => {
+            genOrder.forEach(key => {
+                generators[key].on = false;
+                generators[key].dispatched = 0;
+            });
+            updateDispatchVisuals();
+         });
+
+        // Initial setup
+        updateDispatchVisuals();
+
+    </script>
+
+</body>
 </html>

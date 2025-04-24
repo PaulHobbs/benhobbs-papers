@@ -1,51 +1,820 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.html" title="Site IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wires vs. Batteries: Upgrading Our Electric Grid</title>
+    <!-- Bootstrap CSS (via CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true,
+            processEnvironments: true
+          },
+          options: {
+            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        };
+      </script>
+    <!-- MathJax Script -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- D3.js (via CDN) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 2em;
+            margin-bottom: 1em;
+        }
+        h1 { margin-top: 0; }
+        code {
+            background-color: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .interactive-viz {
+            border: 1px solid #ddd;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+            background-color: #fdfdfd;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary color */
+        }
+        .explanation {
+            background-color: #e9ecef;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+        .term-link {
+            font-weight: bold;
+            color: #198754; /* Bootstrap success color */
+            text-decoration: none;
+        }
+        .term-link:hover {
+            text-decoration: underline;
+        }
+        svg {
+            display: block;
+            margin: auto;
+            font-family: sans-serif;
+        }
+        .node { fill: #69b3a2; stroke: #333; stroke-width: 1px; }
+        .link { stroke: #aaa; stroke-opacity: 0.6; }
+        .link-label { font-size: 10px; fill: #555; }
+        .zone-label { font-size: 12px; font-weight: bold; text-anchor: middle; }
+        .bar { fill: steelblue; }
+        .bar-label { fill: white; text-anchor: middle; font-size: 10px; }
+        .load-shed { fill: red; }
+        .storage-soc { fill: orange; }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Wires vs. Batteries: Upgrading Our Electric Grid</h1>
+        <p class="lead">How do we decide between building new power lines or installing large batteries to make our electricity supply more reliable? This article explores a new way to compare these options, inspired by the paper "Assessing the Reliability Benefits of Energy Storage as a Transmission Asset."</p>
 
-					const element = document.currentScript.parentElement;
+        <div class="alert alert-info">
+            <strong>Key Idea:</strong> Energy storage (like giant batteries) can sometimes do the job of traditional transmission lines ("wires") in keeping the lights on, potentially faster and cheaper. But figuring out *when* and *how much* reliability they add requires careful analysis.
+        </div>
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+        <h2>The Grid Challenge: Bottlenecks and Blackouts</h2>
+        <p>Imagine the electric grid as a network of highways for electricity. Power plants generate electricity, and transmission lines carry it to cities and homes. Sometimes, just like highways during rush hour, transmission lines get congested. This happens when there's lots of cheap power (like wind or solar) in one area, but not enough line capacity to send it where it's needed.</p>
+        <p>This congestion can force us to use more expensive local power plants or even lead to <a href="https://en.wikipedia.org/wiki/Rolling_blackout" target="_blank" class="term-link">rolling blackouts</a> if demand is too high or if power plants unexpectedly fail (<a href="https://en.wikipedia.org/wiki/Forced_outage_(power_engineering)" target="_blank" class="term-link">forced outages</a>). To prevent this, grid planners need to upgrade the system.</p>
+
+        <h2>The Contenders: Wires vs. Batteries</h2>
+        <p>Traditionally, the solution to congestion is building more transmission lines – the "wires" approach. But this can be slow, expensive, and face public opposition.</p>
+        <p>Recently, large-scale battery storage has emerged as an alternative. A new concept called <strong class="term-link">SATOA (Storage as Transmission-Only Asset)</strong> allows batteries to be treated like transmission equipment. Instead of participating in energy markets, they specifically help relieve congestion or provide backup power during emergencies, acting *like* wires.</p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Transmission Lines ("Wires")</h5>
+                        <p class="card-text">High-capacity pathways for electricity.</p>
+                        <ul>
+                            <li><strong>Pros:</strong> Move large amounts of power over long distances continuously.</li>
+                            <li><strong>Cons:</strong> Very expensive, take many years to build, require significant land.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Energy Storage ("Batteries" - SATOA)</h5>
+                        <p class="card-text">Store electricity for later use, specifically for grid support.</p>
+                        <ul>
+                            <li><strong>Pros:</strong> Faster deployment, flexible location, can provide quick power bursts.</li>
+                            <li><strong>Cons:</strong> Limited energy storage duration (e.g., 4 hours), cost, efficiency losses.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>How to Decide? A Two-Stage Approach</h2>
+        <p>Simply comparing the upfront cost isn't enough. We need to know how much each option *improves reliability* – its ability to prevent blackouts. The paper uses a sophisticated two-stage approach:</p>
+        <ol>
+            <li><strong>Stage 1: Least-Cost Expansion Planning (JHSMINE model).</strong> Find the cheapest mix of new wires and/or batteries needed to meet basic grid requirements, looking at simplified conditions (like the peak hour of each day).</li>
+            <li><strong>Stage 2: Probabilistic Reliability Assessment (A-LEAF model).</strong> Take the plan from Stage 1 and simulate its performance over a full year (8760 hours), hour by hour. This simulation includes *random* generator failures and detailed grid operations to see how often and how badly blackouts might occur.</li>
+        </ol>
+
+        <h3>Stage 1: Finding the Cheapest Plan</h3>
+        <p>The first stage uses a mathematical technique called <a href="https://en.wikipedia.org/wiki/Integer_programming" target="_blank" class="term-link">Mixed-Integer Linear Programming</a> (MILP) to find the lowest cost investment plan. The goal is to minimize the total system cost, which includes:</p>
+        <ul>
+            <li>Investment costs for new lines or storage.</li>
+            <li>Operational costs (fuel for power plants, maintenance).</li>
+        </ul>
+        <p>The model considers constraints like power flow physics (simplified DC power flow), limits on how much power lines can carry, and how storage operates (charging/discharging). The paper's objective function looks something like this (simplified):</p>
+        $$ \min \sum (\text{InvestmentCost} + \text{OperationalCost}) $$
+        <p>Subject to:</p>
+        <ul>
+            <li>Power Balance at each location (node): Power In = Power Out + Load</li>
+            <li>Line Flow Limits: Power flow $\le$ Line Capacity</li>
+            <li>Generation Limits: Power output $\le$ Generator Capacity</li>
+            <li>Storage Constraints: Energy stored, charge/discharge limits</li>
+        </ul>
+        <p>This stage identifies promising candidates for upgrades but doesn't capture the full picture of reliability under random events.</p>
+
+        <h3>Stage 2: Testing the Plan Under Stress</h3>
+        <p>This is where the real test happens. We take the grid design (with any new wires or batteries from Stage 1) and simulate its operation over thousands of hours. Crucially, this simulation uses a <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method" target="_blank" class="term-link">Monte Carlo</a> approach:</p>
+        <ul>
+            <li><strong>Random Outages:</strong> In each hour, power plants have a chance of failing randomly (based on historical data and even weather conditions).</li>
+            <li><strong>Detailed Dispatch:</strong> The simulation figures out the cheapest way to generate power to meet demand, respecting line limits and storage capabilities *after* considering any outages. SATOA storage might only be used during these contingency events.</li>
+            <li><strong>Measuring Failure:</strong> If demand can't be met, the simulation records "unserved energy".</li>
+        </ul>
+        <p>By running many simulations (trials), we get statistical measures of reliability:</p>
+        <ul>
+            <li><strong class="term-link">EUE (Expected Unserved Energy):</strong> The average amount of energy (in Megawatt-hours, MWh) that couldn't be delivered over the year due to shortages. Lower is better.</li>
+            <li><strong class="term-link">LOLH (Loss of Load Hours):</strong> The average number of hours per year where *some* demand couldn't be met. Lower is better.</li>
+        </ul>
+
+        <h2>Interactive Simulation: The Bottleneck Problem</h2>
+        <p>Let's explore this with a simplified interactive simulation based on the paper's case study (a model of the Texas ERCOT grid). Imagine a scenario with three zones:</p>
+        <ul>
+            <li><strong>Zone 7 (Far West):</strong> Lots of cheap wind power, but limited transmission out.</li>
+            <li><strong>Zone 3 (Central):</strong> High demand (load) and the location for potential battery storage.</li>
+            <li><strong>Zone 4 (East):</strong> More demand and traditional power plants.</li>
+        </ul>
+        <p>The key bottleneck is the transmission line between Zone 7 and Zone 3. We can either upgrade this line (TEP - Transmission Expansion Planning) or add battery storage in Zone 3 (BEP - Battery Expansion Planning).</p>
+
+        <div class="interactive-viz">
+            <h4>Simplified Grid Reliability Simulation</h4>
+            <p>Adjust the upgrades and run the simulation to see the impact on reliability (preventing load shedding in Zone 3). The simulation runs for 24 hours, introducing random generator outages.</p>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="lineCapacitySlider">Line 7-3 Capacity (MW): <span id="lineCapacityValue" class="value-display">500</span> MW</label>
+                    <input type="range" id="lineCapacitySlider" min="200" max="2000" value="500" step="100">
+                    <small>(Base: 283 MW, TEP upgrade adds ~1500 MW)</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="storageCapacitySlider">Storage in Zone 3 (MW): <span id="storageCapacityValue" class="value-display">0</span> MW</label>
+                    <input type="range" id="storageCapacitySlider" min="0" max="1500" value="0" step="100">
+                     <label for="storageDurationSlider">Storage Duration (Hours): <span id="storageDurationValue" class="value-display">4</span> h</label>
+                    <input type="range" id="storageDurationSlider" min="2" max="8" value="4" step="1">
+                </div>
+            </div>
+            <button id="runSimButton" class="btn btn-primary mb-3">Run 24hr Simulation</button>
+             <button id="resetSimButton" class="btn btn-secondary mb-3">Reset</button>
+            <div id="simulationGridViz"></div>
+            <div id="simulationOutput" class="mt-3">
+                <p>Simulation results will appear here.</p>
+                <div class="progress" style="height: 20px;">
+                  <div id="simProgressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+             <div class="explanation mt-3">
+                <strong>Simulation Notes:</strong> This is a highly simplified model. Real simulations involve many more zones, lines, generators, and complex operational rules. Outages are random. Storage (if added) primarily acts to reduce load shedding during high-demand/low-supply hours (simulating SATOA). It charges when Zone 3 has surplus cheap power.
+            </div>
+        </div>
+
+        <h2>Case Study Results: What Did the Paper Find?</h2>
+        <p>The paper applied this two-stage method to the ERCOT-like system. Here's a summary of their findings when comparing the base case (no upgrades), upgrading the Zone 3-7 line (TEP), and adding different amounts of 4-hour storage in Zone 3 (BEP):</p>
+
+        <div class="interactive-viz">
+            <h4>Reliability Improvements (EUE & LOLH)</h4>
+            <p>Compare the Expected Unserved Energy (EUE) and Loss of Load Hours (LOLH) across different scenarios. Lower bars are better. Hover over bars for details. (Data based on paper Tables IV & V).</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Expected Unserved Energy (EUE)</h5>
+                    <svg id="eueChart" width="400" height="300"></svg>
+                </div>
+                <div class="col-md-6">
+                    <h5>Loss of Load Hours (LOLH)</h5>
+                    <svg id="lolhChart" width="400" height="300"></svg>
+                </div>
+            </div>
+            <div class="tooltip" id="chartTooltip"></div>
+        </div>
+
+        <div class="interactive-viz">
+            <h4>Cost of Reliability</h4>
+            <p>How much does it cost to "buy" reliability? This chart shows the annualized investment cost divided by the reliability improvement (reduction in EUE) compared to the reference case. Lower bars indicate a more cost-effective improvement. (Data based on paper Fig 8 & Table VI).</p>
+             <svg id="costBenefitChart" width="800" height="350"></svg>
+             <div class="explanation mt-3">
+                <strong>Note:</strong> This only considers the *investment* cost. Transmission upgrades often provide additional *operational* cost savings (by allowing access to cheaper power) which SATOA typically doesn't, as it can't participate in energy markets. This comparison focuses purely on the cost to achieve the reliability benefit.
+            </div>
+        </div>
+
+        <h3>Key Takeaways from the Case Study:</h3>
+        <ul>
+            <li><strong>Transmission Wins (Overall):</strong> In this specific case, upgrading the transmission line (TEP) provided the largest reduction in both EUE and LOLH and was highly cost-effective. It completely eliminated unserved energy in the congested Zone 3.</li>
+            <li><strong>Storage is a Strong Contender:</strong> Large amounts of storage (e.g., 4h, 1500 MW) significantly improved reliability, approaching the benefits of the transmission line, although not quite matching it.</li>
+            <li><strong>Cost-Effectiveness Varies:</strong> While TEP was best overall, smaller storage installations offered comparable or even slightly better *cost per unit of reliability improvement* compared to the large transmission project. This suggests storage could be advantageous for smaller, targeted improvements or where large line projects are infeasible.</li>
+            <li><strong>Location Matters:</strong> The benefits are distributed differently. TEP helped Zone 3 significantly but slightly worsened reliability in other zones due to shifting power flows. Storage benefits were more localized.</li>
+        </ul>
+
+        <h2>Conclusion: A Sharper Tool for Grid Planning</h2>
+        <p>The paper demonstrates a valuable framework for comparing transmission lines and energy storage not just on upfront cost, but on their crucial contribution to grid reliability.</p>
+        <p>The key is the **two-stage approach**: using optimization to find good candidates (Stage 1) and then rigorously testing them with detailed, probabilistic simulations that account for random failures (Stage 2). This allows planners to quantify metrics like EUE and LOLH.</p>
+        <p>While traditional transmission upgrades might offer the biggest reliability bang in some cases, storage (especially SATOA) presents a viable, flexible, and potentially more cost-effective alternative for certain reliability needs. Having tools that accurately assess *both* economic and reliability dimensions is essential for building the resilient, clean energy grid of the future.</p>
+
+    </div>
+
+    <!-- Inlined Javascript -->
+    <script>
+        // --- Simulation Logic ---
+        const simulationGridViz = document.getElementById('simulationGridViz');
+        const simulationOutput = document.getElementById('simulationOutput');
+        const lineCapacitySlider = document.getElementById('lineCapacitySlider');
+        const storageCapacitySlider = document.getElementById('storageCapacitySlider');
+        const storageDurationSlider = document.getElementById('storageDurationSlider');
+        const lineCapacityValue = document.getElementById('lineCapacityValue');
+        const storageCapacityValue = document.getElementById('storageCapacityValue');
+        const storageDurationValue = document.getElementById('storageDurationValue');
+        const runSimButton = document.getElementById('runSimButton');
+        const resetSimButton = document.getElementById('resetSimButton');
+        const simProgressBar = document.getElementById('simProgressBar');
+
+        // Basic simulation parameters (highly simplified)
+        const zones = {
+            '7': { name: 'Zone 7 (West)', baseGen: 3000, baseLoad: 500, outageRate: 0.05, color: '#ff7f0e' }, // High Gen, Low Load
+            '3': { name: 'Zone 3 (Central)', baseGen: 1000, baseLoad: 2500, outageRate: 0.03, color: '#2ca02c' }, // Low Gen, High Load
+            '4': { name: 'Zone 4 (East)', baseGen: 2000, baseLoad: 1500, outageRate: 0.03, color: '#1f77b4' }  // Med Gen, Med Load
+        };
+        const links = {
+            '7-3': { source: '7', target: '3', baseCapacity: 283 }, // Bottleneck
+            '3-4': { source: '3', target: '4', baseCapacity: 3000 }
+        };
+        const hoursToSimulate = 24;
+        let simIntervalId = null;
+        let currentSimHour = 0;
+        let simResults = {};
+
+        // SVG setup for grid visualization
+        const svgWidth = 400;
+        const svgHeight = 250;
+        const nodeRadius = 20;
+
+        const svg = d3.select("#simulationGridViz").append("svg")
+            .attr("width", svgWidth)
+            .attr("height", svgHeight);
+
+        // Tooltip for SVG
+        const vizTooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .attr("id", "vizTooltip");
+
+        function drawInitialGrid() {
+             svg.selectAll("*").remove(); // Clear previous drawing
+
+            const nodePositions = {
+                '7': { x: svgWidth * 0.2, y: svgHeight / 2 },
+                '3': { x: svgWidth * 0.5, y: svgHeight / 2 },
+                '4': { x: svgWidth * 0.8, y: svgHeight / 2 }
+            };
+
+            // Draw links first
+            svg.append("g").selectAll("line")
+                .data(Object.keys(links))
+                .enter().append("line")
+                .attr("class", "link")
+                .attr("id", d => `link-${d}`)
+                .attr("x1", d => nodePositions[links[d].source].x)
+                .attr("y1", d => nodePositions[links[d].source].y)
+                .attr("x2", d => nodePositions[links[d].target].x)
+                .attr("y2", d => nodePositions[links[d].target].y)
+                .attr("stroke-width", 3); // Initial width
+
+            // Draw nodes
+            const nodeGroup = svg.append("g").selectAll("g")
+                .data(Object.keys(zones))
+                .enter().append("g")
+                 .attr("transform", d => `translate(${nodePositions[d].x},${nodePositions[d].y})`);
+
+            nodeGroup.append("circle")
+                .attr("class", "node")
+                .attr("id", d => `node-${d}`)
+                .attr("r", nodeRadius)
+                .attr("fill", d => zones[d].color)
+                 .on("mouseover", (event, d) => {
+                    const nodeData = simResults.hourly?.[currentSimHour]?.zones[d];
+                    if (!nodeData) return;
+                    vizTooltip.transition().duration(200).style("opacity", .9);
+                    vizTooltip.html(`<strong>${zones[d].name}</strong><br/>
+                                     Load: ${nodeData.load.toFixed(0)} MW<br/>
+                                     Gen Avail: ${nodeData.availableGen.toFixed(0)} MW<br/>
+                                     Gen Dispatch: ${nodeData.dispatchedGen.toFixed(0)} MW<br/>
+                                     Shed: ${nodeData.loadShed.toFixed(0)} MW<br/>
+                                     ${nodeData.storageSoC !== undefined ? `Storage: ${nodeData.storageSoC.toFixed(0)} MWh` : ''}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    vizTooltip.transition().duration(500).style("opacity", 0);
+                });
+
+
+            nodeGroup.append("text")
+                .attr("dy", "0.3em")
+                .attr("class", "zone-label")
+                .attr("fill", "white")
+                .text(d => d);
+
+            // Add initial status text
+             svg.append("text")
+                .attr("id", "simStatusText")
+                .attr("x", 10)
+                .attr("y", 20)
+                .attr("font-size", "12px")
+                .text("Status: Ready");
+
+            svg.append("text")
+                .attr("id", "simHourText")
+                .attr("x", svgWidth - 50)
+                .attr("y", 20)
+                .attr("font-size", "12px")
+                .attr("text-anchor", "middle")
+                .text("Hour: 0");
+        }
+
+
+        function updateSimulationViz(hourData) {
+            if (!hourData) return;
+
+            // Update node appearance (e.e.g., indicate load shedding)
+            Object.keys(zones).forEach(zoneId => {
+                const node = svg.select(`#node-${zoneId}`);
+                const zoneData = hourData.zones[zoneId];
+                node.attr("stroke", zoneData.loadShed > 1 ? "red" : "#333") // Thicker red border if load shed
+                   .attr("stroke-width", zoneData.loadShed > 1 ? 3 : 1);
+            });
+
+             // Update link appearance (loading)
+            Object.keys(links).forEach(linkId => {
+                const link = svg.select(`#link-${linkId}`);
+                const linkData = hourData.links[linkId];
+                const capacity = linkData.capacity;
+                const flow = Math.abs(linkData.flow);
+                const loading = capacity > 0 ? Math.min(flow / capacity, 1.0) : 0; // Cap at 100%
+
+                link.attr("stroke-width", 2 + loading * 6) // Width indicates loading
+                    .attr("stroke", loading > 0.95 ? "orange" : (loading > 0.8 ? "#d62728" : "#aaa")); // Color indicates high loading
+            });
+
+            // Update status text
+             svg.select("#simStatusText").text(`Status: Running`);
+             svg.select("#simHourText").text(`Hour: ${currentSimHour + 1}`);
+        }
+
+
+        function runSimulationStep() {
+            if (currentSimHour >= hoursToSimulate) {
+                clearInterval(simIntervalId);
+                simIntervalId = null;
+                finalizeSimulation();
+                runSimButton.disabled = false;
+                return;
+            }
+
+            const hour = currentSimHour;
+            const lineCapacity73 = parseFloat(lineCapacitySlider.value);
+            const storageCapacity = parseFloat(storageCapacitySlider.value);
+            const storageDuration = parseFloat(storageDurationSlider.value);
+            const storageMaxEnergy = storageCapacity * storageDuration;
+
+            let currentHourData = { zones: {}, links: {} };
+
+            // 1. Determine available generation (random outages) & load
+            let totalAvailableGen = 0;
+            let totalLoad = 0;
+            Object.keys(zones).forEach(id => {
+                const zone = zones[id];
+                // Simple load variation (e.g., sine wave)
+                const loadFactor = 0.7 + 0.3 * Math.sin((hour / hoursToSimulate) * 2 * Math.PI + Math.PI * 1.5);
+                 const actualLoad = zone.baseLoad * loadFactor * (1 + (Math.random() - 0.5) * 0.1); // Add some noise
+                const isOutage = Math.random() < zone.outageRate;
+                const availableGen = isOutage ? 0 : zone.baseGen * (0.9 + Math.random() * 0.1); // Slight variation if online
+                totalAvailableGen += availableGen;
+                totalLoad += actualLoad;
+
+                currentHourData.zones[id] = {
+                    load: actualLoad,
+                    availableGen: availableGen,
+                    dispatchedGen: 0, // To be determined
+                    loadShed: 0,
+                    storageSoC: (id === '3' && storageCapacity > 0) ? simResults.hourly[hour - 1]?.zones['3'].storageSoC ?? storageMaxEnergy / 2 : undefined, // Start storage at 50% or carry over
+                    storageCharge: 0,
+                    storageDischarge: 0
+                };
+            });
+
+             // Add link capacities for this hour
+             Object.keys(links).forEach(id => {
+                 currentHourData.links[id] = {
+                     capacity: id === '7-3' ? lineCapacity73 : links[id].baseCapacity,
+                     flow: 0 // To be determined
+                 };
+             });
+
+
+            // 2. Simplified Dispatch & Flow Calculation (Greedy approach)
+            // This is VERY simplified compared to real Unit Commitment / Economic Dispatch
+
+            // Meet local load first
+            Object.keys(zones).forEach(id => {
+                const zoneData = currentHourData.zones[id];
+                const dispatch = Math.min(zoneData.load, zoneData.availableGen);
+                zoneData.dispatchedGen += dispatch;
+                zoneData.netLoad = zoneData.load - dispatch; // Remaining load
+                zoneData.availableGen -= dispatch; // Remaining available gen
+            });
+
+            // Try to export surplus / import deficit using links (prioritize bottleneck 7-3 if needed)
+            // Simplified: Try to push Zone 7 surplus to Zone 3
+            let flow73 = 0;
+            if (currentHourData.zones['7'].availableGen > 0 && currentHourData.zones['3'].netLoad > 0) {
+                 flow73 = Math.min(
+                    currentHourData.zones['7'].availableGen,
+                    currentHourData.zones['3'].netLoad,
+                    currentHourData.links['7-3'].capacity
+                );
+                currentHourData.zones['7'].dispatchedGen += flow73;
+                currentHourData.zones['7'].availableGen -= flow73;
+                currentHourData.zones['3'].netLoad -= flow73; // Reduce Zone 3 need
+            } else if (currentHourData.zones['3'].availableGen > 0 && currentHourData.zones['7'].netLoad > 0) {
+                 // Flow 3 -> 7 (less likely in scenario)
+                 flow73 = -Math.min(
+                    currentHourData.zones['3'].availableGen,
+                    currentHourData.zones['7'].netLoad,
+                    currentHourData.links['7-3'].capacity
+                 );
+                 currentHourData.zones['3'].dispatchedGen -= flow73; // Negative flow means export
+                 currentHourData.zones['3'].availableGen += flow73;
+                 currentHourData.zones['7'].netLoad += flow73;
+            }
+             currentHourData.links['7-3'].flow = flow73;
+
+
+            // Try to use 3-4 link
+             let flow34 = 0;
+             if (currentHourData.zones['3'].availableGen > 0 && currentHourData.zones['4'].netLoad > 0) {
+                 // Flow 3 -> 4
+                 flow34 = Math.min(
+                    currentHourData.zones['3'].availableGen,
+                    currentHourData.zones['4'].netLoad,
+                    currentHourData.links['3-4'].capacity
+                 );
+                 currentHourData.zones['3'].dispatchedGen += flow34;
+                 currentHourData.zones['3'].availableGen -= flow34;
+                 currentHourData.zones['4'].netLoad -= flow34;
+             } else if (currentHourData.zones['4'].availableGen > 0 && currentHourData.zones['3'].netLoad > 0) {
+                 // Flow 4 -> 3
+                 flow34 = -Math.min(
+                    currentHourData.zones['4'].availableGen,
+                    currentHourData.zones['3'].netLoad,
+                    currentHourData.links['3-4'].capacity
+                 );
+                 currentHourData.zones['4'].dispatchedGen -= flow34;
+                 currentHourData.zones['4'].availableGen += flow34;
+                 currentHourData.zones['3'].netLoad += flow34;
+             }
+             currentHourData.links['3-4'].flow = flow34;
+
+            // 3. Use Storage (Zone 3) if needed (SATOA logic: primarily for deficit)
+            const zone3Data = currentHourData.zones['3'];
+            if (zone3Data.netLoad > 0 && storageCapacity > 0 && zone3Data.storageSoC > 0) {
+                const dischargeNeeded = zone3Data.netLoad;
+                const maxDischargePower = storageCapacity; // Assume power rating = capacity rating
+                const maxDischargeEnergy = zone3Data.storageSoC / 0.9; // Account for discharge efficiency (90%)
+                const actualDischarge = Math.min(dischargeNeeded, maxDischargePower, maxDischargeEnergy * 0.9);
+
+                zone3Data.storageDischarge = actualDischarge;
+                zone3Data.netLoad -= actualDischarge;
+                zone3Data.storageSoC -= actualDischarge / 0.9; // Decrease SoC based on energy drawn
+            }
+            // Simplified charging: If Zone 3 has surplus *local* generation after meeting local load and exports
+            else if (zone3Data.availableGen > 0 && storageCapacity > 0 && zone3Data.storageSoC < storageMaxEnergy) {
+                 const maxChargePower = storageCapacity;
+                 const energyRoom = (storageMaxEnergy - zone3Data.storageSoC) / 0.9; // Account for charge efficiency (90%)
+                 const actualCharge = Math.min(zone3Data.availableGen, maxChargePower, energyRoom * 0.9);
+
+                 zone3Data.storageCharge = actualCharge;
+                 zone3Data.dispatchedGen += actualCharge; // Gen goes to charging
+                 zone3Data.availableGen -= actualCharge;
+                 zone3Data.storageSoC += actualCharge * 0.9; // Increase SoC
+            }
+
+
+            // 4. Calculate Load Shed
+            Object.keys(zones).forEach(id => {
+                const zoneData = currentHourData.zones[id];
+                if (zoneData.netLoad > 0) {
+                    zoneData.loadShed = zoneData.netLoad; // Any remaining net load is shed
+                    simResults.totalEUE += zoneData.loadShed;
+                    if (zoneData.loadShed > 0.1) { // Count hour if shedding > 0.1 MW
+                         simResults.hourly[hour].hasLoadShed = true;
+                    }
+                }
+                 // Ensure dispatched generation doesn't exceed initial available
+                 zoneData.dispatchedGen = Math.max(0, Math.min(zones[id].baseGen, zoneData.dispatchedGen + zoneData.storageCharge));
+            });
+
+            simResults.hourly[hour] = currentHourData;
+            updateSimulationViz(currentHourData);
+
+            // Update progress bar
+            const progress = ((hour + 1) / hoursToSimulate) * 100;
+            simProgressBar.style.width = `${progress}%`;
+            simProgressBar.setAttribute('aria-valuenow', progress);
+
+
+            currentSimHour++;
+        }
+
+        function finalizeSimulation() {
+             // Calculate total LOLH
+             simResults.totalLOLH = simResults.hourly.filter(h => h.hasLoadShed).length;
+
+             simulationOutput.innerHTML = `
+                <h4>Simulation Complete</h4>
+                <p>Total Expected Unserved Energy (EUE): <strong class="value-display">${simResults.totalEUE.toFixed(1)} MWh</strong></p>
+                <p>Total Loss of Load Hours (LOLH): <strong class="value-display">${simResults.totalLOLH} hours</strong></p>
+            `;
+             svg.select("#simStatusText").text(`Status: Complete`);
+        }
+
+        function startSimulation() {
+            if (simIntervalId) {
+                clearInterval(simIntervalId); // Clear existing interval if any
+            }
+            runSimButton.disabled = true;
+            currentSimHour = 0;
+            simResults = {
+                totalEUE: 0,
+                totalLOLH: 0,
+                hourly: Array(hoursToSimulate).fill(null).map(() => ({ zones: {}, links: {}, hasLoadShed: false }))
+            };
+            simulationOutput.innerHTML = '<p>Simulation running...</p>';
+            simProgressBar.style.width = `0%`;
+            simProgressBar.setAttribute('aria-valuenow', 0);
+
+            drawInitialGrid(); // Redraw grid in case parameters changed
+
+            // Run simulation steps with a short delay
+            simIntervalId = setInterval(runSimulationStep, 100); // Adjust speed as needed
+        }
+
+         function resetSimulation() {
+             if (simIntervalId) {
+                 clearInterval(simIntervalId);
+                 simIntervalId = null;
+             }
+             currentSimHour = 0;
+             simResults = {};
+             lineCapacitySlider.value = 500;
+             storageCapacitySlider.value = 0;
+             storageDurationSlider.value = 4;
+             lineCapacityValue.textContent = lineCapacitySlider.value;
+             storageCapacityValue.textContent = storageCapacitySlider.value;
+             storageDurationValue.textContent = storageDurationSlider.value;
+             simulationOutput.innerHTML = '<p>Simulation results will appear here.</p>';
+             simProgressBar.style.width = `0%`;
+             simProgressBar.setAttribute('aria-valuenow', 0);
+             drawInitialGrid(); // Redraw initial state
+              svg.select("#simStatusText").text(`Status: Ready`);
+              svg.select("#simHourText").text(`Hour: 0`);
+             runSimButton.disabled = false;
+         }
+
+
+        // Event Listeners
+        lineCapacitySlider.addEventListener('input', (e) => {
+            lineCapacityValue.textContent = e.target.value;
+        });
+        storageCapacitySlider.addEventListener('input', (e) => {
+            storageCapacityValue.textContent = e.target.value;
+        });
+         storageDurationSlider.addEventListener('input', (e) => {
+            storageDurationValue.textContent = e.target.value;
+        });
+        runSimButton.addEventListener('click', startSimulation);
+        resetSimButton.addEventListener('click', resetSimulation);
+
+
+        // --- D3 Charts ---
+        const chartTooltip = d3.select("#chartTooltip");
+
+        // Data based on paper (approximated/simplified)
+        const reliabilityData = [
+            { scenario: "Reference", eue: 5864, lolh: 6.16 },
+            { scenario: "TEP (Line)", eue: 926, lolh: 1.49 },
+            { scenario: "BEP 2h 600MW", eue: 4407, lolh: 4.33 },
+            { scenario: "BEP 4h 600MW", eue: 3558, lolh: 3.97 },
+            { scenario: "BEP 4h 1500MW", eue: 1661, lolh: 1.93 },
+        ];
+
+        const costData = [
+             { scenario: "TEP (Line)", cost: 80.7, eue_redux: 5864 - 926, lolh_redux: 6.16 - 1.49 },
+             { scenario: "BEP 2h 300MW", cost: 19.8, eue_redux: 5864 - 5000, lolh_redux: 6.16 - 5.5 }, // Approx EUE/LOLH for smaller storage
+             { scenario: "BEP 2h 600MW", cost: 39.6, eue_redux: 5864 - 4407, lolh_redux: 6.16 - 4.33 },
+             { scenario: "BEP 4h 300MW", cost: 39.6, eue_redux: 5864 - 4800, lolh_redux: 6.16 - 5.0 }, // Approx
+             { scenario: "BEP 4h 600MW", cost: 79.3, eue_redux: 5864 - 3558, lolh_redux: 6.16 - 3.97 },
+             { scenario: "BEP 4h 1500MW", cost: 198.2, eue_redux: 5864 - 1661, lolh_redux: 6.16 - 1.93 },
+        ].map(d => ({
+            ...d,
+            cost_per_eue: d.eue_redux > 0 ? (d.cost * 1000 / d.eue_redux) : Infinity, // Cost in k$ per MWh EUE reduced
+            cost_per_lolh: d.lolh_redux > 0 ? (d.cost / d.lolh_redux) : Infinity // Cost in M$ per LOLH reduced
+        }));
+
+
+        function drawBarChart(svgId, data, yValue, yLabel) {
+            const svg = d3.select(svgId);
+            const margin = {top: 20, right: 30, bottom: 60, left: 60};
+            const width = +svg.attr("width") - margin.left - margin.right;
+            const height = +svg.attr("height") - margin.top - margin.bottom;
+
+            const x = d3.scaleBand()
+                .range([0, width])
+                .domain(data.map(d => d.scenario))
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d[yValue]) * 1.1]) // Add 10% padding
+                .range([height, 0]);
+
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X axis
+            g.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "translate(-10,0)rotate(-30)")
+                .style("text-anchor", "end");
+
+            // Y axis
+            g.append("g")
+                .call(d3.axisLeft(y).ticks(5)); // Limit number of ticks
+
+             // Y axis label
+             g.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left)
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("font-size", "12px")
+                .text(yLabel);
+
+
+            // Bars
+            g.selectAll(".bar")
+                .data(data)
+                .enter().append("rect")
+                .attr("class", "bar")
+                .attr("x", d => x(d.scenario))
+                .attr("y", d => y(d[yValue]))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d[yValue]))
+                .on("mouseover", function(event, d) {
+                    d3.select(this).style("fill", "lightblue");
+                    chartTooltip.transition().duration(200).style("opacity", .9);
+                    chartTooltip.html(`<strong>${d.scenario}</strong><br/>${yLabel}: ${d[yValue].toFixed(1)}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                     d3.select(this).style("fill", "steelblue");
+                    chartTooltip.transition().duration(500).style("opacity", 0);
+                });
+        }
+
+         function drawCostBenefitChart(svgId, data) {
+            const svg = d3.select(svgId);
+            const margin = {top: 20, right: 30, bottom: 80, left: 80}; // Increased bottom/left margin
+            const width = +svg.attr("width") - margin.left - margin.right;
+            const height = +svg.attr("height") - margin.top - margin.bottom;
+
+             // Filter out infinite costs for scaling
+             const finiteData = data.filter(d => isFinite(d.cost_per_eue));
+
+            const x = d3.scaleBand()
+                .range([0, width])
+                .domain(finiteData.map(d => d.scenario))
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(finiteData, d => d.cost_per_eue) * 1.1]) // Scale based on finite data
+                .range([height, 0]);
+
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // X axis
+            g.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll("text")
+                .attr("transform", "translate(-10,0)rotate(-45)")
+                .style("text-anchor", "end");
+
+            // Y axis
+            g.append("g")
+                .call(d3.axisLeft(y));
+
+             // Y axis label
+             g.append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 0 - margin.left + 10) // Adjust position
+                .attr("x", 0 - (height / 2))
+                .attr("dy", "1em")
+                .style("text-anchor", "middle")
+                .style("font-size", "12px")
+                .text("Cost per EUE Reduction (k$/MWh)");
+
+            // Bars
+            g.selectAll(".bar")
+                .data(finiteData) // Use filtered data for bars
+                .enter().append("rect")
+                .attr("class", "bar")
+                 .attr("fill", d => d.scenario.includes("TEP") ? "#ff7f0e" : "#1f77b4") // Different color for TEP
+                .attr("x", d => x(d.scenario))
+                .attr("y", d => y(d.cost_per_eue))
+                .attr("width", x.bandwidth())
+                .attr("height", d => height - y(d.cost_per_eue))
+                .on("mouseover", function(event, d) {
+                    d3.select(this).style("opacity", 0.7);
+                    chartTooltip.transition().duration(200).style("opacity", .9);
+                    chartTooltip.html(`<strong>${d.scenario}</strong><br/>Cost/EUE: ${d.cost_per_eue.toFixed(1)} k$/MWh<br/>Cost/LOLH: ${d.cost_per_lolh.toFixed(1)} M$/h<br/>Annual Cost: ${d.cost.toFixed(1)} M$`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    d3.select(this).style("opacity", 1.0);
+                    chartTooltip.transition().duration(500).style("opacity", 0);
+                });
+        }
+
+
+        // Initial draws
+        drawInitialGrid();
+        drawBarChart("#eueChart", reliabilityData, 'eue', 'EUE (MWh/year)');
+        drawBarChart("#lolhChart", reliabilityData, 'lolh', 'LOLH (hours/year)');
+        drawCostBenefitChart("#costBenefitChart", costData);
+
+    </script>
+
+</body>
 </html>

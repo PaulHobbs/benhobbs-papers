@@ -1,51 +1,866 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main.html" title="Site Bichuch_Hobbs_Song_ENEECO_2023_1-s2.0-S0140988323000658-main" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding Electricity Capacity Markets: Incentives, Risk, and Market Power</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- MathJax Library -->
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer space */
+        }
+        .container {
+            max-width: 900px;
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .slider-label {
+            min-width: 150px;
+            display: inline-block;
+        }
+        .value-display {
+            font-weight: bold;
+            min-width: 60px;
+            display: inline-block;
+            text-align: right;
+            margin-left: 10px;
+        }
+        .explanation {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        }
+        .term {
+            font-weight: bold;
+            color: #0d6efd; /* Bootstrap primary blue */
+        }
+        .term a {
+            text-decoration: none;
+            color: inherit;
+        }
+        .term a:hover {
+            text-decoration: underline;
+        }
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            height: 150px;
+            border-bottom: 1px solid #ccc;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        .bar {
+            flex-grow: 1;
+            margin: 0 5px;
+            background-color: steelblue;
+            position: relative;
+            text-align: center;
+            color: white;
+            font-size: 0.8em;
+        }
+        .bar span {
+            position: absolute;
+            bottom: 5px;
+            left: 0;
+            right: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .bar-label {
+            font-size: 0.8em;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .legend {
+            margin-top: 15px;
+        }
+        .legend-item {
+            display: inline-block;
+            margin-right: 15px;
+            font-size: 0.9em;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        /* Utility function plot styles */
+        #utilityPlotContainer {
+            margin-top: 20px;
+            text-align: center;
+        }
+        #utilityCanvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Keeping the Lights On: Designing Smarter Electricity Markets</h1>
+        <p class="lead">Exploring how to incentivize power plant construction in the face of uncertainty, market power, and regulations.</p>
+        <p>Ensuring a reliable supply of electricity is crucial for modern society. But how do we make sure enough power plants are built to meet demand, especially when the future is uncertain and companies might act strategically? This article explores the challenges of <span class="term"><a href="https://en.wikipedia.org/wiki/Resource_adequacy" target="_blank">resource adequacy</a></span> in electricity markets and delves into the ideas presented in the paper "<em>Identifying optimal capacity expansion and differentiated capacity payments under risk aversion and market power: A financial Stackelberg game approach</em>" by Bichuch, Hobbs, and Song.</p>
+        <p>We'll use interactive visualizations to understand the core concepts, aiming for intuition rather than getting lost in complex mathematics right away.</p>
 
-					const element = document.currentScript.parentElement;
+        <h2>The Ideal World vs. Reality: The "Missing Money" Problem</h2>
+        <p>In a perfect, theoretical electricity market, the price of energy ($/MWh) fluctuates based on supply and demand. During times of scarcity (high demand, low supply), prices should rise significantly. These high prices are supposed to signal the need for new power plants and provide the revenue to build them, especially for <span class="term"><a href="https://en.wikipedia.org/wiki/Peaking_power_plant" target="_blank">peaking power plants</a></span> (or "peakers") that only run during these high-demand periods.</p>
+        <p>However, real-world markets often have <span class="term"><a href="https://en.wikipedia.org/wiki/Price_ceiling" target="_blank">price caps</a></span> ($M$) imposed by regulators to protect consumers from extremely high prices. While well-intentioned, these caps can prevent peaker plants from earning enough revenue during scarce hours to cover their large investment costs ($F$). This is known as the <span class="term">missing money problem</span>.</p>
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+        <div class="interactive-section">
+            <h3>Interactive: The Peaker Plant's Dilemma</h3>
+            <p>Imagine a simple peaking power plant. It has an annual investment cost that needs to be recovered. It only makes money when the electricity price is high, but there's a cap on how high the price can go.</p>
+            <div class="mb-3 row">
+                <label for="investmentCostSlider" class="col-sm-4 col-form-label slider-label">Annual Investment Cost ($F$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="investmentCostSlider" min="50" max="150" value="100" step="1">
+                </div>
+                <div class="col-sm-2">
+                    $<span id="investmentCostValue" class="value-display">100</span> K/MW/yr
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="priceCapSlider" class="col-sm-4 col-form-label slider-label">Energy Price Cap ($M$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="priceCapSlider" min="500" max="5000" value="2000" step="100">
+                </div>
+                <div class="col-sm-2">
+                    $<span id="priceCapValue" class="value-display">2000</span> /MWh
+                </div>
+            </div>
+             <div class="mb-3 row">
+                <label for="scarcityHoursSlider" class="col-sm-4 col-form-label slider-label">Hours at Price Cap:</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="scarcityHoursSlider" min="5" max="100" value="20" step="1">
+                </div>
+                <div class="col-sm-2">
+                    <span id="scarcityHoursValue" class="value-display">20</span> hr/yr
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Calculation:</strong> The plant earns revenue only during scarcity hours. We assume its operating cost is negligible compared to the price cap for simplicity.
+                <br>
+                Annual Revenue ≈ (Price Cap) * (Hours at Cap)
+                <br>
+                Profit = Annual Revenue - Annual Investment Cost
+            </div>
+            <div class="mt-3">
+                <strong>Estimated Annual Revenue:</strong> $<span id="peakerRevenue" class="value-display">40.0</span> K/MW/yr <br>
+                <strong>Estimated Annual Profit:</strong> <span id="peakerProfit" class="value-display" style="color: red;">$-60.0</span> K/MW/yr
+            </div>
+            <p class="mt-2" id="peakerConclusion">With the current settings, the price cap prevents the peaker from recovering its investment cost. No rational investor would build it!</p>
+        </div>
+
+        <h2>A Potential Solution: Capacity Payments</h2>
+        <p>To address the missing money problem, many electricity markets introduce <span class="term"><a href="https://en.wikipedia.org/wiki/Capacity_market" target="_blank">capacity payments</a></span> ($C$). These are payments made to generators simply for being available, measured in $/MW/year, regardless of how much energy they actually produce. The idea is to provide an additional revenue stream to cover investment costs.</p>
+        <p>The System Operator (SO) - the entity managing the grid and market - typically sets or oversees these payments.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive: Can Capacity Payments Help?</h3>
+            <p>Let's add a capacity payment to our previous example. Can the SO set a payment ($C$) that makes the peaker plant viable?</p>
+            <p><em>(Investment Cost, Price Cap, and Scarcity Hours are carried over from the previous section.)</em></p>
+             <div class="mb-3 row">
+                <label for="capacityPaymentSlider" class="col-sm-4 col-form-label slider-label">Capacity Payment ($C$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="capacityPaymentSlider" min="0" max="150" value="0" step="1">
+                </div>
+                <div class="col-sm-2">
+                    $<span id="capacityPaymentValue" class="value-display">0</span> K/MW/yr
+                </div>
+            </div>
+            <div class="explanation">
+                <strong>Calculation:</strong>
+                <br>
+                Total Revenue = Energy Revenue + Capacity Payment
+                <br>
+                Profit = Total Revenue - Annual Investment Cost
+            </div>
+             <div class="mt-3">
+                <strong>Energy Revenue:</strong> $<span id="peakerEnergyRevenue2" class="value-display">40.0</span> K/MW/yr <br>
+                <strong>Capacity Payment Received:</strong> $<span id="peakerCapacityRevenue2" class="value-display">0.0</span> K/MW/yr <br>
+                <strong>Total Annual Revenue:</strong> $<span id="peakerTotalRevenue2" class="value-display">40.0</span> K/MW/yr <br>
+                <strong>Estimated Annual Profit:</strong> <span id="peakerProfit2" class="value-display" style="color: red;">$-60.0</span> K/MW/yr
+            </div>
+            <p class="mt-2" id="peakerConclusion2">Adjust the capacity payment slider. Try to find the minimum payment needed for the plant to break even (Profit ≥ 0).</p>
+        </div>
+
+        <h2>Complication 1: Market Power & Strategic Behavior</h2>
+        <p>Okay, so capacity payments can fill the revenue gap. Problem solved? Not quite.</p>
+        <p>Power plant owners aren't just passive recipients of payments. They are businesses aiming to maximize profits. They might realize that if *everyone* builds less capacity, scarcity will be more frequent, driving up energy prices (even with a cap, prices might hit the cap more often or stay high just below it longer) and potentially leading the SO to offer higher capacity payments in the future. This strategic interaction, where firms anticipate each other's actions, is often modeled as a <span class="term"><a href="https://en.wikipedia.org/wiki/Nash_equilibrium" target="_blank">Nash Equilibrium</a></span>.</p>
+        <p>The paper models this as a game in the *investment stage*: given the SO's capacity payment rules, suppliers strategically decide *how much* capacity ($K$) of each type to build.</p>
+        <div class="explanation">
+            <strong>Simplified Idea:</strong> Imagine two identical firms deciding whether to build a plant.
+            <ul>
+                <li>If both build, supply is high, prices are low, profits are low (maybe negative).</li>
+                <li>If only one builds, supply is lower, prices are higher, that firm makes good profit, the other makes zero.</li>
+                <li>If neither builds, prices are very high (hitting cap often), but they make zero profit from generation (though consumers suffer).</li>
+            </ul>
+            In this scenario, they might settle on an equilibrium where only one firm builds, or perhaps where both hesitate, leading to less total capacity than is socially optimal (i.e., lowest total cost for society). This exercise of <span class="term">market power</span> in the investment stage can lead to under-investment and higher costs overall.
+        </div>
+
+        <h2>Complication 2: Risk Aversion</h2>
+        <p>Building and operating power plants involves uncertainty. Future demand, fuel prices, energy prices, and even the capacity payments themselves might fluctuate. Investors and companies are often <span class="term"><a href="https://en.wikipedia.org/wiki/Risk_aversion" target="_blank">risk-averse</a></span> – they prefer a more certain outcome over a risky one, even if the average expected payoff is the same.</p>
+        <p>This is typically modeled using a <span class="term">utility function</span>, which represents satisfaction or preference. For risk-averse entities, the utility gained from an extra dollar decreases as wealth increases. A common form is the negative exponential utility function: $U(x) = -e^{-\gamma x}$, where $x$ is the monetary outcome (e.g., profit) and $\gamma$ is the coefficient of risk aversion. Higher $\gamma$ means higher risk aversion.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive: Risk Aversion and Investment</h3>
+            <p>Consider an investment choice: Option A gives a certain profit of $50K. Option B gives a 50% chance of $0K profit and a 50% chance of $110K profit. The *expected* profit of Option B is (0.5 * 0) + (0.5 * 110) = $55K, which is higher than Option A.</p>
+            <p>How does risk aversion affect the choice? We calculate the *expected utility*.</p>
+             <div class="mb-3 row">
+                <label for="riskAversionSlider" class="col-sm-4 col-form-label slider-label">Risk Aversion ($\gamma$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="riskAversionSlider" min="0.001" max="0.1" value="0.01" step="0.001">
+                </div>
+                <div class="col-sm-2">
+                    <span id="riskAversionValue" class="value-display">0.010</span>
+                </div>
+            </div>
+            <div id="utilityPlotContainer">
+                <canvas id="utilityCanvas" width="400" height="200"></canvas>
+                <p style="font-size: 0.9em;">Utility Function: $U(x) = 1 - e^{-\gamma x}$ (scaled for plotting)</p>
+            </div>
+             <div class="explanation">
+                <strong>Calculation ($U(x) = -e^{-\gamma x}$):</strong>
+                <ul>
+                    <li>Utility of Option A (Certain $50K): $U_A = -e^{-\gamma \times 50}$</li>
+                    <li>Utility of Option B (Uncertain): $U_B = 0.5 \times (-e^{-\gamma \times 0}) + 0.5 \times (-e^{-\gamma \times 110})$</li>
+                </ul>
+                Choose the option with higher utility.
+            </div>
+             <div class="mt-3">
+                <strong>Utility of Option A:</strong> <span id="utilityA" class="value-display">-0.606</span> <br>
+                <strong>Utility of Option B:</strong> <span id="utilityB" class="value-display">-0.665</span> <br>
+                <strong>Decision:</strong> <span id="riskDecision" class="value-display" style="font-weight: bold;">Choose Option A (Certain)</span>
+            </div>
+            <p class="mt-2" id="riskConclusion">Adjust the risk aversion slider. Notice how higher risk aversion makes the uncertain (but higher expected profit) Option B less attractive compared to the certain Option A.</p>
+            <p>In electricity markets, higher risk aversion might lead suppliers to demand higher capacity payments to compensate for uncertainty, or favor investments with more predictable revenue streams, potentially distorting the optimal generation mix.</p>
+        </div>
+
+
+        <h2>The Regulator's Challenge: A Stackelberg Game</h2>
+        <p>The System Operator (SO) faces a complex task. It wants to ensure reliability and keep costs low for consumers, but it must account for the strategic behavior (market power) and risk preferences of the suppliers.</p>
+        <p>The paper models this interaction as a <span class="term"><a href="https://en.wikipedia.org/wiki/Stackelberg_competition" target="_blank">Stackelberg game</a></span>, a type of leader-follower game:</p>
+        <ol>
+            <li><strong>Leader (SO):</strong> Chooses the capacity payments ($C$) for different generator types to maximize its objective (e.g., consumer welfare, represented by consumer utility) while meeting a reliability target (e.g., maximum allowed <span class="term"><a href="https://en.wikipedia.org/wiki/Loss_of_Load_Expectation" target="_blank">Loss of Load Expectation, LOLE</a></span>, $\rho$).</li>
+            <li><strong>Followers (Suppliers):</strong> Observe the capacity payments ($C$) set by the SO. They then play a Nash game amongst themselves to decide how much capacity ($K$) of each type to build, aiming to maximize their own risk-adjusted profits (expected utility).</li>
+        </ol>
+        <p>This structure is mathematically formulated as a <span class="term"><a href="https://en.wikipedia.org/wiki/Mathematical_program_with_equilibrium_constraints" target="_blank">Mathematical Program with Equilibrium Constraints (MPEC)</a></span>. The SO's optimization problem has a constraint that requires the suppliers' decisions ($K$) to be a Nash Equilibrium of *their* game, given the SO's choice of $C$.</p>
+        <p>A key question the paper explores is whether the SO should set a *uniform* capacity payment for all technologies or *differentiate* payments based on technology type (e.g., pay more for nuclear than for gas).</p>
+
+        <h2>Simulating the Market: Putting it Together</h2>
+        <p>Let's simulate a simplified version of this market. We have three generator types: Baseload (high investment cost $F$, low operating cost $G$), Peaker (low $F$, high $G$), and Renewable (medium $F$, near-zero $G$, but maybe less reliable or needing specific conditions - simplified here). The SO sets capacity payments ($C_{base}, C_{peak}, C_{ren}$). Suppliers decide how much capacity ($K_{base}, K_{peak}, K_{ren}$) to build.</p>
+
+        <div class="interactive-section">
+            <h3>Interactive Market Simulation</h3>
+            <p>Adjust the SO's strategy and market conditions. Observe the impact on built capacity, costs, and reliability. (Note: This is a highly simplified model for illustration).</p>
+
+            <h4>SO Decisions & Market Conditions</h4>
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="differentiatedPaymentsSwitch">
+                <label class="form-check-label" for="differentiatedPaymentsSwitch">Allow Differentiated Payments (vs. Uniform)</label>
+            </div>
+            <div id="uniformPaymentSection">
+                <div class="mb-3 row">
+                    <label for="uniformPaymentSlider" class="col-sm-4 col-form-label slider-label">Uniform Payment ($C_{all}$):</label>
+                    <div class="col-sm-6">
+                        <input type="range" class="form-range" id="uniformPaymentSlider" min="0" max="150" value="60" step="1">
+                    </div>
+                    <div class="col-sm-2">
+                        $<span id="uniformPaymentValue" class="value-display">60</span> K/MW/yr
+                    </div>
+                </div>
+            </div>
+             <div id="differentiatedPaymentsSection" style="display: none;">
+                <div class="mb-3 row">
+                    <label for="basePaymentSlider" class="col-sm-4 col-form-label slider-label">Baseload Payment ($C_{base}$):</label>
+                    <div class="col-sm-6">
+                        <input type="range" class="form-range" id="basePaymentSlider" min="0" max="150" value="80" step="1">
+                    </div>
+                    <div class="col-sm-2">
+                        $<span id="basePaymentValue" class="value-display">80</span> K/MW/yr
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="peakPaymentSlider" class="col-sm-4 col-form-label slider-label">Peaker Payment ($C_{peak}$):</label>
+                    <div class="col-sm-6">
+                        <input type="range" class="form-range" id="peakPaymentSlider" min="0" max="150" value="40" step="1">
+                    </div>
+                    <div class="col-sm-2">
+                        $<span id="peakPaymentValue" class="value-display">40</span> K/MW/yr
+                    </div>
+                </div>
+                 <div class="mb-3 row">
+                    <label for="renPaymentSlider" class="col-sm-4 col-form-label slider-label">Renewable Payment ($C_{ren}$):</label>
+                    <div class="col-sm-6">
+                        <input type="range" class="form-range" id="renPaymentSlider" min="0" max="150" value="70" step="1">
+                    </div>
+                    <div class="col-sm-2">
+                        $<span id="renPaymentValue" class="value-display">70</span> K/MW/yr
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label for="simPriceCapSlider" class="col-sm-4 col-form-label slider-label">Energy Price Cap ($M$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="simPriceCapSlider" min="500" max="5000" value="2000" step="100">
+                </div>
+                <div class="col-sm-2">
+                    $<span id="simPriceCapValue" class="value-display">2000</span> /MWh
+                </div>
+            </div>
+             <div class="mb-3 row">
+                <label for="simRiskAversionSlider" class="col-sm-4 col-form-label slider-label">Supplier Risk Aversion ($\gamma_s$):</label>
+                <div class="col-sm-6">
+                    <input type="range" class="form-range" id="simRiskAversionSlider" min="0.001" max="0.1" value="0.01" step="0.001">
+                </div>
+                <div class="col-sm-2">
+                    <span id="simRiskAversionValue" class="value-display">0.010</span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                 <label for="marketPowerFactorSlider" class="col-sm-4 col-form-label slider-label">Market Power Factor:</label>
+                 <div class="col-sm-6">
+                    <input type="range" class="form-range" id="marketPowerFactorSlider" min="0" max="0.5" value="0.2" step="0.05" title="0 = Perfect Competition, >0 = Suppliers strategically reduce capacity">
+                </div>
+                 <div class="col-sm-2">
+                    <span id="marketPowerFactorValue" class="value-display">0.20</span>
+                </div>
+            </div>
+
+            <h4>Simulation Results (Equilibrium Capacity & Outcomes)</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Built Capacity (MW):</strong>
+                    <div class="bar-chart" id="capacityChart">
+                        <!-- Bars added by JS -->
+                    </div>
+                    <div class="bar-labels" id="capacityLabels">
+                        <!-- Labels added by JS -->
+                     </div>
+                     <div class="legend">
+                        <span class="legend-item"><span class="legend-color" style="background-color: #2c3e50;"></span>Baseload</span>
+                        <span class="legend-item"><span class="legend-color" style="background-color: #c0392b;"></span>Peaker</span>
+                        <span class="legend-item"><span class="legend-color" style="background-color: #27ae60;"></span>Renewable</span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <strong>Market Outcomes:</strong>
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Capacity Built:
+                            <span class="badge bg-primary rounded-pill"><span id="totalCapacity">0</span> MW</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Average Energy Price:
+                            <span class="badge bg-info rounded-pill">$<span id="avgEnergyPrice">0</span> /MWh</span>
+                        </li>
+                         <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Consumer Cost:
+                            <span class="badge bg-warning text-dark rounded-pill">$<span id="totalConsumerCost">0</span> M/yr</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Supplier Profit:
+                            <span class="badge bg-success rounded-pill">$<span id="totalSupplierProfit">0</span> M/yr</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Reliability (Est. LOLE):
+                            <span class="badge bg-danger rounded-pill"><span id="estimatedLOLE">0.0</span> hr/yr</span>
+                        </li>
+                    </ul>
+                     <p style="font-size: 0.8em; margin-top: 10px;">(LOLE = Loss of Load Expectation, hours per year demand might exceed supply. Lower is better.)</p>
+                </div>
+            </div>
+            <div class="explanation mt-3">
+                <strong>Simplified Logic Behind Results:</strong>
+                <ul>
+                    <li><strong>Capacity Decision:</strong> Each supplier type builds capacity ($K$) aiming to maximize expected utility. This depends on investment cost ($F$), operating cost ($G$), the capacity payment ($C$), expected energy revenue (influenced by $M$, total capacity, and demand), risk aversion ($\gamma_s$), and market power (strategic reduction factor). Higher $C$, lower $F$, lower $\gamma_s$ encourage investment. Market power reduces it.</li>
+                    <li><strong>Market Outcomes:</strong> Based on built capacity and a simplified demand profile, we estimate average energy price, costs (energy + capacity payments), supplier profits (revenue - costs), and reliability (LOLE calculation based on capacity vs. peak demand).</li>
+                </ul>
+            </div>
+        </div>
+
+        <h2>Key Insights from the Paper (and Simulation)</h2>
+        <p>The paper, through its more complex mathematical model and analysis, provides several key insights, some of which you might observe in the simplified simulation above:</p>
+        <ul>
+            <li><strong>Differentiated Payments Matter:</strong> When suppliers have market power and different risk attitudes, allowing the SO to set *different* capacity payments for different technologies can lead to a more efficient outcome (e.g., lower total cost for consumers while maintaining reliability) compared to a single uniform payment. Try switching the toggle in the simulation – can you achieve better results with differentiated payments?</li>
+            <li><strong>Market Power Increases Costs:</strong> The strategic behavior of suppliers (Nash equilibrium) generally leads to less capacity being built and higher overall costs compared to a perfectly competitive scenario (where suppliers are price-takers). Increase the "Market Power Factor" slider – does total capacity decrease and consumer cost increase?</li>
+            <li><strong>Risk Aversion Influences Mix and Payments:</strong> Higher risk aversion among suppliers tends to make them demand higher capacity payments to compensate for uncertainty, or shift investment towards technologies perceived as less risky. Increase the "Supplier Risk Aversion" – how does the required payment (to maintain capacity) or the resulting capacity mix change?</li>
+            <li><strong>Price Caps and Payments are Linked:</strong> A lower energy price cap ($M$) exacerbates the "missing money" problem, generally requiring higher capacity payments ($C$) to incentivize sufficient investment. Lower the "Energy Price Cap" – do you need to increase capacity payments to maintain capacity levels?</li>
+            <li><strong>Optimal Reliability Trade-offs:</strong> The paper also explores scenarios where the reliability target ($\rho$) isn't fixed but is chosen optimally. It finds that consumers (especially risk-averse ones) might prefer slightly lower average reliability if it significantly lowers average costs, highlighting a trade-off between cost and risk of outages.</li>
+        </ul>
+
+        <h2>Conclusion</h2>
+        <p>Designing electricity markets to ensure resource adequacy is a complex balancing act. Simple energy prices are often insufficient due to price caps (the missing money problem). While capacity payments can help, their optimal design must consider the realities of market power (strategic supplier behavior) and risk aversion.</p>
+        <p>The research suggests that sophisticated approaches, like the Stackelberg game model allowing for differentiated capacity payments, can provide valuable insights. By understanding these interactions, policymakers and regulators can design smarter market rules that better navigate the trade-offs between reliability, cost, and the strategic incentives of market participants, ultimately helping to keep the lights on affordably and reliably.</p>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Inline Javascript -->
+    <script>
+        // --- Peaker Plant Calculation 1 ---
+        const investmentCostSlider = document.getElementById('investmentCostSlider');
+        const priceCapSlider = document.getElementById('priceCapSlider');
+        const scarcityHoursSlider = document.getElementById('scarcityHoursSlider');
+        const investmentCostValue = document.getElementById('investmentCostValue');
+        const priceCapValue = document.getElementById('priceCapValue');
+        const scarcityHoursValue = document.getElementById('scarcityHoursValue');
+        const peakerRevenue = document.getElementById('peakerRevenue');
+        const peakerProfit = document.getElementById('peakerProfit');
+        const peakerConclusion = document.getElementById('peakerConclusion');
+
+        function calculatePeakerProfit1() {
+            const F = parseFloat(investmentCostSlider.value); // K$/MW/yr
+            const M = parseFloat(priceCapSlider.value); // $/MWh
+            const H = parseFloat(scarcityHoursSlider.value); // hr/yr
+
+            investmentCostValue.textContent = F.toFixed(0);
+            priceCapValue.textContent = M.toFixed(0);
+            scarcityHoursValue.textContent = H.toFixed(0);
+
+            // Revenue calculation: Price Cap * Hours * (1 MW) / 1000 (to convert $/MWh * hr to K$/MW)
+            const revenue = (M * H) / 1000; // K$/MW/yr
+            const profit = revenue - F;
+
+            peakerRevenue.textContent = revenue.toFixed(1);
+            peakerProfit.textContent = profit.toFixed(1);
+
+            if (profit >= 0) {
+                peakerProfit.style.color = 'green';
+                peakerConclusion.textContent = "With these settings, the peaker plant can recover its costs.";
+            } else {
+                peakerProfit.style.color = 'red';
+                peakerConclusion.textContent = "With the current settings, the price cap prevents the peaker from recovering its investment cost. No rational investor would build it!";
+            }
+            // Update values for the second section as well
+            updatePeakerSection2();
+        }
+
+        investmentCostSlider.addEventListener('input', calculatePeakerProfit1);
+        priceCapSlider.addEventListener('input', calculatePeakerProfit1);
+        scarcityHoursSlider.addEventListener('input', calculatePeakerProfit1);
+
+        // --- Peaker Plant Calculation 2 ---
+        const capacityPaymentSlider = document.getElementById('capacityPaymentSlider');
+        const capacityPaymentValue = document.getElementById('capacityPaymentValue');
+        const peakerEnergyRevenue2 = document.getElementById('peakerEnergyRevenue2');
+        const peakerCapacityRevenue2 = document.getElementById('peakerCapacityRevenue2');
+        const peakerTotalRevenue2 = document.getElementById('peakerTotalRevenue2');
+        const peakerProfit2 = document.getElementById('peakerProfit2');
+        const peakerConclusion2 = document.getElementById('peakerConclusion2');
+
+        function updatePeakerSection2() {
+            const F = parseFloat(investmentCostSlider.value);
+            const M = parseFloat(priceCapSlider.value);
+            const H = parseFloat(scarcityHoursSlider.value);
+            const C = parseFloat(capacityPaymentSlider.value); // K$/MW/yr
+
+            capacityPaymentValue.textContent = C.toFixed(0);
+
+            const energyRevenue = (M * H) / 1000; // K$/MW/yr
+            const capacityRevenue = C;
+            const totalRevenue = energyRevenue + capacityRevenue;
+            const profit = totalRevenue - F;
+
+            peakerEnergyRevenue2.textContent = energyRevenue.toFixed(1);
+            peakerCapacityRevenue2.textContent = capacityRevenue.toFixed(1);
+            peakerTotalRevenue2.textContent = totalRevenue.toFixed(1);
+            peakerProfit2.textContent = profit.toFixed(1);
+
+             if (profit >= 0) {
+                peakerProfit2.style.color = 'green';
+                 if (C > 0) {
+                     peakerConclusion2.textContent = `At $${C.toFixed(0)}K/MW/yr capacity payment, the plant is profitable. The minimum required payment is $${Math.max(0, F - energyRevenue).toFixed(1)}K/MW/yr.`;
+                 } else {
+                      peakerConclusion2.textContent = "The plant is profitable even without capacity payments.";
+                 }
+            } else {
+                peakerProfit2.style.color = 'red';
+                peakerConclusion2.textContent = `The plant is still not profitable. It needs at least $${Math.max(0, F - energyRevenue).toFixed(1)}K/MW/yr capacity payment.`;
+            }
+        }
+
+        capacityPaymentSlider.addEventListener('input', updatePeakerSection2);
+
+        // --- Risk Aversion Calculation & Plot ---
+        const riskAversionSlider = document.getElementById('riskAversionSlider');
+        const riskAversionValue = document.getElementById('riskAversionValue');
+        const utilityA = document.getElementById('utilityA');
+        const utilityB = document.getElementById('utilityB');
+        const riskDecision = document.getElementById('riskDecision');
+        const riskConclusion = document.getElementById('riskConclusion');
+        const utilityCanvas = document.getElementById('utilityCanvas');
+        const ctx = utilityCanvas.getContext('2d');
+
+        function negExpUtility(x, gamma) {
+            // Using -exp(-gamma*x)
+             return -Math.exp(-gamma * x / 100); // Scale x by 100 for better curve shape with typical gamma
+        }
+
+        function plotUtilityFunction(gamma) {
+            const width = utilityCanvas.width;
+            const height = utilityCanvas.height;
+            const maxX = 120; // Max profit to plot
+            const scaleX = width / maxX;
+
+            // Calculate min/max utility for scaling Y axis
+            // Using U(x) = 1 - exp(-gamma * x / 100) for plotting (shifted to be positive)
+            const plotUtility = (x, gamma) => 1 - Math.exp(-gamma * x / 100);
+            const minY = plotUtility(0, gamma); // Should be 0
+            const maxY = plotUtility(maxX, gamma);
+            const scaleY = height / (maxY - minY);
+
+            ctx.clearRect(0, 0, width, height);
+            ctx.beginPath();
+            ctx.strokeStyle = 'steelblue';
+            ctx.lineWidth = 2;
+
+            for (let x = 0; x <= maxX; x += 1) {
+                const plotX = x * scaleX;
+                const util = plotUtility(x, gamma);
+                const plotY = height - (util - minY) * scaleY; // Invert Y for canvas coords
+                if (x === 0) {
+                    ctx.moveTo(plotX, plotY);
+                } else {
+                    ctx.lineTo(plotX, plotY);
+                }
+            }
+            ctx.stroke();
+
+            // Add axes
+            ctx.beginPath();
+            ctx.strokeStyle = '#aaa';
+            ctx.lineWidth = 1;
+            // Y axis
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, height);
+            // X axis
+            ctx.moveTo(0, height);
+            ctx.lineTo(width, height);
+            ctx.stroke();
+
+             // Add labels (simple)
+            ctx.fillStyle = '#333';
+            ctx.font = '10px sans-serif';
+            ctx.fillText('Profit (x)', width - 50, height - 5);
+            ctx.save();
+            ctx.translate(10, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Utility U(x)', 0, 0);
+            ctx.restore();
+        }
+
+
+        function calculateRiskDecision() {
+            const gamma = parseFloat(riskAversionSlider.value);
+            riskAversionValue.textContent = gamma.toFixed(3);
+
+            const profitA = 50;
+            const profitB1 = 0;
+            const profitB2 = 110;
+
+            const utilA = negExpUtility(profitA, gamma);
+            const utilB = 0.5 * negExpUtility(profitB1, gamma) + 0.5 * negExpUtility(profitB2, gamma);
+
+            utilityA.textContent = utilA.toFixed(3);
+            utilityB.textContent = utilB.toFixed(3);
+
+            if (utilA >= utilB) {
+                riskDecision.textContent = "Choose Option A (Certain)";
+                riskDecision.style.color = 'darkblue';
+                riskConclusion.textContent = "Risk aversion makes the certain, lower-expected-profit option preferable.";
+
+            } else {
+                riskDecision.textContent = "Choose Option B (Uncertain)";
+                 riskDecision.style.color = 'darkgreen';
+                 riskConclusion.textContent = "Low risk aversion makes the uncertain, higher-expected-profit option preferable.";
+            }
+
+            plotUtilityFunction(gamma);
+        }
+
+        riskAversionSlider.addEventListener('input', calculateRiskDecision);
+
+
+        // --- Market Simulation ---
+        const differentiatedPaymentsSwitch = document.getElementById('differentiatedPaymentsSwitch');
+        const uniformPaymentSection = document.getElementById('uniformPaymentSection');
+        const differentiatedPaymentsSection = document.getElementById('differentiatedPaymentsSection');
+        const uniformPaymentSlider = document.getElementById('uniformPaymentSlider');
+        const basePaymentSlider = document.getElementById('basePaymentSlider');
+        const peakPaymentSlider = document.getElementById('peakPaymentSlider');
+        const renPaymentSlider = document.getElementById('renPaymentSlider');
+        const simPriceCapSlider = document.getElementById('simPriceCapSlider');
+        const simRiskAversionSlider = document.getElementById('simRiskAversionSlider');
+        const marketPowerFactorSlider = document.getElementById('marketPowerFactorSlider');
+
+        const uniformPaymentValue = document.getElementById('uniformPaymentValue');
+        const basePaymentValue = document.getElementById('basePaymentValue');
+        const peakPaymentValue = document.getElementById('peakPaymentValue');
+        const renPaymentValue = document.getElementById('renPaymentValue');
+        const simPriceCapValue = document.getElementById('simPriceCapValue');
+        const simRiskAversionValue = document.getElementById('simRiskAversionValue');
+        const marketPowerFactorValue = document.getElementById('marketPowerFactorValue');
+
+        const capacityChart = document.getElementById('capacityChart');
+        const capacityLabels = document.getElementById('capacityLabels');
+        const totalCapacity = document.getElementById('totalCapacity');
+        const avgEnergyPrice = document.getElementById('avgEnergyPrice');
+        const totalConsumerCost = document.getElementById('totalConsumerCost');
+        const totalSupplierProfit = document.getElementById('totalSupplierProfit');
+        const estimatedLOLE = document.getElementById('estimatedLOLE');
+
+        // Simplified Generator Parameters
+        const generators = {
+            base: { name: 'Baseload', F: 150, G: 10, color: '#2c3e50' }, // High F, Low G
+            peak: { name: 'Peaker', F: 80, G: 100, color: '#c0392b' },   // Low F, High G
+            ren: { name: 'Renewable', F: 120, G: 5, color: '#27ae60' }    // Med F, V.Low G
+        };
+
+        // Simplified Demand Profile (example values)
+        const peakDemand = 6000; // MW
+        const avgDemand = 4000; // MW
+        const hoursInYear = 8760;
+
+        function togglePaymentSliders() {
+            if (differentiatedPaymentsSwitch.checked) {
+                uniformPaymentSection.style.display = 'none';
+                differentiatedPaymentsSection.style.display = 'block';
+            } else {
+                uniformPaymentSection.style.display = 'block';
+                differentiatedPaymentsSection.style.display = 'none';
+            }
+            runMarketSimulation(); // Re-run simulation when toggling
+        }
+
+        differentiatedPaymentsSwitch.addEventListener('change', togglePaymentSliders);
+
+        function runMarketSimulation() {
+            // Get current slider values
+            const isDifferentiated = differentiatedPaymentsSwitch.checked;
+            const uniformC = parseFloat(uniformPaymentSlider.value);
+            const baseC = isDifferentiated ? parseFloat(basePaymentSlider.value) : uniformC;
+            const peakC = isDifferentiated ? parseFloat(peakPaymentSlider.value) : uniformC;
+            const renC = isDifferentiated ? parseFloat(renPaymentSlider.value) : uniformC;
+            const M = parseFloat(simPriceCapSlider.value);
+            const gamma_s = parseFloat(simRiskAversionSlider.value);
+            const marketPowerFactor = parseFloat(marketPowerFactorSlider.value); // 0 to 0.5
+
+            // Update display values
+            uniformPaymentValue.textContent = uniformC.toFixed(0);
+            basePaymentValue.textContent = baseC.toFixed(0);
+            peakPaymentValue.textContent = peakC.toFixed(0);
+            renPaymentValue.textContent = renC.toFixed(0);
+            simPriceCapValue.textContent = M.toFixed(0);
+            simRiskAversionValue.textContent = gamma_s.toFixed(3);
+            marketPowerFactorValue.textContent = marketPowerFactor.toFixed(2);
+
+            const payments = { base: baseC, peak: peakC, ren: renC };
+            let builtCapacity = { base: 0, peak: 0, ren: 0 };
+            let totalGenCapacity = 0;
+
+            // *** Simplified Supplier Equilibrium Calculation ***
+            // This is a major simplification of the Nash equilibrium / MPEC / VI
+            // It tries to capture the *direction* of effects, not precise values.
+            for (const type in generators) {
+                const gen = generators[type];
+                const C = payments[type];
+
+                // 1. Base Incentive: Capacity payment vs. Investment cost
+                let incentive = C - gen.F;
+
+                // 2. Add simplified expected energy profit (very rough)
+                // Assume higher M and lower total capacity increase energy profit potential
+                // Assume lower G benefits more
+                // This part is highly heuristic!
+                let expectedEnergyProfit = (M / 100) * (1 / (1 + totalGenCapacity/10000)) * (50 / (gen.G + 1)) ; // Arbitrary scaling
+                incentive += expectedEnergyProfit * (1 - gamma_s * 10); // Reduce energy profit value with risk aversion
+
+                // 3. Determine capacity based on incentive (scaled arbitrarily)
+                // Using a sigmoid-like response: more incentive -> more capacity, up to a point
+                let capacityTarget = 1000 + 4000 / (1 + Math.exp(-incentive / 50)); // Max ~5000 MW
+
+                // 4. Apply Market Power Reduction
+                capacityTarget *= (1 - marketPowerFactor);
+
+                // 5. Apply Risk Aversion effect (higher gamma reduces investment for same incentive)
+                capacityTarget *= (1 - gamma_s * 2); // Reduce capacity slightly more for risk aversion
+
+                builtCapacity[type] = Math.max(0, Math.round(capacityTarget)); // Ensure non-negative
+                totalGenCapacity += builtCapacity[type]; // Update total for next iteration's calc (simple sequential update)
+            }
+             totalGenCapacity = builtCapacity.base + builtCapacity.peak + builtCapacity.ren; // Recalculate total accurately
+
+
+            // *** Simplified Market Outcome Calculation ***
+            let totalEnergyCost = 0;
+            let totalCapacityCost = 0;
+            let totalSupplierRevenue = 0;
+            let totalSupplierOpCost = 0;
+            let totalSupplierInvCost = 0;
+            let hoursDemandExceedsSupply = 0;
+
+            // Merit order dispatch (simplified)
+            const dispatchOrder = Object.entries(generators).sort(([,a], [,b]) => a.G - b.G);
+            let cumulativeCapacity = 0;
+            let avgPrice = 0;
+            let energySupplied = 0; // MWh
+
+            // Simulate using average demand for costs/prices (huge simplification)
+            let demand = avgDemand;
+            let price = 0;
+            let capacityUsed = 0;
+             for (const [type, gen] of dispatchOrder) {
+                const cap = builtCapacity[type];
+                if (demand > capacityUsed && cap > 0) {
+                    const needed = demand - capacityUsed;
+                    const supplied = Math.min(needed, cap);
+                    price = Math.min(M, gen.G); // Price set by last generator (simplified)
+                    totalEnergyCost += supplied * price;
+                    totalSupplierOpCost += supplied * gen.G; // Actual cost
+                    capacityUsed += supplied;
+                }
+                 if (capacityUsed >= demand) break;
+            }
+             if (capacityUsed < demand) {
+                price = M; // Scarcity price if demand not met by avg
+                totalEnergyCost += (demand - capacityUsed) * M; // Cost of unmet energy at cap price (consumer perspective)
+            }
+
+            // Rough average price calculation
+            avgPrice = totalEnergyCost / demand || 0;
+            energySupplied = demand * hoursInYear; // Assume avg demand met for total energy
+
+            // Calculate total costs and profits
+            for (const type in builtCapacity) {
+                const cap = builtCapacity[type];
+                const gen = generators[type];
+                totalCapacityCost += cap * payments[type] / 1000; // M$/yr (payments are K$)
+                totalSupplierInvCost += cap * gen.F / 1000; // M$/yr
+            }
+            // Supplier revenue = energy sales (at avg price, simplified) + capacity payments
+            // Supplier op cost already calculated based on avg demand dispatch
+             totalSupplierRevenue = (avgPrice * energySupplied / 1e6) + totalCapacityCost; // M$/yr
+             let totalSupplierOperatingCostEst = 0; // Estimate operating cost over year
+             // Very rough estimate: assume plants run proportionally to avg demand / capacity
+             for (const type in builtCapacity) {
+                 if (builtCapacity[type] > 0) {
+                     totalSupplierOperatingCostEst += (avgDemand / totalGenCapacity) * builtCapacity[type] * generators[type].G * hoursInYear / 1e6;
+                 }
+             }
+
+            const totalConsumerCostEst = (avgPrice * energySupplied / 1e6) + totalCapacityCost; // M$/yr
+            const totalSupplierProfitEst = totalSupplierRevenue - totalSupplierOperatingCostEst - totalSupplierInvCost; // M$/yr
+
+            // Estimate LOLE (very crudely)
+            // Assume normal distribution of demand around average, or just compare peak
+            let safetyMargin = totalGenCapacity - peakDemand;
+            // Map margin to LOLE hours (completely arbitrary mapping for demo)
+            if (safetyMargin >= 1000) hoursDemandExceedsSupply = 0.1;
+            else if (safetyMargin >= 500) hoursDemandExceedsSupply = 1;
+            else if (safetyMargin >= 200) hoursDemandExceedsSupply = 5;
+            else if (safetyMargin >= 0) hoursDemandExceedsSupply = 10;
+            else if (safetyMargin >= -200) hoursDemandExceedsSupply = 24; // 1 day
+            else if (safetyMargin >= -500) hoursDemandExceedsSupply = 87; // 1% of year
+            else hoursDemandExceedsSupply = 200; // High LOLE
+
+
+            // Update Results Display
+            totalCapacity.textContent = totalGenCapacity.toFixed(0);
+            avgEnergyPrice.textContent = avgPrice.toFixed(2);
+            totalConsumerCost.textContent = totalConsumerCostEst.toFixed(1);
+            totalSupplierProfit.textContent = totalSupplierProfitEst.toFixed(1);
+            estimatedLOLE.textContent = hoursDemandExceedsSupply.toFixed(1);
+
+            // Update Bar Chart
+            capacityChart.innerHTML = ''; // Clear previous bars
+            capacityLabels.innerHTML = '';
+            let maxCap = 0;
+             for (const type in builtCapacity) {
+                 if (builtCapacity[type] > maxCap) maxCap = builtCapacity[type];
+            }
+            if (maxCap === 0) maxCap = 1000; // Avoid division by zero if no capacity
+
+             for (const type in builtCapacity) {
+                const gen = generators[type];
+                const cap = builtCapacity[type];
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${(cap / maxCap) * 100}%`;
+                bar.style.backgroundColor = gen.color;
+                bar.title = `${gen.name}: ${cap.toFixed(0)} MW`; // Tooltip
+
+                const barValSpan = document.createElement('span');
+                 barValSpan.textContent = cap.toFixed(0);
+                 bar.appendChild(barValSpan);
+
+                capacityChart.appendChild(bar);
+
+                const label = document.createElement('div');
+                label.classList.add('bar-label');
+                label.style.width = `${100 / Object.keys(builtCapacity).length}%`; // Distribute labels
+                 label.style.display = 'inline-block';
+                 label.textContent = gen.name;
+                capacityLabels.appendChild(label);
+            }
+        }
+
+        // Add event listeners to all simulation sliders
+        const simSliders = [
+            uniformPaymentSlider, basePaymentSlider, peakPaymentSlider, renPaymentSlider,
+            simPriceCapSlider, simRiskAversionSlider, marketPowerFactorSlider
+        ];
+        simSliders.forEach(slider => slider.addEventListener('input', runMarketSimulation));
+
+        // Initial Calculations
+        calculatePeakerProfit1();
+        calculateRiskDecision();
+        togglePaymentSliders(); // Also runs initial market simulation
+
+    </script>
+
+</body>
 </html>

@@ -1,51 +1,874 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: Nature_Energy_Storage_2023_s41560-023-01340-6</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/Nature_Energy_Storage_2023_s41560-023-01340-6.html" title="Site Nature_Energy_Storage_2023_s41560-023-01340-6" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration: Energy Storage & The Future Grid</title>
+    <!-- Bootstrap CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- MathJax Configuration -->
+    <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- Custom CSS (Minimal) -->
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        h1, h2, h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #0056b3; /* A slightly darker blue */
+        }
+        h1 { font-size: 2.2rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.4rem; color: #333; }
+        code {
+            background-color: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        canvas {
+            display: block;
+            margin: 1rem auto;
+            border: 1px solid #ccc;
+            background-color: white;
+        }
+        .slider-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            font-size: 0.9em;
+        }
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+        }
+        .legend span::before {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            margin-right: 0.3em;
+            border: 1px solid #555;
+        }
+        .legend .demand::before { background-color: rgba(255, 0, 0, 0.7); }
+        .legend .vre::before { background-color: rgba(0, 180, 0, 0.7); }
+        .legend .netload::before { background-color: rgba(0, 0, 255, 0.7); }
+        .legend .storage-charge::before { background-color: rgba(255, 165, 0, 0.7); }
+        .legend .storage-discharge::before { background-color: rgba(128, 0, 128, 0.7); }
+        .legend .curtailment::before { background-color: rgba(169, 169, 169, 0.7); }
+        .legend .unmet::before { background-color: rgba(255, 99, 71, 0.9); }
+        .soc-indicator {
+            width: 100%;
+            height: 30px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .soc-level {
+            height: 100%;
+            background-color: #28a745; /* Green */
+            position: absolute;
+            left: 0;
+            top: 0;
+            transition: width 0.1s linear;
+        }
+        .soc-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: #333;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        .cost-breakdown {
+            font-size: 0.9em;
+            margin-top: 1rem;
+        }
+        .cost-breakdown span {
+            display: inline-block;
+            margin-right: 1rem;
+        }
+        .result-bar-container {
+            display: flex;
+            height: 30px;
+            background-color: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+        .result-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: width 0.3s ease-in-out;
+        }
+        .bar-solar { background-color: #ffc107; color: #333;}
+        .bar-wind { background-color: #17a2b8; }
+        .bar-gas { background-color: #6c757d; }
+        .bar-storage-power { background-color: #fd7e14; }
+        .bar-storage-energy { background-color: #28a745; }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8em;
+            pointer-events: none; /* Important */
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+    </style>
+</head>
+<body>
 
-					const element = document.currentScript.parentElement;
+<div class="container">
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+    <h1>Powering the Future: How Energy Storage Shapes Our Grid</h1>
+
+    <p class="lead">Our electricity grids are undergoing a massive transformation. To combat climate change, we're rapidly shifting away from fossil fuels towards renewable energy sources like wind and solar. This is great news, but it brings new challenges. A recent <a href="https://www.nature.com/articles/s41560-023-01340-6" target="_blank">Nature Energy review article</a> explores a critical piece of this puzzle: <a href="https://en.wikipedia.org/wiki/Energy_storage" target="_blank">energy storage</a> (ES), and how we plan for it using tools called <a href="https://en.wikipedia.org/wiki/Capacity_expansion_model" target="_blank">Capacity Expansion Models</a> (CEMs).</p>
+
+    <p>This post dives into the core ideas, using interactive visualizations to build intuition about why storage is important and why modeling it accurately is crucial (and tricky!).</p>
+
+    <h2>The Challenge: The Sun Doesn't Always Shine, The Wind Doesn't Always Blow</h2>
+
+    <p>Traditional power plants (like coal or natural gas) can generate electricity whenever needed. <a href="https://en.wikipedia.org/wiki/Variable_renewable_energy" target="_blank">Variable Renewable Energy</a> (VRE) sources like solar and wind are different. Their output depends entirely on the weather.</p>
+
+    <p>This creates a mismatch problem. Sometimes, the sun is shining brightly and the wind is blowing strong when demand for electricity is low. Other times, it's cloudy, calm, and everyone turns on their air conditioning. How do we balance this?</p>
+
+    <div class="interactive-section">
+        <h3>Visualize the Balancing Act</h3>
+        <p>The chart below shows a simplified 48-hour period. Drag the slider to change the amount of VRE (wind and solar) installed. Observe how VRE generation (green) often doesn't match demand (red). The blue line shows the "net load" – the demand that <em>isn't</em> met by VRE and needs to be covered by other sources (or go unmet!).</p>
+
+        <label for="vrePenetrationSlider" class="form-label slider-label">VRE Penetration Level: <span id="vrePenetrationValue" class="value-display">50</span>%</label>
+        <input type="range" class="form-range" id="vrePenetrationSlider" min="0" max="100" value="50">
+
+        <canvas id="vreDemandCanvas" width="800" height="300"></canvas>
+        <div class="legend">
+            <span class="demand">Demand</span>
+            <span class="vre">VRE Generation</span>
+            <span class="netload">Net Load (Demand - VRE)</span>
+        </div>
+        <div id="vreDemandTooltip" class="tooltip"></div>
+    </div>
+
+    <h2>Enter Energy Storage: Bridging the Gaps</h2>
+
+    <p>Energy storage acts like a giant rechargeable battery for the grid. It can absorb excess energy when VRE generation is high and demand is low, and release that stored energy later when demand is high and VRE generation is low.</p>
+
+    <p>A key concept for storage is its <a href="https://en.wikipedia.org/wiki/State_of_charge" target="_blank">State of Charge</a> (SOC), which is like the battery level indicator on your phone. It tells us how much energy is currently stored, usually expressed as a percentage of its maximum capacity.</p>
+
+    <p>Mathematically, the SOC at time $t$ depends on the SOC at the previous time step ($t-1$), how much power is charged ($P_{ch,t}$), how much is discharged ($P_{dis,t}$), and the charging ($\eta_{ch}$) and discharging ($\eta_{dis}$) efficiencies (some energy is always lost):</p>
+    $$ S_t = S_{t-1} + \eta_{ch} P_{ch,t} \Delta t - \frac{1}{\eta_{dis}} P_{dis,t} \Delta t $$
+    <p>This simple equation has big implications for planning, as the ability to discharge <em>now</em> depends on charging decisions made <em>earlier</em>.</p>
+
+    <div class="interactive-section">
+        <h3>Storage in Action</h3>
+        <p>Let's add storage to our previous scenario. Adjust the VRE level, storage power capacity (how fast it can charge/discharge), and storage energy capacity (how much energy it can hold). Observe how storage (charging in orange, discharging in purple) helps reduce net load (blue), unmet demand (dark red areas below zero), and wasted VRE (curtailment, grey areas above demand).</p>
+
+        <div class="row">
+            <div class="col-md-4">
+                <label for="vrePenetrationSlider2" class="form-label slider-label">VRE Penetration: <span id="vrePenetrationValue2" class="value-display">50</span>%</label>
+                <input type="range" class="form-range" id="vrePenetrationSlider2" min="0" max="100" value="50">
+            </div>
+            <div class="col-md-4">
+                <label for="storagePowerSlider" class="form-label slider-label">Storage Power (MW): <span id="storagePowerValue" class="value-display">20</span></label>
+                <input type="range" class="form-range" id="storagePowerSlider" min="0" max="100" value="20" step="5">
+            </div>
+            <div class="col-md-4">
+                <label for="storageEnergySlider" class="form-label slider-label">Storage Energy (MWh): <span id="storageEnergyValue" class="value-display">80</span></label>
+                <input type="range" class="form-range" id="storageEnergySlider" min="0" max="400" value="80" step="10">
+                 <!-- Duration calculated dynamically -->
+                <small class="text-muted">Duration: <span id="storageDurationValue">4.0</span> hours</small>
+            </div>
+        </div>
+
+        <canvas id="storageCanvas" width="800" height="350"></canvas>
+        <div class="legend">
+            <span class="demand">Demand</span>
+            <span class="vre">VRE Generation</span>
+            <span class="netload">Net Load (after storage)</span>
+            <span class="storage-charge">Storage Charging</span>
+            <span class="storage-discharge">Storage Discharging</span>
+            <span class="curtailment">VRE Curtailment</span>
+            <span class="unmet">Unmet Demand</span>
+        </div>
+         <label class="form-label slider-label" style="margin-top: 1rem;">Storage State of Charge (SOC):</label>
+        <div class="soc-indicator">
+            <div class="soc-level" id="socLevelIndicator"></div>
+            <div class="soc-text" id="socLevelText">50%</div>
+        </div>
+        <div id="storageTooltip" class="tooltip"></div>
+    </div>
+
+    <h2>Planning the Future Grid: Capacity Expansion Models (CEMs)</h2>
+
+    <p>Okay, so we know VRE and storage are important. But how much of each do we need? And where should we build them? What about transmission lines? And should we keep some gas plants for backup?</p>
+
+    <p>These are multi-billion dollar questions with huge consequences. This is where Capacity Expansion Models (CEMs) come in. CEMs are sophisticated computer models used by planners, utilities, and policymakers to figure out the lowest-cost way to build and operate the electricity grid of the future, while meeting specific goals like:</p>
+    <ul>
+        <li>Meeting electricity demand reliably at all times.</li>
+        <li>Achieving decarbonization targets (e.g., net-zero emissions by 2050).</li>
+        <li>Considering costs of building new generators, storage, transmission lines, and operating them (fuel, maintenance).</li>
+    </ul>
+
+    <p>At their core, CEMs often solve complex optimization problems. A highly simplified objective might look like:</p>
+    $$ \text{Minimize} \sum_{i \in \text{Technologies}} (\text{InvestmentCost}_i \times \text{Capacity}_i) + \sum_{t \in \text{Time}} (\text{OperatingCost}_t) $$
+    <p>Subject to constraints like:</p>
+    <ul>
+        <li>Generation + Storage Discharge $\ge$ Demand (at all times $t$)</li>
+        <li>VRE Generation $\le$ Available Resource (at all times $t$)</li>
+        <li>Storage SOC dynamics (like the equation shown earlier)</li>
+        <li>Total Emissions $\le$ Policy Target</li>
+        <li>And many, many more...</li>
+    </ul>
+
+    <div class="interactive-section">
+        <h3>Interactive (Simplified) CEM</h3>
+        <p>Let's play with a vastly simplified CEM. Assume we need to meet a peak demand of 100 MW reliably over a year. We can build Solar, Wind, Natural Gas, and/or Battery Storage. Adjust the <em>relative</em> costs of these technologies using the sliders below. The simulation will show a hypothetical "optimal" capacity mix and the estimated total annual cost based on these simplified inputs.</p>
+        <p><strong>Note:</strong> This is <em>highly</em> simplified! Real CEMs consider hourly variations, transmission, complex reliability metrics, and much more. This simulation uses pre-calculated relationships for illustrative purposes.</p>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="solarCostSlider" class="form-label slider-label">Solar Cost (Relative): <span id="solarCostValue" class="value-display">1.0</span></label>
+                <input type="range" class="form-range" id="solarCostSlider" min="0.5" max="2.0" value="1.0" step="0.1">
+            </div>
+            <div class="col-md-6">
+                <label for="windCostSlider" class="form-label slider-label">Wind Cost (Relative): <span id="windCostValue" class="value-display">1.2</span></label>
+                <input type="range" class="form-range" id="windCostSlider" min="0.5" max="2.0" value="1.2" step="0.1">
+            </div>
+        </div>
+         <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="gasCostSlider" class="form-label slider-label">Gas Cost (Relative): <span id="gasCostValue" class="value-display">1.5</span></label>
+                <input type="range" class="form-range" id="gasCostSlider" min="0.5" max="3.0" value="1.5" step="0.1">
+            </div>
+             <div class="col-md-6">
+                <label for="storageCostSlider" class="form-label slider-label">Storage Cost (Power+Energy, Relative): <span id="storageCostValue" class="value-display">1.8</span></label>
+                <input type="range" class="form-range" id="storageCostSlider" min="0.5" max="4.0" value="1.8" step="0.1">
+            </div>
+        </div>
+         <div class="row mb-3">
+             <div class="col-md-6">
+                 <label for="storageDurationSliderCEM" class="form-label slider-label">Target Storage Duration (Hours): <span id="storageDurationValueCEM" class="value-display">4</span></label>
+                 <input type="range" class="form-range" id="storageDurationSliderCEM" min="1" max="12" value="4" step="1">
+             </div>
+             <div class="col-md-6">
+                 <label for="co2PriceSlider" class="form-label slider-label">CO2 Price (Relative): <span id="co2PriceValue" class="value-display">1.0</span></label>
+                 <input type="range" class="form-range" id="co2PriceSlider" min="0" max="5.0" value="1.0" step="0.2">
+             </div>
+         </div>
+
+
+        <h4>Resulting Capacity Mix (Simplified):</h4>
+        <div id="cemResultBars" class="result-bar-container" style="height: 40px;">
+            <!-- Bars will be added here by JS -->
+        </div>
+        <div class="legend">
+            <span style="background-color: #ffc107; color:#333; padding: 2px 5px; border-radius:3px;">Solar</span>
+            <span style="background-color: #17a2b8; color:white; padding: 2px 5px; border-radius:3px;">Wind</span>
+            <span style="background-color: #6c757d; color:white; padding: 2px 5px; border-radius:3px;">Gas</span>
+            <span style="background-color: #fd7e14; color:white; padding: 2px 5px; border-radius:3px;">Storage (Power)</span>
+             <!-- <span style="background-color: #28a745; color:white; padding: 2px 5px; border-radius:3px;">Storage (Energy)</span> -->
+        </div>
+
+        <h4>Estimated Total Annualized Cost: <span id="totalCostValue" class="value-display">---</span> (Relative Units)</h4>
+        <div id="cemCostBreakdown" class="cost-breakdown">
+            <!-- Cost breakdown will be added here -->
+        </div>
+    </div>
+
+    <h2>Why Modeling Storage is Hard: Key Challenges</h2>
+
+    <p>The Nature Energy review paper highlights that while CEMs are powerful, accurately capturing the value and behavior of energy storage presents significant challenges. Getting this wrong can lead to poor investment decisions and make the energy transition slower, more expensive, or less reliable.</p>
+
+    <p>Here are some key challenges discussed in the paper:</p>
+
+    <ol>
+        <li><strong>Technology Representation:</strong>
+            <ul>
+                <li><strong>Diversity of Storage:</strong> There isn't just one type of storage. Lithium-ion batteries are common now, but future grids might need longer-duration storage (days, weeks, or even seasons) using different technologies (hydrogen, thermal storage, etc.). Each has unique costs, efficiencies, lifetimes, and degradation characteristics. CEMs need to represent this diversity.</li>
+                <li><strong>State of Charge (SOC) Management:</strong> As we saw, SOC links decisions across time. Modeling this accurately, especially for long-duration storage over entire years, is computationally demanding.</li>
+                <li><strong>Degradation:</strong> Batteries wear out faster if cycled heavily. Modeling this cost accurately influences how storage is dispatched and valued.</li>
+                <li><strong>Independent Sizing:</strong> Storage power (MW) and energy (MWh) capacity can often be sized independently. CEMs need to capture this flexibility, unlike traditional generators.</li>
+            </ul>
+        </li>
+        <li><strong>System Representation:</strong>
+            <ul>
+                <li><strong>Time Granularity:</strong> Should the model look at every hour, or use representative days/weeks? Hourly detail captures short-term storage value better, but modeling a full year hourly is computationally intensive. Using representative periods might miss the value of storage during rare but critical events (like heatwaves or winter storms) or misrepresent the needs for long-duration storage.</li>
+                <li><strong>Weather Variability:</strong> VRE output and demand fluctuate with weather. Using just one "typical" weather year isn't enough. CEMs need to consider multiple weather years and extreme events to ensure reliability and correctly value storage's ability to handle these variations.</li>
+                <li><strong>Geographic Detail:</strong> Where should storage be built? Near solar farms? Near cities? Modeling the grid with enough geographic detail (nodes/zones) and including transmission constraints is vital but adds complexity.</li>
+                <li><strong>Uncertainty:</strong> Future technology costs, fuel prices, demand growth, and policies are all uncertain. CEMs need methods (like stochastic optimization or sensitivity analysis) to account for this uncertainty when making long-term investment decisions.</li>
+            </ul>
+        </li>
+        <li><strong>Markets, Policy, and Society:</strong>
+            <ul>
+                <li><strong>Market Design:</strong> How will storage earn revenue in future electricity markets? Current markets weren't designed for high VRE and storage penetration. CEMs often assume perfect markets, which might not reflect reality.</li>
+                <li><strong>Policy Details:</strong> Specific incentives (like tax credits), regulations, or emissions standards heavily influence decisions, but can be hard to model perfectly.</li>
+                <li><strong>Energy Equity:</strong> How are the costs and benefits of the energy transition distributed? Can storage help improve reliability or reduce costs for disadvantaged communities? Traditional CEMs focus on minimizing total system cost, but increasingly need to incorporate equity considerations.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2>Conclusion: Better Models for a Better Grid</h2>
+
+    <p>Energy storage is indispensable for a decarbonized electricity grid powered by variable renewables. Capacity Expansion Models are the primary tools we use to plan this complex transition.</p>
+
+    <p>As the Nature Energy review emphasizes, enhancing these models to accurately capture the diverse characteristics, operational complexities, and system-wide value of energy storage is crucial. Addressing the challenges in technology representation, system modeling, and incorporating market, policy, and societal factors will lead to:</p>
+    <ul>
+        <li>More robust and cost-effective decarbonization pathways.</li>
+        <li>Better-informed investment decisions in generation, storage, and transmission.</li>
+        <li>A more reliable, resilient, and equitable energy future.</li>
+    </ul>
+
+    <p>The interactive examples here offer a glimpse into these dynamics. Real-world planning involves far greater complexity, making continued research and development in CEM methodologies essential as we navigate the clean energy transition.</p>
+
+</div> <!-- /container -->
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<!-- Custom Javascript for Interactions -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // --- Visualization 1: VRE vs Demand ---
+    const vreCanvas = document.getElementById('vreDemandCanvas');
+    const vreCtx = vreCanvas.getContext('2d');
+    const vreSlider = document.getElementById('vrePenetrationSlider');
+    const vreValueSpan = document.getElementById('vrePenetrationValue');
+    const vreTooltip = document.getElementById('vreDemandTooltip');
+
+    // Sample data (48 hours) - simplified sinusoidal patterns
+    const hours = Array.from({ length: 48 }, (_, i) => i);
+    const demandData = hours.map(h => 50 + 30 * Math.sin(Math.PI * (h - 8) / 12) + 10 * Math.sin(Math.PI * h / 24) + Math.random() * 5);
+    // VRE: Combine 'solar' (daytime peak) and 'wind' (more variable) profiles
+    const baseSolar = hours.map(h => Math.max(0, 80 * Math.sin(Math.PI * (h % 24 - 6) / 12)) * (1 + Math.random() * 0.1));
+    const baseWind = hours.map(h => 40 + 30 * Math.sin(Math.PI * h / 8) * Math.sin(Math.PI * h / 12) + Math.random() * 15);
+    const maxPossibleVRE = Math.max(...baseSolar) + Math.max(...baseWind); // Rough normalization factor
+
+    function calculateVRE(penetration) {
+        // Scale base profiles based on penetration level, ensuring some diversity
+        const scaleFactor = penetration / 50; // Normalize around 50% being the base data
+        return hours.map((h, i) => Math.max(0, (baseSolar[i] * 0.6 + baseWind[i] * 0.4) * scaleFactor));
+    }
+
+    function drawVREChart() {
+        const penetration = parseInt(vreSlider.value);
+        vreValueSpan.textContent = penetration;
+        const vreData = calculateVRE(penetration);
+        const netLoadData = hours.map((h, i) => demandData[i] - vreData[i]);
+
+        const width = vreCanvas.width;
+        const height = vreCanvas.height;
+        const padding = 40;
+        const plotWidth = width - 2 * padding;
+        const plotHeight = height - 2 * padding;
+
+        const allData = [...demandData, ...vreData, ...netLoadData];
+        const yMax = Math.max(100, Math.ceil(Math.max(...allData) / 10) * 10); // Ensure at least 100MW range
+        const yMin = Math.min(0, Math.floor(Math.min(...netLoadData) / 10) * 10);
+        const yRange = yMax - yMin;
+
+        const xScale = plotWidth / (hours.length - 1);
+        const yScale = plotHeight / yRange;
+
+        vreCtx.clearRect(0, 0, width, height);
+
+        // Draw axes
+        vreCtx.strokeStyle = '#ccc';
+        vreCtx.lineWidth = 1;
+        vreCtx.beginPath();
+        vreCtx.moveTo(padding, padding);
+        vreCtx.lineTo(padding, height - padding); // Y axis
+        vreCtx.lineTo(width - padding, height - padding); // X axis
+        vreCtx.stroke();
+
+        // Draw Zero line
+        const yZero = height - padding - (0 - yMin) * yScale;
+        vreCtx.strokeStyle = '#aaa';
+        vreCtx.setLineDash([2, 2]);
+        vreCtx.beginPath();
+        vreCtx.moveTo(padding, yZero);
+        vreCtx.lineTo(width - padding, yZero);
+        vreCtx.stroke();
+        vreCtx.setLineDash([]);
+
+        // Draw axis labels (simplified)
+        vreCtx.fillStyle = '#333';
+        vreCtx.textAlign = 'right';
+        vreCtx.textBaseline = 'middle';
+        vreCtx.fillText(yMax.toFixed(0), padding - 5, padding);
+        vreCtx.fillText(yMin.toFixed(0), padding - 5, height - padding);
+        vreCtx.fillText("0", padding - 5, yZero);
+
+        vreCtx.textAlign = 'center';
+        vreCtx.textBaseline = 'top';
+        vreCtx.fillText("0h", padding, height - padding + 5);
+        vreCtx.fillText("24h", padding + plotWidth / 2, height - padding + 5);
+        vreCtx.fillText("48h", width - padding, height - padding + 5);
+        vreCtx.fillText("Time", padding + plotWidth / 2, height - padding + 20);
+
+        vreCtx.save();
+        vreCtx.translate(padding - 25, height / 2);
+        vreCtx.rotate(-Math.PI / 2);
+        vreCtx.textAlign = "center";
+        vreCtx.fillText("Power (MW)", 0, 0);
+        vreCtx.restore();
+
+
+        // Function to draw a line
+        function drawLine(data, color, lineWidth = 2) {
+            vreCtx.strokeStyle = color;
+            vreCtx.lineWidth = lineWidth;
+            vreCtx.beginPath();
+            vreCtx.moveTo(padding, height - padding - (data[0] - yMin) * yScale);
+            data.forEach((val, i) => {
+                vreCtx.lineTo(padding + i * xScale, height - padding - (val - yMin) * yScale);
+            });
+            vreCtx.stroke();
+        }
+
+        // Draw lines
+        drawLine(demandData, 'rgba(255, 0, 0, 0.7)'); // Red
+        drawLine(vreData, 'rgba(0, 180, 0, 0.7)'); // Green
+        drawLine(netLoadData, 'rgba(0, 0, 255, 0.7)'); // Blue
+    }
+
+    // Tooltip logic for VRE chart
+    vreCanvas.addEventListener('mousemove', (event) => {
+        const rect = vreCanvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const padding = 40;
+        const plotWidth = vreCanvas.width - 2 * padding;
+
+        if (x > padding && x < vreCanvas.width - padding && y > padding && y < vreCanvas.height - padding) {
+            const hourIndex = Math.round((x - padding) / (plotWidth / (hours.length - 1)));
+            if (hourIndex >= 0 && hourIndex < hours.length) {
+                const penetration = parseInt(vreSlider.value);
+                const vreData = calculateVRE(penetration);
+                const netLoadData = hours.map((h, i) => demandData[i] - vreData[i]);
+
+                vreTooltip.style.opacity = '1';
+                vreTooltip.style.left = `${event.clientX + 10}px`;
+                vreTooltip.style.top = `${event.clientY - 15}px`;
+                vreTooltip.innerHTML = `Hour: ${hourIndex}<br>Demand: ${demandData[hourIndex].toFixed(1)} MW<br>VRE: ${vreData[hourIndex].toFixed(1)} MW<br>Net Load: ${netLoadData[hourIndex].toFixed(1)} MW`;
+            } else {
+                vreTooltip.style.opacity = '0';
+            }
+        } else {
+            vreTooltip.style.opacity = '0';
+        }
+    });
+    vreCanvas.addEventListener('mouseout', () => {
+        vreTooltip.style.opacity = '0';
+    });
+
+
+    vreSlider.addEventListener('input', drawVREChart);
+    drawVREChart(); // Initial draw
+
+
+    // --- Visualization 2: Storage in Action ---
+    const storageCanvas = document.getElementById('storageCanvas');
+    const storageCtx = storageCanvas.getContext('2d');
+    const vreSlider2 = document.getElementById('vrePenetrationSlider2');
+    const vreValueSpan2 = document.getElementById('vrePenetrationValue2');
+    const storagePowerSlider = document.getElementById('storagePowerSlider');
+    const storagePowerValueSpan = document.getElementById('storagePowerValue');
+    const storageEnergySlider = document.getElementById('storageEnergySlider');
+    const storageEnergyValueSpan = document.getElementById('storageEnergyValue');
+    const storageDurationValueSpan = document.getElementById('storageDurationValue');
+    const socLevelIndicator = document.getElementById('socLevelIndicator');
+    const socLevelText = document.getElementById('socLevelText');
+    const storageTooltip = document.getElementById('storageTooltip');
+
+
+    let currentSOC = 0; // State variable for SOC
+
+    function updateDurationDisplay() {
+         const power = parseFloat(storagePowerSlider.value);
+         const energy = parseFloat(storageEnergySlider.value);
+         const duration = (power > 0) ? (energy / power) : 0;
+         storageDurationValueSpan.textContent = duration.toFixed(1);
+    }
+
+    function drawStorageChart() {
+        const penetration = parseInt(vreSlider2.value);
+        const storagePower = parseFloat(storagePowerSlider.value);
+        const storageEnergy = parseFloat(storageEnergySlider.value);
+        vreValueSpan2.textContent = penetration;
+        storagePowerValueSpan.textContent = storagePower;
+        storageEnergyValueSpan.textContent = storageEnergy;
+        updateDurationDisplay(); // Update duration when sliders change
+
+        const vreData = calculateVRE(penetration);
+
+        // Simulate storage operation
+        const netLoadBeforeStorage = hours.map((h, i) => demandData[i] - vreData[i]);
+        const storageCharge = new Array(hours.length).fill(0);
+        const storageDischarge = new Array(hours.length).fill(0);
+        const socProfile = new Array(hours.length).fill(0);
+        const curtailment = new Array(hours.length).fill(0);
+        const unmetDemand = new Array(hours.length).fill(0);
+
+        // Assume 90% charge/discharge efficiency
+        const chargeEfficiency = 0.95;
+        const dischargeEfficiency = 0.95;
+        let soc = storageEnergy * 0.5; // Start at 50% SOC
+
+        for (let i = 0; i < hours.length; i++) {
+            const potentialCharge = -netLoadBeforeStorage[i]; // Negative net load means surplus VRE
+
+            if (potentialCharge > 0) { // Surplus VRE: Try to charge
+                const chargePower = Math.min(potentialCharge, storagePower, (storageEnergy - soc) / chargeEfficiency);
+                storageCharge[i] = Math.max(0, chargePower);
+                soc += storageCharge[i] * chargeEfficiency;
+                curtailment[i] = Math.max(0, potentialCharge - storageCharge[i]);
+            } else { // Deficit: Try to discharge
+                const neededDischarge = -potentialCharge;
+                const dischargePower = Math.min(neededDischarge, storagePower, soc * dischargeEfficiency);
+                storageDischarge[i] = Math.max(0, dischargePower);
+                soc -= storageDischarge[i] / dischargeEfficiency;
+            }
+            // Ensure SOC stays within bounds [0, storageEnergy]
+            soc = Math.max(0, Math.min(storageEnergy, soc));
+            socProfile[i] = soc;
+        }
+        currentSOC = soc; // Update global SOC for indicator
+
+        const netLoadAfterStorage = hours.map((h, i) => netLoadBeforeStorage[i] + storageDischarge[i] - storageCharge[i]);
+        // Calculate unmet demand AFTER storage tried to help
+        unmetDemand.fill(0); // Reset before recalculating
+        for(let i=0; i<hours.length; ++i) {
+            if (netLoadAfterStorage[i] > 0) {
+                 unmetDemand[i] = netLoadAfterStorage[i];
+                 netLoadAfterStorage[i] = 0; // Assume unmet demand is handled elsewhere, show 0 net load met by grid
+            }
+        }
+
+
+        // --- Drawing logic (similar to VRE chart, but with more series) ---
+        const width = storageCanvas.width;
+        const height = storageCanvas.height;
+        const padding = 40;
+        const plotWidth = width - 2 * padding;
+        const plotHeight = height - 2 * padding;
+
+        const allDataPoints = [
+            ...demandData, ...vreData, ...netLoadAfterStorage,
+            ...storageCharge.map(v => -v), // Show charge below zero
+            ...storageDischarge,
+            ...curtailment,
+            ...unmetDemand.map(v => -v) // Show unmet below zero
+        ];
+        const yMax = Math.max(100, Math.ceil(Math.max(...allDataPoints.filter(v => v > 0)) / 10) * 10);
+        const yMin = Math.min(0, Math.floor(Math.min(...allDataPoints.filter(v => v < 0)) / 10) * 10);
+        const yRange = yMax - yMin;
+
+        const xScale = plotWidth / (hours.length - 1);
+        const yScale = plotHeight / yRange;
+
+        storageCtx.clearRect(0, 0, width, height);
+
+        // Draw axes and labels (similar to drawVREChart)
+        storageCtx.strokeStyle = '#ccc';
+        storageCtx.lineWidth = 1;
+        storageCtx.beginPath();
+        storageCtx.moveTo(padding, padding); storageCtx.lineTo(padding, height - padding); storageCtx.lineTo(width - padding, height - padding); storageCtx.stroke();
+        const yZero = height - padding - (0 - yMin) * yScale;
+        storageCtx.strokeStyle = '#aaa'; storageCtx.setLineDash([2, 2]); storageCtx.beginPath(); storageCtx.moveTo(padding, yZero); storageCtx.lineTo(width - padding, yZero); storageCtx.stroke(); storageCtx.setLineDash([]);
+        storageCtx.fillStyle = '#333'; storageCtx.textAlign = 'right'; storageCtx.textBaseline = 'middle';
+        storageCtx.fillText(yMax.toFixed(0), padding - 5, padding); storageCtx.fillText(yMin.toFixed(0), padding - 5, height - padding); storageCtx.fillText("0", padding - 5, yZero);
+        storageCtx.textAlign = 'center'; storageCtx.textBaseline = 'top';
+        storageCtx.fillText("0h", padding, height - padding + 5); storageCtx.fillText("24h", padding + plotWidth / 2, height - padding + 5); storageCtx.fillText("48h", width - padding, height - padding + 5);
+        storageCtx.fillText("Time", padding + plotWidth / 2, height - padding + 20);
+        storageCtx.save(); storageCtx.translate(padding - 25, height / 2); storageCtx.rotate(-Math.PI / 2); storageCtx.textAlign = "center"; storageCtx.fillText("Power (MW)", 0, 0); storageCtx.restore();
+
+
+        // Function to draw line/area
+        function drawSeries(data, color, isArea = false, baseValue = 0) {
+            storageCtx.fillStyle = color;
+            storageCtx.strokeStyle = color;
+            storageCtx.lineWidth = isArea ? 1 : 2;
+            storageCtx.beginPath();
+            const yBase = height - padding - (baseValue - yMin) * yScale;
+            storageCtx.moveTo(padding, isArea ? yBase : height - padding - (data[0] - yMin) * yScale);
+
+            data.forEach((val, i) => {
+                storageCtx.lineTo(padding + i * xScale, height - padding - (val - yMin) * yScale);
+            });
+
+            if (isArea) {
+                storageCtx.lineTo(padding + (data.length - 1) * xScale, yBase);
+                storageCtx.closePath();
+                storageCtx.fill();
+            } else {
+                storageCtx.stroke();
+            }
+        }
+
+        // Draw series - Order matters for visibility
+        drawSeries(curtailment, 'rgba(169, 169, 169, 0.7)', true, 0); // Curtailment area (positive)
+        drawSeries(unmetDemand.map(v=>-v), 'rgba(255, 99, 71, 0.9)', true, 0); // Unmet area (negative)
+        drawSeries(storageCharge.map(v=>-v), 'rgba(255, 165, 0, 0.7)', true, 0); // Charge area (negative)
+        drawSeries(storageDischarge, 'rgba(128, 0, 128, 0.7)', true, 0); // Discharge area (positive)
+
+        drawSeries(demandData, 'rgba(255, 0, 0, 0.7)'); // Demand line
+        drawSeries(vreData, 'rgba(0, 180, 0, 0.7)'); // VRE line
+        drawSeries(netLoadAfterStorage, 'rgba(0, 0, 255, 0.9)', false); // Net Load line (after storage)
+
+
+        // Update SOC indicator
+        const socPercent = storageEnergy > 0 ? (currentSOC / storageEnergy * 100) : 0;
+        socLevelIndicator.style.width = `${socPercent}%`;
+        socLevelText.textContent = `${socPercent.toFixed(1)}%`;
+    }
+
+     // Tooltip logic for Storage chart
+    storageCanvas.addEventListener('mousemove', (event) => {
+        const rect = storageCanvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const padding = 40;
+        const plotWidth = storageCanvas.width - 2 * padding;
+
+        if (x > padding && x < storageCanvas.width - padding && y > padding && y < storageCanvas.height - padding) {
+            const hourIndex = Math.round((x - padding) / (plotWidth / (hours.length - 1)));
+            if (hourIndex >= 0 && hourIndex < hours.length) {
+                // Recalculate data for the tooltip based on current slider values
+                const penetration = parseInt(vreSlider2.value);
+                const storagePower = parseFloat(storagePowerSlider.value);
+                const storageEnergy = parseFloat(storageEnergySlider.value);
+                const vreData = calculateVRE(penetration);
+                const netLoadBeforeStorage = hours.map((h, i) => demandData[i] - vreData[i]);
+                const storageCharge = new Array(hours.length).fill(0);
+                const storageDischarge = new Array(hours.length).fill(0);
+                const socProfile = new Array(hours.length).fill(0);
+                const curtailment = new Array(hours.length).fill(0);
+                const unmetDemand = new Array(hours.length).fill(0);
+                const chargeEfficiency = 0.95; const dischargeEfficiency = 0.95;
+                let soc = storageEnergy * 0.5;
+                 for (let i = 0; i < hours.length; i++) {
+                    const potentialCharge = -netLoadBeforeStorage[i];
+                    if (potentialCharge > 0) {
+                        const chargePower = Math.min(potentialCharge, storagePower, (storageEnergy - soc) / chargeEfficiency);
+                        storageCharge[i] = Math.max(0, chargePower);
+                        soc += storageCharge[i] * chargeEfficiency;
+                        curtailment[i] = Math.max(0, potentialCharge - storageCharge[i]);
+                    } else {
+                        const neededDischarge = -potentialCharge;
+                        const dischargePower = Math.min(neededDischarge, storagePower, soc * dischargeEfficiency);
+                        storageDischarge[i] = Math.max(0, dischargePower);
+                        soc -= storageDischarge[i] / dischargeEfficiency;
+                    }
+                    soc = Math.max(0, Math.min(storageEnergy, soc));
+                    socProfile[i] = soc;
+                }
+                 const netLoadAfterStorage = hours.map((h, i) => netLoadBeforeStorage[i] + storageDischarge[i] - storageCharge[i]);
+                 unmetDemand.fill(0);
+                 for(let i=0; i<hours.length; ++i) { if (netLoadAfterStorage[i] > 0) { unmetDemand[i] = netLoadAfterStorage[i]; } }
+
+                storageTooltip.style.opacity = '1';
+                storageTooltip.style.left = `${event.clientX + 10}px`;
+                storageTooltip.style.top = `${event.clientY - 15}px`;
+                storageTooltip.innerHTML = `Hour: ${hourIndex}<br>
+                    Demand: ${demandData[hourIndex].toFixed(1)} MW<br>
+                    VRE: ${vreData[hourIndex].toFixed(1)} MW<br>
+                    Charge: ${storageCharge[hourIndex].toFixed(1)} MW<br>
+                    Discharge: ${storageDischarge[hourIndex].toFixed(1)} MW<br>
+                    Net Load: ${netLoadAfterStorage[hourIndex].toFixed(1)} MW<br>
+                    Unmet: ${unmetDemand[hourIndex].toFixed(1)} MW<br>
+                    Curtail: ${curtailment[hourIndex].toFixed(1)} MW<br>
+                    SOC: ${(socProfile[hourIndex]/storageEnergy*100).toFixed(1)}%`;
+            } else {
+                storageTooltip.style.opacity = '0';
+            }
+        } else {
+            storageTooltip.style.opacity = '0';
+        }
+    });
+    storageCanvas.addEventListener('mouseout', () => {
+        storageTooltip.style.opacity = '0';
+    });
+
+
+    vreSlider2.addEventListener('input', drawStorageChart);
+    storagePowerSlider.addEventListener('input', drawStorageChart);
+    storageEnergySlider.addEventListener('input', drawStorageChart);
+    drawStorageChart(); // Initial draw
+
+
+    // --- Visualization 3: Simplified CEM ---
+    const solarCostSlider = document.getElementById('solarCostSlider');
+    const solarCostValueSpan = document.getElementById('solarCostValue');
+    const windCostSlider = document.getElementById('windCostSlider');
+    const windCostValueSpan = document.getElementById('windCostValue');
+    const gasCostSlider = document.getElementById('gasCostSlider');
+    const gasCostValueSpan = document.getElementById('gasCostValue');
+    const storageCostSlider = document.getElementById('storageCostSlider');
+    const storageCostValueSpan = document.getElementById('storageCostValue');
+    const storageDurationSliderCEM = document.getElementById('storageDurationSliderCEM');
+    const storageDurationValueCEMSpan = document.getElementById('storageDurationValueCEM');
+    const co2PriceSlider = document.getElementById('co2PriceSlider');
+    const co2PriceValueSpan = document.getElementById('co2PriceValue');
+
+    const cemResultBarsDiv = document.getElementById('cemResultBars');
+    const totalCostValueSpan = document.getElementById('totalCostValue');
+    const cemCostBreakdownDiv = document.getElementById('cemCostBreakdown');
+
+    function updateCEMResults() {
+        const solarCost = parseFloat(solarCostSlider.value);
+        const windCost = parseFloat(windCostSlider.value);
+        const gasCost = parseFloat(gasCostSlider.value); // Includes fuel/op cost + CO2
+        const storageCost = parseFloat(storageCostSlider.value); // Combined power/energy cost factor
+        const targetDuration = parseFloat(storageDurationSliderCEM.value);
+        const co2Price = parseFloat(co2PriceSlider.value);
+
+        solarCostValueSpan.textContent = solarCost.toFixed(1);
+        windCostValueSpan.textContent = windCost.toFixed(1);
+        gasCostValueSpan.textContent = gasCost.toFixed(1);
+        storageCostValueSpan.textContent = storageCost.toFixed(1);
+        storageDurationValueCEMSpan.textContent = targetDuration.toFixed(0);
+        co2PriceValueSpan.textContent = co2Price.toFixed(1);
+
+        // *** Highly Simplified Logic ***
+        // This is NOT a real optimization. It's a heuristic based on costs.
+        // Goal: Meet 100 MW peak, with some energy balancing.
+
+        // Base costs influence VRE preference
+        let solarCapacity = 100 / solarCost;
+        let windCapacity = 80 / windCost;
+
+        // Gas cost + CO2 price influences its competitiveness
+        let effectiveGasCost = gasCost + co2Price * 1.5; // Assume gas emits CO2
+        let gasCapacity = Math.max(10, 50 / effectiveGasCost); // Always need some? Reduced by high cost/CO2
+
+        // Storage cost and duration influence its size
+        // Cheaper storage or higher VRE penetration encourages more storage
+        let storagePowerCapacity = Math.max(5, (solarCapacity + windCapacity) * 0.2 / (storageCost * 0.8));
+        let storageEnergyCapacity = storagePowerCapacity * targetDuration;
+
+        // Adjust gas based on VRE + Storage adequacy (very rough)
+        let firmCapacity = gasCapacity + storagePowerCapacity * 0.8; // Storage isn't perfectly firm
+        let vreContribution = (solarCapacity + windCapacity) * 0.15; // Assume low capacity factor for peak
+        if (firmCapacity + vreContribution < 100) {
+             gasCapacity += (100 - (firmCapacity + vreContribution));
+        }
+        gasCapacity = Math.max(0, gasCapacity); // Cannot be negative
+
+
+        // Normalize capacities somewhat arbitrarily for display
+        let totalCapacity = solarCapacity + windCapacity + gasCapacity + storagePowerCapacity;
+        if (totalCapacity === 0) totalCapacity = 1; // Avoid division by zero
+        solarCapacity = Math.min(150, solarCapacity / totalCapacity * 150); // Cap max visual size
+        windCapacity = Math.min(150, windCapacity / totalCapacity * 150);
+        gasCapacity = Math.min(100, gasCapacity / totalCapacity * 100);
+        storagePowerCapacity = Math.min(80, storagePowerCapacity / totalCapacity * 80);
+        storageEnergyCapacity = storagePowerCapacity * targetDuration; // Recalc energy based on final power
+
+
+        // Calculate simplified total cost
+        // These factors are arbitrary, just for relative comparison
+        const costFactorSolar = 0.8;
+        const costFactorWind = 1.0;
+        const costFactorGas = 1.2; // Higher operational cost factor
+        const costFactorStoragePower = 0.5;
+        const costFactorStorageEnergy = 0.1; // Energy cost per MWh
+
+        let totalCost =
+            (solarCapacity * solarCost * costFactorSolar) +
+            (windCapacity * windCost * costFactorWind) +
+            (gasCapacity * effectiveGasCost * costFactorGas) + // Use effective cost
+            (storagePowerCapacity * storageCost * costFactorStoragePower) +
+            (storageEnergyCapacity * storageCost * costFactorStorageEnergy / targetDuration); // Normalize energy cost
+
+        totalCost = totalCost / 10; // Scale down for display
+
+        // Update Display
+        totalCostValueSpan.textContent = totalCost.toFixed(1);
+
+        // Update Bars (normalize to 100% width)
+         let displayTotal = solarCapacity + windCapacity + gasCapacity + storagePowerCapacity;
+         if (displayTotal === 0) displayTotal = 1; // Avoid division by zero
+
+         cemResultBarsDiv.innerHTML = `
+            <div class="result-bar bar-solar" style="width: ${solarCapacity / displayTotal * 100}%" title="Solar: ${solarCapacity.toFixed(0)} MW">Solar</div>
+            <div class="result-bar bar-wind" style="width: ${windCapacity / displayTotal * 100}%" title="Wind: ${windCapacity.toFixed(0)} MW">Wind</div>
+            <div class="result-bar bar-gas" style="width: ${gasCapacity / displayTotal * 100}%" title="Gas: ${gasCapacity.toFixed(0)} MW">Gas</div>
+            <div class="result-bar bar-storage-power" style="width: ${storagePowerCapacity / displayTotal * 100}%" title="Storage: ${storagePowerCapacity.toFixed(0)} MW / ${storageEnergyCapacity.toFixed(0)} MWh (${targetDuration}h)">Storage</div>
+         `;
+
+        // Update Cost Breakdown (Example)
+        cemCostBreakdownDiv.innerHTML = `
+            <span>Solar Cost: ${(solarCapacity * solarCost * costFactorSolar / 10).toFixed(1)}</span>
+            <span>Wind Cost: ${(windCapacity * windCost * costFactorWind / 10).toFixed(1)}</span>
+            <span>Gas Cost: ${(gasCapacity * effectiveGasCost * costFactorGas / 10).toFixed(1)}</span>
+            <span>Storage Cost: ${((storagePowerCapacity * storageCost * costFactorStoragePower + storageEnergyCapacity * storageCost * costFactorStorageEnergy / targetDuration) / 10).toFixed(1)}</span>
+        `;
+    }
+
+    solarCostSlider.addEventListener('input', updateCEMResults);
+    windCostSlider.addEventListener('input', updateCEMResults);
+    gasCostSlider.addEventListener('input', updateCEMResults);
+    storageCostSlider.addEventListener('input', updateCEMResults);
+    storageDurationSliderCEM.addEventListener('input', updateCEMResults);
+    co2PriceSlider.addEventListener('input', updateCEMResults);
+    updateCEMResults(); // Initial calculation
+
+});
+</script>
+
+</body>
 </html>

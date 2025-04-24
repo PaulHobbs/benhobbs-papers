@@ -1,51 +1,778 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" href="../favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="../_app/immutable/assets/3.DJmUgK8-.css" rel="stylesheet">
-		<link rel="modulepreload" href="../_app/immutable/entry/start.DCT_7LmL.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DvTB1D3d.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CSG1WaFW.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DlAFYr2h.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/Dd00vRqg.js">
-		<link rel="modulepreload" href="../_app/immutable/entry/app.Bq1AzoqV.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CG8VK_41.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BrZLoES1.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BsjRu56E.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/qkjVjD8k.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/CGnA1y9k.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/0.C6sfMKzQ.js">
-		<link rel="modulepreload" href="../_app/immutable/nodes/3.BPPjIIzZ.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/DMEgerzy.js">
-		<link rel="modulepreload" href="../_app/immutable/chunks/BdjNhoyE.js"><!--[--><!--]--><title>Site: Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<div style="display: contents"><!--[--><!--[--><!----><!----><nav class="svelte-1e3vll7"><a href="/" class="svelte-1e3vll7">← Back to Home</a></nav><!----> <div class="site-container svelte-rwel8p"><iframe src="/sites/Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy.html" title="Site Bothwell_Hobbs_2023_IEEE_How_Sampling_and_Averaging_Historical_Solar_and_Wind_Data_Can_Distort_Resource_Adequacy" width="100%" height="800px" frameborder="0" class="svelte-rwel8p"></iframe></div><!----><!----><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_kkgv3q = {
-						base: new URL("..", location).pathname.slice(0, -1)
-					};
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Understanding the Impact of Data Sampling on Power Grid Planning</title>
+    <!-- Bootstrap CSS (via CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- MathJax Library -->
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <!-- D3.js Library (via CDN) -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* Minimal Custom CSS */
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            padding-bottom: 50px; /* Footer space */
+        }
+        .container {
+            max-width: 900px; /* Limit width for readability */
+        }
+        h1, h2, h3 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            font-weight: 300;
+        }
+        h1 { color: #0056b3; }
+        h2 { color: #17a2b8; }
+        h3 { color: #6c757d; }
+        code {
+            background-color: #f8f9fa;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .interactive-section {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .slider-label {
+            display: inline-block;
+            min-width: 120px;
+            text-align: right;
+            margin-right: 10px;
+        }
+        .value-display {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #dee2e6;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-size: 0.8em;
+            fill: #6c757d;
+        }
+        .line {
+            fill: none;
+            stroke-width: 2px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .bar {
+            fill: steelblue;
+        }
+        .bar:hover {
+            fill: lightblue;
+        }
+        .cost-bar { fill: #dc3545; }
+        .reliability-bar { fill: #ffc107; }
+        .base-bar { fill: #6c757d; }
+        .planned-bar { fill: #17a2b8; }
+        .actual-bar { fill: #fd7e14; }
 
-					const element = document.currentScript.parentElement;
+        /* Specific styles for visualizations */
+        #timeSeriesChart svg, #averagingChart svg, #reliabilityChart svg {
+            display: block;
+            margin: auto;
+        }
 
-					Promise.all([
-						import("../_app/immutable/entry/start.DCT_7LmL.js"),
-						import("../_app/immutable/entry/app.Bq1AzoqV.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 3],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		</div>
-	</body>
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <header class="text-center mb-5">
+            <h1>Sun, Wind, and the Grid: Why Old Data Can Lead to New Problems</h1>
+            <p class="lead">An interactive exploration of how averaging and sampling historical weather data can distort electricity grid planning.</p>
+            <p><small>Based on the paper: "How Sampling and Averaging Historical Solar and Wind Data Can Distort Resource Adequacy" by C. D. Bothwell and B. F. Hobbs, IEEE Transactions on Sustainable Energy, 2023.</small></p>
+        </header>
+
+        <section>
+            <h2>The Challenge: Planning for a Renewable Future</h2>
+            <p>
+                Electricity grids are undergoing a massive transformation. We're moving away from predictable fossil fuel power plants towards variable renewable energy sources like wind and solar. This is great for the environment, but it poses a huge challenge for grid planners.
+            </p>
+            <p>
+                Planners need to ensure there's always enough electricity to meet demand, every hour of every day. This is called <a href="https://en.wikipedia.org/wiki/Resource_adequacy" target="_blank">Resource Adequacy</a>. With traditional power plants, this was relatively straightforward – you knew how much power a plant could produce. But wind and solar power depend entirely on the weather, which is constantly changing and hard to predict perfectly years in advance.
+            </p>
+            <p>
+                To make long-term decisions (like which power plants to build over the next 10-20 years), planners rely on historical data: past records of electricity demand (load), wind speeds, and solar radiation. The big question is: **how much data is enough, and how should we use it?** This exploration dives into why using too little data, or using simplified "average" data, can lead to building the wrong grid – one that's potentially more expensive and less reliable than intended.
+            </p>
+        </section>
+
+        <section>
+            <h2>The Flicker of Variability: Load, Wind, and Solar</h2>
+            <p>
+                Let's look at what makes planning difficult. Electricity demand isn't constant; it changes throughout the day (people wake up, businesses open) and across seasons (heating in winter, air conditioning in summer). Wind and solar output are even more variable. Sometimes the wind blows strongly at night when demand is low; sometimes the sun shines brightest when demand is moderate.
+            </p>
+            <p>
+                Below is a simplified representation of hourly data for a few days. Use the buttons to switch between different years or an "average" year. Notice how much the patterns can differ from year to year, and how the "average" smooths things out.
+            </p>
+            <div class="interactive-section">
+                <h3>Hourly Patterns: A Glimpse of Reality</h3>
+                <div class="mb-3 text-center">
+                    <button class="btn btn-outline-info btn-sm" onclick="updateTimeSeries('Year 1')">Year 1</button>
+                    <button class="btn btn-outline-info btn-sm" onclick="updateTimeSeries('Year 2')">Year 2</button>
+                    <button class="btn btn-outline-info btn-sm" onclick="updateTimeSeries('Year 3')">Year 3</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="updateTimeSeries('Average')">Average Year</button>
+                </div>
+                <div id="timeSeriesChart"></div>
+                <p class="mt-2 text-center"><small>Simplified hourly profiles for Load, Wind, and Solar output (normalized).</small></p>
+            </div>
+            <p>
+                The key takeaway is **variability**. Relying on a single year might capture specific events (like a heatwave or a wind drought) but miss others. Relying on an average might seem like a safe bet, but it hides the extremes.
+            </p>
+        </section>
+
+        <section>
+            <h2>The Danger of Averages: Smoothing Out the Bumps</h2>
+            <p>
+                Grid planners often need to simplify data to make calculations manageable. A common technique is to average many years of historical data to create a single "typical" or "average" year. While this preserves the overall seasonal and daily trends, it drastically reduces the variability.
+            </p>
+            <p>
+                Why is this dangerous? Because the grid needs to be robust against the *extremes*, not just the average conditions. We need enough power during the hottest hour of the year, or during a week with very little wind. Averaging hides these critical moments.
+            </p>
+            <p>
+                Interact with the chart below. It shows the distribution of hourly load (how often different demand levels occur) for individual years versus the average. This is called a <a href="https://en.wikipedia.org/wiki/Load_duration_curve" target="_blank">Load Duration Curve</a>, sorted from highest load to lowest. Notice how the average curve (black) is smoother and has lower peaks than some individual years.
+            </p>
+            <div class="interactive-section">
+                <h3>Load Duration: Hiding the Peaks</h3>
+                <div id="averagingChart"></div>
+                 <div class="mt-3 text-center">
+                    <label for="yearHighlightSlider">Highlight Year:</label>
+                    <input type="range" id="yearHighlightSlider" min="1" max="10" value="1" step="1" oninput="highlightYear(this.value)">
+                    <span id="yearHighlightValue" class="value-display">Year 1</span>
+                </div>
+                <p class="mt-2 text-center"><small>Load Duration Curves for 10 individual years (grey) and the multi-year average (black). The highlighted curve corresponds to the selected year.</small></p>
+            </div>
+            <p>
+                If a planner uses only the average data, they might underestimate the peak demand the system needs to handle, or overestimate how much power wind and solar farms will produce during critical high-demand periods. This leads to under-building capacity, risking blackouts when extreme conditions actually occur. The paper shows this effect clearly: using averaged renewable data led to a **16% system cost increase** and a **38-fold increase in expected blackouts** (measured as Expected Unserved Energy, EUE) compared to using 10 years of detailed data.
+            </p>
+        </section>
+
+         <section>
+            <h2>It's About Timing: Coincidence Matters</h2>
+            <p>
+                It's not just about the average amount of wind or solar; it's about *when* that energy is produced relative to when it's needed. Ideally, wind and solar would generate the most power exactly when demand is highest. Reality is more complex.
+            </p>
+            <ul>
+                <li>Solar power peaks mid-day, often before the highest evening demand in residential areas.</li>
+                <li>Wind patterns vary significantly. Some regions have more wind at night, others during the day. Sometimes, periods of high demand coincide with low wind across large areas.</li>
+            </ul>
+            <p>
+                Averaging data or using short time samples often masks these crucial **temporal interdependencies**. A plan based on average data might assume wind and solar contribute significantly during peak hours, when the reality over many years might be different.
+            </p>
+             <div class="interactive-section">
+                 <h3>Simulated Grid Planning: The Impact of Your Data</h3>
+                 <p>Let's simulate being a grid planner. Your goal is to build a mix of power plants (Coal, Gas, Wind, Solar) to meet demand reliably at the lowest cost. Your only information comes from a specific historical data sample (a single year, 5 years, or the average).</p>
+                 <p>Choose your data source, and we'll estimate the "optimal" grid based *only* on that limited view. Then, we'll test how that grid *actually* performs when faced with the full 10 years of real-world variability.</p>
+
+                 <div class="row mb-3 align-items-center">
+                     <div class="col-md-4">
+                         <label for="dataSourceSelect" class="form-label"><strong>1. Choose Your Data Sample:</strong></label>
+                         <select id="dataSourceSelect" class="form-select" onchange="updatePlanner()">
+                             <option value="AVG">Average Year</option>
+                             <option value="Y1">Year 1 (Example Low Wind/Solar)</option>
+                             <option value="Y4">Year 4 (Example High Wind/Solar)</option>
+                             <option value="Y3">Year 3 (Example Low Peak Load)</option>
+                             <option value="5A">Years 1-5</option>
+                             <option value="10Y">Full 10 Years (Benchmark)</option>
+                         </select>
+                     </div>
+                     <div class="col-md-8">
+                         <p class="mt-3"><small>This choice represents the limited information available to the planner.</small></p>
+                     </div>
+                 </div>
+
+                 <div class="row">
+                     <div class="col-md-6">
+                         <h4>Planner's Expectation (Based on Sample)</h4>
+                         <div id="plannedMix"></div>
+                         <p><strong>Expected Cost:</strong> <span id="expectedCost" class="value-display">$?</span> Billion</p>
+                         <p><strong>Expected Reliability (Unserved Energy):</strong> <span id="expectedEUE" class="value-display">?</span> GWh</p>
+                     </div>
+                     <div class="col-md-6">
+                         <h4>Reality Check (Tested on Full 10 Years)</h4>
+                         <div id="actualPerformance"></div>
+                         <p><strong>Actual Cost:</strong> <span id="actualCost" class="value-display">$?</span> Billion</p>
+                         <p><strong>Actual Reliability (Unserved Energy):</strong> <span id="actualEUE" class="value-display">?</span> GWh</p>
+                     </div>
+                 </div>
+                  <p class="mt-3 text-center"><small>Costs and reliability are illustrative, based on patterns observed in the paper. Lower Unserved Energy means higher reliability.</small></p>
+             </div>
+            <p>
+                Notice how choosing different data samples leads to different investment decisions. Critically, the plan that looks best based on limited data often performs poorly (higher cost, lower reliability) when tested against the full range of historical conditions. Using the "Average Year" data looks cheap and reliable initially, but performs terribly in the reality check, reflecting the paper's findings. Selecting the "wrong" single year could increase costs by 4% and unserved energy 7-fold compared to the best plan based on full data.
+            </p>
+        </section>
+
+        <section>
+            <h2>Quantifying the Distortion: Cost and Reliability Impacts</h2>
+            <p>
+                The paper systematically analyzes these effects using a detailed <a href="https://en.wikipedia.org/wiki/Capacity_expansion" target="_blank">capacity expansion optimization model</a>. This model finds the least-cost mix of generation technologies ($x_g$ for each generator type $g$) needed to meet demand, subject to constraints like generator availability and meeting renewable energy targets (like a <a href="https://en.wikipedia.org/wiki/Renewable_portfolio_standard" target="_blank">Renewable Portfolio Standard</a> or RPS).
+            </p>
+            <p>
+                The core objective is to minimize total system cost:
+                $$ \text{MIN } \text{TotalCost} = \underbrace{\sum_{g \in G} FC_g \cdot x_g}_{\text{Fixed Costs}} + \underbrace{\sum_{h \in H} \sum_{g \in F} VC_g \cdot e_{h,g}}_{\text{Variable Costs}} + \underbrace{\sum_{h \in H} \text{VOLL} \cdot \text{eue}_h}_{\text{Unserved Energy Cost}} $$
+                Where $FC_g$ are fixed costs, $VC_g$ are variable costs, $e_{h,g}$ is energy produced by generator $g$ in hour $h$, $\text{VOLL}$ is the high cost assigned to unmet demand (Value of Lost Load), and $\text{eue}_h$ is the energy unserved in hour $h$. (Note: The actual model is more complex, including subsidies, curtailment etc.).
+            </p>
+            <p>
+                The paper runs this model using different data inputs: the full 10 years, various single years (Y1-Y10), 5-year blocks (5A, 5B), and the averaged year (AVG). It then compares the resulting costs and reliability (measured by total Expected Unserved Energy, EUE).
+            </p>
+             <div class="interactive-section">
+                <h3>Comparing Planning Outcomes</h3>
+                <p>The chart below summarizes the *actual* cost increase and *actual* unserved energy when plans are made using different data samples, compared to the optimal plan using the full 10 years of data.</p>
+                 <div id="reliabilityChart"></div>
+                 <div class="mt-3 text-center">
+                     <label for="policyScenarioSelect">Select Policy Scenario:</label>
+                     <select id="policyScenarioSelect" class="form-select-sm" onchange="updateSummaryChart()">
+                         <option value="A">A: No Renewables Policy</option>
+                         <option value="B">B: Tax Credits (PTC/ITC)</option>
+                         <option value="C">C: 40% RPS</option>
+                         <!-- Add other scenarios if data allows -->
+                     </select>
+                 </div>
+                 <p class="mt-2 text-center"><small>Bars show the % increase in cost and the relative amount of Unserved Energy (higher = less reliable) compared to the 10-Year benchmark plan, for different data samples used in planning.</small></p>
+             </div>
+            <p>
+                Key findings visible here:
+            </p>
+            <ul>
+                <li>**Averaging (AVG) is consistently the worst:** It leads to the highest cost increases and drastically worse reliability (highest EUE).</li>
+                <li>**Single years vary wildly:** Some years (like Y1 or Y9 in some scenarios) might accidentally give a decent result, while others (like Y3 or Y4) lead to very poor outcomes. Critically, the "best" single year changes depending on the renewable policy!</li>
+                <li>**Longer samples help, but aren't perfect:** 5-year samples (5A, 5B) are generally better than single years, but still show significant distortion compared to the full 10 years.</li>
+                <li>**Distortions increase with renewables:** The errors become much larger in scenarios with higher renewable targets (like 40% RPS) or subsidies, because the system becomes more sensitive to the variability and timing of wind/solar generation.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Conclusion: The Value of Good Data</h2>
+            <p>
+                Planning the future power grid requires careful consideration of the data we use. This exploration, based on the work by Bothwell and Hobbs, highlights that:
+            </p>
+            <ul>
+                <li>**Averaging historical data is dangerous:** It masks crucial variability and interdependencies, leading to potentially unreliable and expensive grid designs.</li>
+                <li>**Short data samples are risky:** Using only one or a few years of data can give a misleading picture of long-term conditions. The "best" short sample changes depending on the grid's characteristics (especially renewable levels).</li>
+                <li>**Coincident, long-term data is essential:** Accurately capturing the simultaneous behaviour of load, wind, and solar over many years is critical for robust planning, especially as renewable energy sources become more dominant.</li>
+            </ul>
+            <p>
+                While using more data increases computational effort, the potential cost of getting it wrong – in terms of both dollars spent and reliability risks – is far greater. As we build the grid of the future, investing in good data and appropriate modeling techniques is not just an academic exercise, but a necessity for ensuring a clean, affordable, and reliable power system.
+            </p>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-5 mb-3">
+        <small>Interactive explanation inspired by the style of Bret Victor and Bartosz Ciechanowski.</small><br/>
+        <small>Core concepts from Bothwell & Hobbs (2023), IEEE Trans. Sustainable Energy.</small>
+    </footer>
+
+    <!-- Inlined Javascript -->
+    <script>
+        // --- Data Simulation (Simplified) ---
+        // In a real implementation, this would be more complex or loaded.
+        // Here, we simulate basic patterns for illustration.
+        const hoursPerDay = 24;
+        const days = 5; // Simulate a few days for the hourly chart
+        const numHours = hoursPerDay * days;
+
+        function generateHourlyData(yearType) {
+            const data = { load: [], wind: [], solar: [] };
+            let loadPeakFactor = 1.0, windFactor = 1.0, solarFactor = 1.0;
+            let loadNoise = 0.05, windNoise = 0.2, solarNoise = 0.1;
+
+            // Adjust factors based on simulated year type
+            switch(yearType) {
+                case 'Year 1': // Example: Lower wind/solar
+                    windFactor = 0.7; solarFactor = 0.8; loadPeakFactor = 1.0;
+                    break;
+                case 'Year 2': // Example: Average-ish
+                     windFactor = 1.0; solarFactor = 1.0; loadPeakFactor = 0.95;
+                    break;
+                case 'Year 3': // Example: Higher wind/solar, lower peak load
+                    windFactor = 1.2; solarFactor = 1.1; loadPeakFactor = 0.9;
+                    break;
+                case 'Average': // Smoothed
+                    loadNoise = 0.02; windNoise = 0.05; solarNoise = 0.03;
+                    loadPeakFactor = 0.92; windFactor = 0.95; solarFactor = 0.95;
+                    break;
+            }
+
+            for (let i = 0; i < numHours; i++) {
+                const hourOfDay = i % hoursPerDay;
+                const dayProgress = hourOfDay / hoursPerDay;
+
+                // Simple Load Pattern: Higher mid-day and evening
+                let load = (Math.sin(dayProgress * Math.PI * 2 - Math.PI / 2) * 0.2 + 0.7) + // Base daily cycle
+                           (Math.sin(dayProgress * Math.PI * 4 - Math.PI / 2) * 0.1); // Smaller evening peak
+                load *= loadPeakFactor * (1 + (Math.random() - 0.5) * 2 * loadNoise);
+
+                // Simple Wind Pattern: More variable, slight night bias
+                let wind = (Math.cos(dayProgress * Math.PI * 2) * 0.1 + 0.5); // Base daily cycle (slight night bias)
+                wind *= windFactor * (1 + (Math.random() - 0.5) * 2 * windNoise);
+
+                // Simple Solar Pattern: Peaks mid-day, zero at night
+                let solar = Math.max(0, Math.sin(dayProgress * Math.PI * 2 - Math.PI / 3) * 1.1); // Shifted sine wave
+                solar = Math.pow(solar, 1.5); // Sharpen peak
+                solar *= solarFactor * (1 + (Math.random() - 0.5) * 2 * solarNoise);
+
+                data.load.push(Math.max(0.3, Math.min(1.0, load))); // Clamp values
+                data.wind.push(Math.max(0, Math.min(1.0, wind)));
+                data.solar.push(Math.max(0, Math.min(1.0, solar)));
+            }
+            return data;
+        }
+
+        // --- Time Series Chart (D3.js) ---
+        const tsMargin = { top: 20, right: 30, bottom: 40, left: 40 };
+        const tsWidth = 800 - tsMargin.left - tsMargin.right;
+        const tsHeight = 300 - tsMargin.top - tsMargin.bottom;
+
+        const tsSvg = d3.select("#timeSeriesChart").append("svg")
+            .attr("width", tsWidth + tsMargin.left + tsMargin.right)
+            .attr("height", tsHeight + tsMargin.top + tsMargin.bottom)
+            .append("g")
+            .attr("transform", `translate(${tsMargin.left},${tsMargin.top})`);
+
+        const tsX = d3.scaleLinear().range([0, tsWidth]);
+        const tsY = d3.scaleLinear().range([tsHeight, 0]).domain([0, 1]); // Normalized 0-1
+
+        const tsLineLoad = d3.line().x((d, i) => tsX(i)).y(d => tsY(d.load));
+        const tsLineWind = d3.line().x((d, i) => tsX(i)).y(d => tsY(d.wind));
+        const tsLineSolar = d3.line().x((d, i) => tsX(i)).y(d => tsY(d.solar));
+
+        tsSvg.append("g").attr("class", "x axis")
+           .attr("transform", `translate(0,${tsHeight})`);
+        tsSvg.append("g").attr("class", "y axis")
+           .call(d3.axisLeft(tsY).ticks(5));
+
+        const tsPathLoad = tsSvg.append("path").attr("class", "line").style("stroke", "#dc3545"); // Red
+        const tsPathWind = tsSvg.append("path").attr("class", "line").style("stroke", "#0d6efd"); // Blue
+        const tsPathSolar = tsSvg.append("path").attr("class", "line").style("stroke", "#ffc107"); // Yellow
+
+        // Add legend
+        const legend = tsSvg.append("g").attr("transform", `translate(${tsWidth - 80}, 0)`);
+        legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 10).attr("height", 10).style("fill", "#dc3545");
+        legend.append("text").attr("x", 15).attr("y", 10).text("Load").style("font-size", "12px");
+        legend.append("rect").attr("x", 0).attr("y", 20).attr("width", 10).attr("height", 10).style("fill", "#0d6efd");
+        legend.append("text").attr("x", 15).attr("y", 30).text("Wind").style("font-size", "12px");
+        legend.append("rect").attr("x", 0).attr("y", 40).attr("width", 10).attr("height", 10).style("fill", "#ffc107");
+        legend.append("text").attr("x", 15).attr("y", 50).text("Solar").style("font-size", "12px");
+
+
+        function updateTimeSeries(yearType) {
+            const data = generateHourlyData(yearType);
+            const formattedData = data.load.map((l, i) => ({ load: l, wind: data.wind[i], solar: data.solar[i] }));
+
+            tsX.domain([0, formattedData.length - 1]);
+            tsSvg.select(".x.axis").transition().duration(500)
+                   .call(d3.axisBottom(tsX).ticks(days).tickFormat(d => `Day ${Math.floor(d/hoursPerDay)+1}`));
+
+            tsPathLoad.datum(formattedData).transition().duration(500).attr("d", tsLineLoad);
+            tsPathWind.datum(formattedData).transition().duration(500).attr("d", tsLineWind);
+            tsPathSolar.datum(formattedData).transition().duration(500).attr("d", tsLineSolar);
+        }
+
+        // Initial call
+        updateTimeSeries('Year 1');
+
+
+        // --- Averaging Chart (Load Duration Curve) ---
+        const avgMargin = { top: 20, right: 20, bottom: 40, left: 50 };
+        const avgWidth = 800 - avgMargin.left - avgMargin.right;
+        const avgHeight = 300 - avgMargin.top - avgMargin.bottom;
+        const numHoursYear = 8760; // For conceptual duration curve length
+
+        const avgSvg = d3.select("#averagingChart").append("svg")
+            .attr("width", avgWidth + avgMargin.left + avgMargin.right)
+            .attr("height", avgHeight + avgMargin.top + avgMargin.bottom)
+            .append("g")
+            .attr("transform", `translate(${avgMargin.left},${avgMargin.top})`);
+
+        const avgX = d3.scaleLinear().range([0, avgWidth]).domain([0, 100]); // Percent of hours
+        const avgY = d3.scaleLinear().range([avgHeight, 0]).domain([0.3, 1]); // Normalized Load Factor
+
+        const avgLine = d3.line()
+            .x((d, i) => avgX( (i / (numHoursYear - 1)) * 100 ))
+            .y(d => avgY(d));
+
+        avgSvg.append("g").attr("class", "x axis")
+           .attr("transform", `translate(0,${avgHeight})`)
+           .call(d3.axisBottom(avgX).ticks(10).tickFormat(d => `${d}%`));
+        avgSvg.append("g").attr("class", "y axis")
+           .call(d3.axisLeft(avgY).ticks(5).tickFormat(d => `${(d*100).toFixed(0)}%`)); // Show as % of peak
+
+        avgSvg.append("text") // X axis label
+            .attr("text-anchor", "middle")
+            .attr("x", avgWidth / 2)
+            .attr("y", avgHeight + avgMargin.bottom - 5)
+            .style("font-size", "12px")
+            .text("Percent of Hours in Year");
+
+        avgSvg.append("text") // Y axis label
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -avgMargin.left + 15)
+            .attr("x", -avgHeight / 2)
+             .style("font-size", "12px")
+            .text("Load (% of Annual Peak)");
+
+        // Generate mock duration curve data for 10 years + average
+        const allYearData = [];
+        let avgData = Array(numHoursYear).fill(0);
+        for(let y=0; y<10; y++) {
+            // Simulate year variability
+            let yearLoad = [];
+            let peakFactor = 0.9 + Math.random() * 0.2; // Vary peakiness
+            let baseLoad = 0.3 + Math.random() * 0.1; // Vary base load
+            for(let h=0; h<numHoursYear; h++) {
+                 // Simple decreasing function with noise
+                 let load = baseLoad + (peakFactor - baseLoad) * Math.exp(-h / (numHoursYear * 0.3)) * (1 + (Math.random()-0.5)*0.1);
+                 load = Math.max(baseLoad * 0.9, Math.min(peakFactor * 1.05, load)); // Clamp
+                 yearLoad.push(load);
+                 avgData[h] += load;
+            }
+            yearLoad.sort(d3.descending); // Sort for duration curve
+            allYearData.push(yearLoad);
+        }
+        avgData = avgData.map(d => d / 10); // Calculate average
+        avgData.sort(d3.descending); // Sort average
+
+        // Draw all years in grey
+        allYearData.forEach((yearLoad, index) => {
+            avgSvg.append("path")
+                .datum(yearLoad)
+                .attr("class", "line year-line")
+                .attr("id", `year-line-${index + 1}`)
+                .style("stroke", "#adb5bd") // Grey
+                .style("stroke-width", 1)
+                .style("opacity", 0.7)
+                .attr("d", avgLine);
+        });
+
+        // Draw average line in black
+        const avgPath = avgSvg.append("path")
+            .datum(avgData)
+            .attr("class", "line avg-line")
+            .style("stroke", "#212529") // Black
+            .style("stroke-width", 2.5)
+            .attr("d", avgLine);
+
+        // Slider interaction
+        function highlightYear(year) {
+            d3.selectAll(".year-line").style("stroke-width", 1).style("stroke", "#adb5bd"); // Reset all
+            d3.select(`#year-line-${year}`).style("stroke-width", 2.5).style("stroke", "#0dcaf0").raise(); // Highlight selected
+            avgPath.raise(); // Ensure average is on top
+            document.getElementById('yearHighlightValue').textContent = `Year ${year}`;
+        }
+        // Initial highlight
+        highlightYear(1);
+
+
+        // --- Conceptual Planner Simulation ---
+        const plannerResults = {
+            // Sample data representing outcomes based on paper's trends
+            // Structure: { plannedMix: {Coal: %, Gas: %, Wind: %, Solar: %}, expectedCost: B$, expectedEUE: GWh, actualCost: B$, actualEUE: GWh }
+            "AVG": { plannedMix: { Coal: 10, Gas: 55, Wind: 20, Solar: 15 }, expectedCost: 155, expectedEUE: 50, actualCost: 183, actualEUE: 2084 },
+            "Y1":  { plannedMix: { Coal: 15, Gas: 65, Wind: 10, Solar: 10 }, expectedCost: 158, expectedEUE: 100, actualCost: 181, actualEUE: 346 }, // Low renewables -> more gas
+            "Y4":  { plannedMix: { Coal: 5, Gas: 45, Wind: 30, Solar: 20 }, expectedCost: 156, expectedEUE: 40, actualCost: 179, actualEUE: 108 }, // High renewables -> less gas (looks good, but maybe not optimal cost/reliability mix)
+            "Y3":  { plannedMix: { Coal: 20, Gas: 60, Wind: 10, Solar: 10 }, expectedCost: 160, expectedEUE: 150, actualCost: 182, actualEUE: 375 }, // Low peak load -> underbuilds -> bad reality
+            "5A":  { plannedMix: { Coal: 12, Gas: 58, Wind: 18, Solar: 12 }, expectedCost: 157, expectedEUE: 60, actualCost: 179, actualEUE: 268 },
+            "10Y": { plannedMix: { Coal: 10, Gas: 60, Wind: 15, Solar: 15 }, expectedCost: 178, expectedEUE: 132, actualCost: 178, actualEUE: 132 } // Benchmark - expected = actual
+        };
+
+        const mixColors = { Coal: '#6c757d', Gas: '#adb5bd', Wind: '#0d6efd', Solar: '#ffc107' };
+
+        function drawMixChart(containerId, mixData) {
+            d3.select(containerId).select("svg").remove(); // Clear previous chart
+
+            const chartMargin = { top: 5, right: 10, bottom: 20, left: 40 };
+            const chartWidth = 250 - chartMargin.left - chartMargin.right;
+            const chartHeight = 150 - chartMargin.top - chartMargin.bottom;
+
+            const svg = d3.select(containerId).append("svg")
+                .attr("width", chartWidth + chartMargin.left + chartMargin.right)
+                .attr("height", chartHeight + chartMargin.top + chartMargin.bottom)
+                .append("g")
+                .attr("transform", `translate(${chartMargin.left},${chartMargin.top})`);
+
+            const stack = d3.stack().keys(Object.keys(mixData));
+            const series = stack([mixData]); // Needs to be an array of one object
+
+            const y = d3.scaleLinear().domain([0, 100]).range([chartHeight, 0]); // Total is 100%
+            const x = d3.scaleBand().domain(["Mix"]).range([0, chartWidth]).padding(0.2);
+
+            svg.append("g").attr("class", "y axis").call(d3.axisLeft(y).ticks(5).tickFormat(d => `${d}%`));
+
+            svg.selectAll(".serie")
+                .data(series)
+                .enter().append("g")
+                .attr("fill", d => mixColors[d.key])
+                .selectAll("rect")
+                .data(d => d)
+                .enter().append("rect")
+                .attr("x", d => x("Mix"))
+                .attr("y", d => y(d[1]))
+                .attr("height", d => y(d[0]) - y(d[1]))
+                .attr("width", x.bandwidth());
+
+             // Add legend below chart
+             const legend = svg.append("g")
+                .attr("transform", `translate(0, ${chartHeight + 5})`)
+                .selectAll(".legend-item")
+                .data(Object.keys(mixData).reverse()) // Reverse to match stack order visually
+                .enter().append("g")
+                .attr("class", "legend-item")
+                .attr("transform", (d, i) => `translate(${i * 55}, 0)`); // Adjust spacing
+
+            legend.append("rect")
+                .attr("width", 10)
+                .attr("height", 10)
+                .attr("fill", d => mixColors[d]);
+
+            legend.append("text")
+                .attr("x", 15)
+                .attr("y", 9)
+                .text(d => d)
+                .style("font-size", "10px");
+        }
+
+        function updatePlanner() {
+            const selectedSource = document.getElementById('dataSourceSelect').value;
+            const results = plannerResults[selectedSource];
+
+            if (!results) return;
+
+            // Update displayed values
+            document.getElementById('expectedCost').textContent = `$${results.expectedCost}`;
+            document.getElementById('expectedEUE').textContent = `${results.expectedEUE} GWh`;
+            document.getElementById('actualCost').textContent = `$${results.actualCost}`;
+            document.getElementById('actualEUE').textContent = `${results.actualEUE} GWh`;
+
+            // Update charts
+            drawMixChart("#plannedMix", results.plannedMix);
+            // For "Reality Check", show the *same* mix, but with actual cost/EUE values displayed
+             drawMixChart("#actualPerformance", results.plannedMix); // Draw the same planned mix visually
+        }
+
+        // Initial planner state
+        updatePlanner();
+
+
+        // --- Summary Bar Chart ---
+        const summaryMargin = { top: 20, right: 20, bottom: 60, left: 50 };
+        const summaryWidth = 800 - summaryMargin.left - summaryMargin.right;
+        const summaryHeight = 300 - summaryMargin.top - summaryMargin.bottom;
+
+        const summarySvg = d3.select("#reliabilityChart").append("svg")
+            .attr("width", summaryWidth + summaryMargin.left + summaryMargin.right)
+            .attr("height", summaryHeight + summaryMargin.top + summaryMargin.bottom)
+            .append("g")
+            .attr("transform", `translate(${summaryMargin.left},${summaryMargin.top})`);
+
+        const summaryX = d3.scaleBand().range([0, summaryWidth]).padding(0.2);
+        const summaryYCost = d3.scaleLinear().range([summaryHeight, 0]);
+        const summaryYEUE = d3.scaleLinear().range([summaryHeight, 0]); // Separate scale for EUE
+
+        const summaryXAxis = summarySvg.append("g")
+            .attr("transform", `translate(0,${summaryHeight})`)
+            .attr("class", "x axis");
+
+        const summaryYAxisCost = summarySvg.append("g").attr("class", "y axis cost-axis");
+        const summaryYAxisEUE = summarySvg.append("g").attr("class", "y axis eue-axis").attr("transform", `translate(${summaryWidth}, 0)`);
+
+        // Add Axis Labels
+        summarySvg.append("text") // Y Cost axis label
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -summaryMargin.left + 15)
+            .attr("x", -summaryHeight / 2)
+             .style("font-size", "12px")
+             .style("fill", "#dc3545")
+            .text("Cost Increase (%) vs. 10Y Plan");
+
+        summarySvg.append("text") // Y EUE axis label
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(90)")
+            .attr("y", -summaryWidth - summaryMargin.right + 5) // Adjust position
+            .attr("x", summaryHeight / 2)
+             .style("font-size", "12px")
+             .style("fill", "#fd7e14")
+            .text("Unserved Energy (Relative to 10Y Plan)");
+
+        // Tooltip
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip");
+
+        // Mock summary data based on paper figures (relative values)
+        const summaryData = {
+            "A": [ // No Policy
+                { sample: "AVG", costIncrease: 9.1, eueFactor: 38.0 }, // Rough factors from text/figs
+                { sample: "Y1", costIncrease: 0.0, eueFactor: 1.1 },
+                { sample: "Y3", costIncrease: 6.0, eueFactor: 9.3 },
+                { sample: "Y4", costIncrease: 1.0, eueFactor: 2.7 },
+                { sample: "5A", costIncrease: 0.0, eueFactor: 1.1 },
+                { sample: "5B", costIncrease: 0.3, eueFactor: 0.7 },
+            ],
+            "B": [ // Tax Credits
+                { sample: "AVG", costIncrease: 16.0, eueFactor: 38.0 },
+                { sample: "Y1", costIncrease: 0.6, eueFactor: 3.4 },
+                { sample: "Y3", costIncrease: 1.6, eueFactor: 6.7 },
+                { sample: "Y4", costIncrease: 0.3, eueFactor: 2.0 },
+                { sample: "5A", costIncrease: 0.3, eueFactor: 2.0 },
+                { sample: "5B", costIncrease: -0.1, eueFactor: 0.6 }, // Can be slightly better by chance
+            ],
+             "C": [ // 40% RPS
+                { sample: "AVG", costIncrease: 10.6, eueFactor: 15.7 },
+                { sample: "Y1", costIncrease: 1.7, eueFactor: 2.6 },
+                { sample: "Y3", costIncrease: 4.3, eueFactor: 2.8 },
+                { sample: "Y4", costIncrease: 0.7, eueFactor: 1.9 }, // Not shown in paper fig, estimated trend
+                { sample: "5A", costIncrease: 0.3, eueFactor: 0.5 },
+                { sample: "5B", costIncrease: 0.2, eueFactor: 1.0 },
+            ]
+        };
+
+        function updateSummaryChart() {
+            const selectedPolicy = document.getElementById('policyScenarioSelect').value;
+            const data = summaryData[selectedPolicy];
+            const baseEUE_10Y = plannerResults["10Y"].actualEUE; // Get benchmark EUE for relative calc
+
+            // Calculate relative EUE
+             const plotData = data.map(d => ({
+                ...d,
+                eueRelative: plannerResults[d.sample] ? plannerResults[d.sample].actualEUE / baseEUE_10Y : 1 // Use planner sim data if available, else assume 1
+            }));
+
+
+            // Update Domains
+            summaryX.domain(plotData.map(d => d.sample));
+            summaryYCost.domain([0, d3.max(plotData, d => d.costIncrease) * 1.1 || 10]); // Add buffer or min domain
+            summaryYEUE.domain([0, d3.max(plotData, d => d.eueRelative) * 1.1 || 5]); // Add buffer or min domain
+
+            // Update Axes
+            summaryXAxis.transition().duration(500).call(d3.axisBottom(summaryX))
+                .selectAll("text")
+                .attr("transform", "rotate(-45)")
+                .style("text-anchor", "end");
+            summaryYAxisCost.transition().duration(500).call(d3.axisLeft(summaryYCost).ticks(5).tickFormat(d => `${d.toFixed(1)}%`));
+            summaryYAxisEUE.transition().duration(500).call(d3.axisRight(summaryYEUE).ticks(5).tickFormat(d => `${d.toFixed(1)}x`)); // Show as factor
+
+            const barWidth = summaryX.bandwidth() / 2 * 0.9; // Make bars narrower
+
+            // --- Cost Bars ---
+            const costBars = summarySvg.selectAll(".cost-bar")
+                .data(plotData, d => d.sample);
+
+            costBars.exit().transition().duration(500).attr("y", summaryHeight).attr("height", 0).remove();
+
+            costBars.enter().append("rect")
+                .attr("class", "bar cost-bar")
+                .attr("x", d => summaryX(d.sample))
+                .attr("y", summaryHeight) // Start from bottom
+                .attr("width", barWidth)
+                .attr("height", 0) // Start with zero height
+                .merge(costBars) // Apply transitions to both enter and update selections
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`Sample: ${d.sample}<br/>Cost Incr: ${d.costIncrease.toFixed(1)}%`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                 })
+                .on("mouseout", d => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                 })
+                .transition().duration(500)
+                .attr("x", d => summaryX(d.sample))
+                .attr("y", d => summaryYCost(d.costIncrease))
+                .attr("height", d => summaryHeight - summaryYCost(d.costIncrease))
+                .attr("width", barWidth);
+
+
+            // --- EUE Bars ---
+             const eueBars = summarySvg.selectAll(".eue-bar")
+                .data(plotData, d => d.sample);
+
+            eueBars.exit().transition().duration(500).attr("y", summaryHeight).attr("height", 0).remove();
+
+            eueBars.enter().append("rect")
+                .attr("class", "bar eue-bar")
+                .attr("x", d => summaryX(d.sample) + summaryX.bandwidth() / 2) // Offset EUE bars
+                .attr("y", summaryHeight) // Start from bottom
+                .attr("width", barWidth)
+                .attr("height", 0) // Start with zero height
+                .style("fill", "#fd7e14") // Orange for EUE
+                .merge(eueBars) // Apply transitions to both enter and update selections
+                 .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`Sample: ${d.sample}<br/>Unserved Energy: ${d.eueRelative.toFixed(1)}x Base`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                 })
+                .on("mouseout", d => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                 })
+                .transition().duration(500)
+                .attr("x", d => summaryX(d.sample) + summaryX.bandwidth() / 2) // Offset EUE bars
+                .attr("y", d => summaryYEUE(d.eueRelative))
+                .attr("height", d => summaryHeight - summaryYEUE(d.eueRelative))
+                .attr("width", barWidth);
+
+             // Add legend for bars
+             summarySvg.selectAll(".summary-legend").remove(); // Clear old legend
+             const summaryLegend = summarySvg.append("g")
+                 .attr("class", "summary-legend")
+                 .attr("transform", `translate(${summaryWidth / 2 - 100}, ${summaryHeight + summaryMargin.bottom - 25})`);
+
+             summaryLegend.append("rect")
+                 .attr("width", 10).attr("height", 10).attr("fill", "#dc3545");
+             summaryLegend.append("text")
+                 .attr("x", 15).attr("y", 9).text("Cost Increase").style("font-size", "11px");
+
+             summaryLegend.append("rect")
+                  .attr("x", 120) // Position second item
+                 .attr("width", 10).attr("height", 10).attr("fill", "#fd7e14");
+             summaryLegend.append("text")
+                  .attr("x", 135) // Position second item text
+                 .attr("y", 9).text("Unserved Energy (Relative)").style("font-size", "11px");
+        }
+
+        // Initial summary chart
+        updateSummaryChart();
+
+    </script>
+
+</body>
 </html>
