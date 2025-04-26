@@ -43,7 +43,7 @@
       environmental and energy systems & policy.
     </p>
     <p class="explanation">
-      This page contains simplified explanations of our papers, with interactive
+      This page contains explanations of our papers, with interactive
       visualizations. See the <a
         href="https://hobbsgroup.johnshopkins.edu/home.html">main site</a
       > for more information about the Hobbs Energy-Environment Decisions Group.
@@ -88,11 +88,12 @@
 </div>
 
 <div>
-  <p>
+  <p class="footer">
     Code for this site is on
     <a
       href="https://github.com/paulhobbs/benhobbs-papers"
       target="_blank"
+      class="footer"
       rel="noopener">GitHub</a
     >.
   </p>
@@ -116,6 +117,16 @@
     color: #343a40; /* Darker base text color */
     margin: 0; /* Ensure no default body margin */
     padding: 0; /* Ensure no default body padding */
+    background-image: url("/Mountain_Grid.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  
+  .footer {
+    text-align: center;
+    margin: 0 auto;
+    color: rgb(255,255,255, 0.9);
   }
 
   .container {
@@ -126,7 +137,11 @@
 
   header {
     text-align: center;
-    margin-bottom: 4rem; /* More space below header */
+    padding-top: 0.15rem;
+    padding-bottom: 0.15rem; /* More space below header */
+    margin-bottom: 3rem;
+    border-radius: 12px;
+    background-color: rgba(250,250,250,0.9);
   }
 
   h1 {
@@ -145,10 +160,10 @@
   .explanation {
     max-width: 700px; /* Limit width for readability */
     margin: 0 auto 2rem auto; /* Center and add bottom margin */
-    color: #495057; /* Slightly darker than subtitle */
+    color: #232629; /* Slightly darker than subtitle */
     line-height: 1.6;
     font-size: 1rem;
-    text-align: justify
+    text-align: justify;
   }
 
   .grid {
