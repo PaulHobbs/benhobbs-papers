@@ -4,6 +4,7 @@ import PyPDF2
 from bs4 import BeautifulSoup
 from site_utils import create_site_entry, client
 from google.genai import types  # type: ignore
+from google.api_core import exceptions as google_exceptions # type: ignore
 from pathlib import Path
 from tqdm import tqdm
 from typing import Optional
