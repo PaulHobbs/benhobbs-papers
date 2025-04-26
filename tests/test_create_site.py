@@ -42,11 +42,11 @@ NESTED_HTML = """
     (NESTED_HTML, "Nested Title"),
 ])
 def test_extract_title_valid(html: str, expected: str):
-    assert extract_title(html) == expected
+    assert create_site.extract_title(html) == expected
 
 def test_extract_title_missing_h1():
     with pytest.raises(ValueError) as exc_info:
-        extract_title(NO_H1_HTML)
+        create_site.extract_title(NO_H1_HTML)
     assert "No h1 element found" in str(exc_info.value)
 
 
@@ -64,7 +64,7 @@ def sample_pdf(tmp_path):
     return pdf_path
 
 def test_extract_metadata_valid(sample_pdf):
-    authors, date = extract_metadata(sample_pdf)
+    authors, date = create_site.extract_metadata(sample_pdf)
     assert authors == ["John Doe", "Jane Smith"]
     assert date == "2024-01-02"
 
@@ -74,8 +74,8 @@ def test_extract_metadata_missing_fields(tmp_path):
         writer = PyPDF2.PdfWriter()
         writer.add_blank_page(612, 792)
         writer.write(f)
-    
-    authors, date = extract_metadata(pdf_path)
+
+    authors, date = create_site.extract_metadata(pdf_path)
     assert authors == ["Unknown author"]
     assert date == ""
 
