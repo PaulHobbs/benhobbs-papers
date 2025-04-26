@@ -67,7 +67,7 @@ def _call_gemini_for_authors(first_page_text: str, pdf_path: Path) -> PDFMeta | 
     the first page of a PDF document. Return the result as a JSON object
     with a key "authors" which is a list of strings, and key "title" which
     is as string.
-    
+
     For example:
         {{
         "authors": ["Author One", "Author Two", "Author Three"],
@@ -107,14 +107,14 @@ def extract_pdf_meta_with_gemini(pdf_path: Path) -> PDFMeta:
     return meta
 
 
-_PDF_SITE_PATH = re.compile(r"/static/([^/]*/[^/]*\.pdf)$")
+_PDF_SITE_PATH = re.compile(r"([^/]*/[^/]*\.pdf)$")
 
 
 def _pdf_site_path(pdf_path: Path) -> str:
     """Converts the absolute path into a relative path used for the site."""
     m = _PDF_SITE_PATH.search(str(pdf_path))
     if not m:
-        raise ValueError(f"Pdf path {str(pdf_path)} does not match static/*.pdf")
+        raise ValueError(f"Pdf path {str(pdf_path)} does not match papers/*.pdf")
     return m.group(1)
 
 
