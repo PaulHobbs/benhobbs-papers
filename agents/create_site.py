@@ -7,6 +7,7 @@ from google.genai import types  # type: ignore
 from pathlib import Path
 from tqdm import tqdm
 from typing import Optional
+import argparse
 import base64
 import datetime
 import json
@@ -50,6 +51,15 @@ Please generate the HTML file based on the provided paper content and these inst
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Generate interactive HTML sites from academic papers.")
+    parser.add_argument("papers", nargs='+', help="Paths to the PDF files to process.")
+    parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Only process papers that are not already present in sites.json."
+    )
+    args = parser.parse_args()
+
     index_path = Path(__file__).parent.parent / "src/lib/sites.json"
     try:
         with open(index_path, "r", encoding="utf-8") as f:
@@ -57,16 +67,20 @@ def main():
     except FileNotFoundError:
         sites = []
 
-    for paper in tqdm(sys.argv[1:]):
-        pdf_path = Path(paper)
-      
+    existing_papers = {entry['paper'] for entry in sites}
+
+    for paper_path_str in tqdm(args.papers):
+        pdf_path = Path(paper_path_str)
+
         # Sanitize filename
         papername = pdf_path.stem.replace(" ", "_")
-        if any(papername == entry['paper'] for entry in sites):
-          print(f'Skipping {papername}')
-          continue
 
-        html = fix_links(generate(paper))
+        # Skip if incremental flag is set and paper already exists
+        if args.incremental and papername in existing_papers:
+            print(f'Skipping {papername} (already exists and --incremental specified)')
+            continue
+
+        html = fix_links(generate(paper_path_str))
 
         # Write content
         output_dir = Path(__file__).parent.parent / "static" / "sites"
@@ -75,13 +89,18 @@ def main():
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html)
 
-        # Add new entry if not exists
+        # Create or update entry
         new_entry = create_site_entry(papername, html, pdf_path)
-      
-        if not any(entry["paper"] == papername for entry in sites):
-            sites.append(new_entry)
-            with open(index_path, "w", encoding="utf-8") as f:
-                json.dump(sites, f, indent=2)
+
+        # Remove existing entry if found, then append the new/updated one
+        sites = [entry for entry in sites if entry["paper"] != papername]
+        sites.append(new_entry)
+
+        # Sort sites alphabetically by paper name for consistency
+        sites.sort(key=lambda x: x['paper'])
+
+        with open(index_path, "w", encoding="utf-8") as f:
+            json.dump(sites, f, indent=2)
 
         print(f"Successfully wrote to {output_path}")
 
