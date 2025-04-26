@@ -72,9 +72,20 @@ def main():
 
     existing_papers = {entry['paper'] for entry in sites}
 
-    for paper_path_str in tqdm(args.papers):
+    # Get modification times and sort papers (newest first)
+    paper_paths_with_mtime = []
+    for paper_path_str in args.papers:
         pdf_path = Path(paper_path_str)
+        try:
+            mtime = pdf_path.stat().st_mtime
+            paper_paths_with_mtime.append((pdf_path, mtime))
+        except FileNotFoundError:
+            print(f"Warning: File not found, skipping: {paper_path_str}", file=sys.stderr)
 
+    # Sort by modification time, descending (newest first)
+    sorted_paper_paths = [p[0] for p in sorted(paper_paths_with_mtime, key=lambda x: x[1], reverse=True)]
+
+    for pdf_path in tqdm(sorted_paper_paths):
         # Sanitize filename
         papername = pdf_path.stem.replace(" ", "_")
 
