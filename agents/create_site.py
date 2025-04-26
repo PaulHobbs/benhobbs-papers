@@ -26,7 +26,6 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
     * Prioritize **interactive Javascript visualizations** to build intuition *before* introducing complex equations.
     * If you must make a chart, prefer using D3.js.
     * Use **MathJax** to render ALL mathematical notation. Ensure LaTeX delimiters (`$...$` for inline, `$$...$$` for display) are used correctly in the output HTML.
-    * Use **Bootstrap** (via CDN link preferably, or minimal inline CSS) for overall styling, layout (containers, rows, columns), and standard components (buttons, cards).
     * For any custom diagrams or simple simulations needed beyond standard charts, use **plain Javascript** or **p5.js** if appropriate.
 
 2.  **Content Flow & Explanation:**
@@ -42,7 +41,6 @@ The goal is a single HTML file (with Javascript and CSS inlined) that serves as 
 
 5.  **Output Format & Quality:**
     * Produce a **single, self-contained HTML file**.
-    * Inline necessary Javascript and CSS. Keep inline CSS minimal; rely on Bootstrap classes.
     * Include **comments in the Javascript code** explaining the logic, especially for visualizations and interactive elements.
     * Ensure the final output is polished, professional, and technically accurate according to the paper's content.
     * You'll probably need to generate the HTML body first before adding scripts and styles at the bottom, given your autoregressive generation of the page. 
