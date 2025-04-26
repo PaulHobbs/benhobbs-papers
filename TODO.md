@@ -21,3 +21,9 @@ For each card:
 - [ ] Generate a screenshot and add to the context for revisions.
   - [ ] [Use a browser MCP for this?](https://www.reddit.com/r/ClaudeAI/comments/1k0f3vs/musthave_mcp_servers_for_coding_and_beyond/)
   - [ ] Would need an agent library to use MCPs. Maybe [fast-agent](https://fast-agent.ai/mcp/)?
+
+
+## Get more papers
+
+- [x] Create a Python script (`agents/download_pdfs.py`) to download all PDF links from `https://hobbsgroup.johnshopkins.edu/publications.html`.
+- [x] Validate the created script.
