@@ -13,8 +13,10 @@ import datetime
 import json
 import re
 import sys
+import time
 
-_MODEL = "gemini-2.5-pro-exp-03-25"
+_PRIMARY_MODEL = "gemini-2.5-pro-exp-03-25"
+_FALLBACK_MODEL = "gemini-2.5-pro-preview-03-25"
 _PROMPT = f"""
 I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (https://ciechanow.ski/).
 
@@ -128,12 +130,36 @@ def generate(pdf: str):
         response_mime_type="text/plain",
     )
 
-    chunks = client().models.generate_content_stream(
-        model=_MODEL,
-        contents=contents,
-        config=generate_content_config,
-    )
-    return _parse_html("".join(chunk.text for chunk in tqdm(chunks)))
+    model_to_use = _PRIMARY_MODEL
+    try:
+        print(f"Attempting generation with primary model: {model_to_use}")
+        chunks = client().models.generate_content_stream(
+            model=model_to_use,
+            contents=contents,
+            config=generate_content_config,
+        )
+        result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
+        return _parse_html(result)
+    except google_exceptions.ResourceExhausted as e:
+        print(f"Resource exhausted for primary model ({model_to_use}): {e}. Falling back...")
+        model_to_use = _FALLBACK_MODEL
+        # Optional: Add a small delay before retrying
+        # time.sleep(1)
+        try:
+            print(f"Attempting generation with fallback model: {model_to_use}")
+            chunks = client().models.generate_content_stream(
+                model=model_to_use,
+                contents=contents,
+                config=generate_content_config,
+            )
+            result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
+            return _parse_html(result)
+        except Exception as fallback_e:
+            print(f"Generation failed with fallback model ({model_to_use}) as well: {fallback_e}")
+            raise fallback_e # Re-raise the exception from the fallback attempt
+    except Exception as primary_e:
+        print(f"An unexpected error occurred with the primary model ({model_to_use}): {primary_e}")
+        raise primary_e # Re-raise other unexpected exceptions
 
 
 def fix_links(html: str) -> str:
