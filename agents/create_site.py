@@ -32,8 +32,7 @@ _PROMPT = f"""
             <li>Prioritize <strong>interactive Javascript visualizations</strong> to build intuition <em>before</em>
                 introducing complex equations.</li>
             <li>If you must make a chart, prefer using D3.js.</li>
-            <li>Use <strong>MathJax</strong> to render ALL mathematical notation. Ensure LaTeX delimiters
-                (<code>$...$</code> for inline, <code>$$...$$</code> for display) are used correctly in the output HTML.
+            <li>Use <strong>MathJax</strong> to render ALL mathematical notation.
             </li>
             <li>For any custom diagrams or simple simulations needed beyond standard charts, use <strong>plain
                     Javascript</strong> or <strong>p5.js</strong> if appropriate.</li>
