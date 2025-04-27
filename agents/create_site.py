@@ -1,3 +1,5 @@
+import asyncio
+from agents.puppet.puppeteer import take_screenshot
 #!/usr/bin/env python3
 from __future__ import annotations
 import PyPDF2
@@ -134,6 +136,10 @@ def main():
         output_path = output_dir / f"{papername}.html"
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(html)
+
+        # Take screenshot
+        site_url = f"/static/sites/{papername}.html"
+        asyncio.run(take_screenshot(site_url, papername))
 
         # Create or update entry
         new_entry = create_site_entry(papername, html, pdf_path)
