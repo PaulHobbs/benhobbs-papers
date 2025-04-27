@@ -78,13 +78,55 @@ def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int 
             if not gemini_client:
                 raise ConnectionError("Failed to initialize Gemini client.")
 
+            # --- Screenshot intermediate step ---
+            temp_html_path = screenshot_dir / f"{papername}_feedback_iter{iteration}.html"
+            screenshot_path = screenshot_dir / f"{papername}_feedback_iter{iteration}.png"
+            logger.info(f"Saving intermediate HTML for screenshot: {temp_html_path}")
+            with open(temp_html_path, "w", encoding="utf-8") as f:
+                f.write(current_html_content) # Use current_html_content for the screenshot
+
+            screenshot_file = None
+            try:
+                logger.info(f"Taking intermediate screenshot: {screenshot_path}")
+                # Use relative path for URL if take_screenshot expects it
+                relative_temp_html_url = f"/static/screenshots/{temp_html_path.name}"
+                # Construct a unique screenshot name for this iteration
+                screenshot_iter_name = f"{papername}_feedback_iter{iteration}"
+                asyncio.run(take_screenshot(relative_temp_html_url, screenshot_iter_name, output_dir=screenshot_dir))
+                logger.info(f"Intermediate screenshot saved: {screenshot_path}")
+
+                # Upload screenshot to Gemini
+                logger.info(f"Uploading screenshot: {screenshot_path}")
+                screenshot_file = gemini_client.files.upload(file=str(screenshot_path))
+                logger.info(f"Screenshot uploaded successfully: {screenshot_file.uri}")
+
+            except Exception as screen_e:
+                logger.error(f"Failed to take or upload intermediate screenshot for {papername} iteration {iteration}: {screen_e}")
+                # Continue the loop even if screenshot fails? Or raise? For now, log and continue.
+                # If screenshot fails, screenshot_file will be None, and we won't add it to contents.
+            finally:
+                # Clean up temporary HTML file
+                if temp_html_path.exists():
+                    temp_html_path.unlink()
+                    logger.info(f"Deleted temporary HTML file: {temp_html_path}")
+            # --- End Screenshot ---
+
             # Prepare content for feedback model
+            feedback_parts = [
+                types.Part.from_text(text=_FEEDBACK_PROMPT.format(html_content=current_html_content)),
+            ]
+            if screenshot_file:
+                 feedback_parts.append(
+                     types.Part.from_uri(
+                         file_uri=screenshot_file.uri,
+                         mime_type=screenshot_file.mime_type,
+                     )
+                 )
+
             feedback_contents = [
                 types.Content(
                     role="user",
-                    parts=[
-                        types.Part.from_text(text=_FEEDBACK_PROMPT.format(html_content=current_html_content)),
-                    ],
+                    parts=feedback_parts,
                 ),
             ]
 
@@ -102,6 +144,14 @@ def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int 
             feedback_response = "".join(chunk.text for chunk in feedback_chunks)
             # feedback_response = "".join(chunk.text for chunk in tqdm(feedback_chunks, desc=f"Feedback loop {iteration}")) # Optional tqdm
 
+            # Clean up uploaded screenshot file
+            if screenshot_file:
+                try:
+                    gemini_client.files.delete(name=screenshot_file.name)
+                    logger.info(f"Deleted uploaded screenshot file: {screenshot_file.name}")
+                except Exception as delete_e:
+                    logger.error(f"Failed to delete uploaded screenshot file: {delete_e}")
+
             # Check if Gemini indicates completion
             if feedback_response.strip().lower() == "looks good":
                 logger.info(f"Feedback loop completed for {papername} after {iteration} iterations.")
@@ -110,31 +160,6 @@ def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int 
             # Parse and update HTML
             logger.info("Parsing feedback response...")
             updated_html = _parse_html(feedback_response)
-
-            # --- Screenshot intermediate step ---
-            temp_html_path = screenshot_dir / f"{papername}_feedback_iter{iteration}.html"
-            screenshot_path = screenshot_dir / f"{papername}_feedback_iter{iteration}.png"
-            logger.info(f"Saving intermediate HTML for screenshot: {temp_html_path}")
-            with open(temp_html_path, "w", encoding="utf-8") as f:
-                f.write(updated_html)
-
-            try:
-                logger.info(f"Taking intermediate screenshot: {screenshot_path}")
-                # Use relative path for URL if take_screenshot expects it
-                relative_temp_html_url = f"/static/screenshots/{temp_html_path.name}"
-                # Construct a unique screenshot name for this iteration
-                screenshot_iter_name = f"{papername}_feedback_iter{iteration}"
-                asyncio.run(take_screenshot(relative_temp_html_url, screenshot_iter_name, output_dir=screenshot_dir))
-                logger.info(f"Intermediate screenshot saved: {screenshot_path}")
-            except Exception as screen_e:
-                logger.error(f"Failed to take intermediate screenshot for {papername} iteration {iteration}: {screen_e}")
-                # Continue the loop even if screenshot fails? Or raise? For now, log and continue.
-            finally:
-                # Clean up temporary HTML file
-                if temp_html_path.exists():
-                    temp_html_path.unlink()
-                    logger.info(f"Deleted temporary HTML file: {temp_html_path}")
-            # --- End Screenshot ---
 
             current_html_content = updated_html
             logger.info(f"HTML updated for {papername} based on feedback iteration {iteration}.")
