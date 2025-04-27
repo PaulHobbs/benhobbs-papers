@@ -1,21 +1,43 @@
-import asyncio
-import time
-import sys
+import dataclasses
 from pyppeteer import launch
 from pathlib import Path
 
-async def take_screenshot(url: str, site_name: str):
+
+@dataclasses.dataclass(frozen=True)
+class Log:
+    level: str
+    msg: str
+
+    def __str__(self):
+        return f'{self.level}: {self.msg}'
+
+
+@dataclasses.dataclass
+class Result:
+    screenshot_path: str
+    logs: list[Log]
+
+
+
+async def take_screenshot(url: str, name: str, output_dir: str = None) -> Result:
     """
     Takes a screenshot of the given URL and saves it based on the site name.
 
     Args:
         url: The URL to navigate to.
-        site_name: The name of the site, used for the screenshot filename.
+        name: The name of the site, used for the screenshot filename.
+        output_dir: optionally, a directory to output screenshots in. Otherwise,
+            will output into $repo_root/static/sites/screenshots.
     """
+    result = Result()
     browser = await launch(headless=True, defaultViewport=None, args=['--no-sandbox']) # Use headless=True for server environments, add --no-sandbox for potential container environments
     page = await browser.newPage()
-    page.on('console', lambda msg: print(f'Browser console: {msg}'))
-    page.on('pageerror', lambda err: print(f'Browser page error: {err}'))
+    def onLog(level, msg):
+        print(f'Browser {level}: {msg}')
+        result.logs.append(Log(level, msg))
+
+    page.on('console', lambda msg: onLog('info', msg))
+    page.on('pageerror', lambda msg: onLog('error', msg))
 
     try:
         await page.goto(url, {
@@ -25,10 +47,11 @@ async def take_screenshot(url: str, site_name: str):
         await page.waitFor(500); # Wait a bit more for rendering
 
         # Ensure the screenshots directory exists
-        screenshot_dir = Path(__file__).parent.parent.parent / "static" / "sites" / "screenshots"
+        screenshot_dir = output_dir or Path(__file__).parent.parent.parent / "static" / "sites" / "screenshots"
         screenshot_dir.mkdir(parents=True, exist_ok=True)
 
-        screenshot_path = screenshot_dir / f"{site_name}.png"
+        screenshot_path = screenshot_dir / f"{name}.png"
+        result.screenshot_path = screenshot_path
         await page.screenshot({'path': str(screenshot_path), 'fullPage': True})
         print(f"Screenshot saved to {screenshot_path}")
 
@@ -37,5 +60,5 @@ async def take_screenshot(url: str, site_name: str):
     finally:
         await browser.close()
 
-# Removed the direct execution part
-# asyncio.get_event_loop().run_until_complete(main())
+    return result
+

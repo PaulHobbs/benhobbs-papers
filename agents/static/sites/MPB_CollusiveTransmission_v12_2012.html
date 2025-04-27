@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untangling Tacit Collusion in Electricity Markets</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 2em auto;
+            max-width: 800px;
+            padding: 0 1em;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+        h1, h2, h3 {
+            color: #1a1a1a;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        h1 { font-size: 2.2em; border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+        p, li {
+            margin-bottom: 1em;
+        }
+        code {
+            font-family: monospace;
+            background-color: #f0f0f0;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        .interactive-container {
+            background-color: #f8f8f8;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 1.5em;
+            margin: 2em 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .interactive-container h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        .output-value {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .explanation {
+            background-color: #e7f3ff;
+            border-left: 5px solid #0056b3;
+            padding: 1em;
+            margin: 1.5em 0;
+        }
+        .equation {
+            display: block;
+            text-align: center;
+            margin: 1.5em 0;
+            font-size: 1.1em;
+            overflow-x: auto; /* Handle potential overflow on small screens */
+        }
+        .highlight {
+             background-color: #fff3cd;
+             padding: 0.1em 0.3em;
+             border-radius: 3px;
+        }
+         a {
+            color: #0056b3;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            width: auto;
+            height: auto;
+            padding: 5px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .controls {
+            margin-bottom: 1em;
+            padding-bottom: 1em;
+            border-bottom: 1px solid #eee;
+        }
+        .controls label, .controls input, .controls button, .controls span {
+             margin-right: 10px;
+             margin-bottom: 5px; /* Add space below controls */
+        }
+        .controls button {
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .controls button.active {
+            background-color: #0056b3;
+            font-weight: bold;
+        }
+        .network-vis {
+            text-align: center;
+        }
+        .network-vis svg {
+             border: 1px dashed #ccc;
+        }
+        .node { fill: steelblue; cursor: pointer; }
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        .link-congested { stroke: red; stroke-width: 4px; }
+        .link-normal { stroke: #999; stroke-width: 2px; }
+        .node-label { font-size: 10px; fill: #333; pointer-events: none; }
+        .profit-bar { fill: steelblue; }
+        .profit-bar:hover { fill: orange; }
+        .axis path, .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font: 10px sans-serif;
+        }
+        .grid line {
+            stroke: lightgrey;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+        .grid path {
+            stroke-width: 0;
+        }
+        .result-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .result-box p { margin-bottom: 5px; }
+        .result-box strong { color: #333; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Untangling Tacit Collusion in Electricity Markets</h1>
+    <p>Based on the paper: <em>Liu, A. L., & Hobbs, B. F. Tacit Collusion Games in Pool-Based Electricity Markets under Transmission Constraints.</em></p>
+
+    <p>Electricity powers our modern world, but the markets that deliver it are complex and often far from the simple "supply meets demand" picture taught in introductory economics. Because building power plants is expensive and requires specialized knowledge, electricity generation is often dominated by a small number of large companies. This creates an <a href="https://en.wikipedia.org/wiki/Oligopoly" target="_blank">oligopoly</a>, a market structure where firms' decisions significantly impact each other and the final price consumers pay.</p>
+
+    <p>One major concern in such markets is <strong>collusion</strong>: firms secretly cooperating to act like a monopoly, reducing output and raising prices to increase their collective profits. While explicit agreements (cartels) are illegal, firms might engage in <em>tacit collusion</em> – coordinating their actions without direct communication, often sustained by the understanding that deviating from the cooperative strategy will trigger future punishment from rivals. This paper explores how tacit collusion might work in electricity markets, specifically considering the impact of the physical power grid – the transmission network – on firms' strategic behavior.</p>
+
+    <h2>The Basics: Competition, Monopoly, and Oligopoly</h2>
+
+    <p>Imagine a simple market. Buyers want electricity (demand), and sellers generate it (supply). In a <a href="https://en.wikipedia.org/wiki/Perfect_competition" target="_blank">perfectly competitive</a> market with many small sellers, no single firm can influence the price. They produce until their marginal cost equals the market price, leading to efficient outcomes (low prices, high quantity).</p>
+
+    <p>At the other extreme is a <a href="https://en.wikipedia.org/wiki/Monopoly" target="_blank">monopoly</a>, where a single seller controls the market. The monopolist restricts output to raise the price, maximizing its own profit but leading to higher prices and less electricity for consumers compared to competition.</p>
+
+    <p>An oligopoly lies between these extremes. Firms have <a href="https://en.wikipedia.org/wiki/Market_power" target="_blank">market power</a> – the ability to influence prices – but they must consider their rivals' actions. How do they compete? One classic model is the <a href="https://en.wikipedia.org/wiki/Cournot_competition" target="_blank">Cournot model</a>, where firms simultaneously choose how much quantity to produce.</p>
+
+    <h2>One Shot vs. Repeated Games: The Shadow of the Future</h2>
+
+    <p>Traditional Cournot models often assume firms interact only once (a "static" or "one-shot" game). In this scenario, each firm acts purely in its immediate self-interest, leading to an outcome known as the <a href="https://en.wikipedia.org/wiki/Nash_equilibrium" target="_blank">Nash equilibrium</a>. This equilibrium is typically better for consumers than a monopoly but worse than perfect competition.</p>
+
+    <p>However, real electricity markets operate daily. Firms interact repeatedly. This changes everything. In a repeated game, firms can use strategies that depend on past actions. A common strategy to sustain tacit collusion is the <a href="https://en.wikipedia.org/wiki/Grim_trigger" target="_blank">grim trigger</a>: "Cooperate (e.g., produce a low quantity to keep prices high) as long as everyone else does. If anyone deviates (e.g., produces more to grab short-term profit), punish them by reverting to the non-cooperative Nash equilibrium forever."</p>
+
+    <p>Does this threat work? It depends on how much firms value future profits compared to immediate gains.</p>
+
+    <h2>The Key: Incentive Compatibility</h2>
+
+    <p>For tacit collusion to be stable, each firm must find it more profitable to stick to the collusive agreement than to cheat. This leads to the crucial <strong>Incentive Compatibility (IC) constraint</strong>. Let's break it down:</p>
+    <ul>
+        <li>\( \pi_f^C \): Firm \(f\)'s profit per period if everyone colludes.</li>
+        <li>\( \pi_f^D \): Firm \(f\)'s (higher) profit in the single period it deviates/cheats, while others still collude.</li>
+        <li>\( \pi_f^N \): Firm \(f\)'s profit per period in the Nash equilibrium (the punishment phase after cheating).</li>
+        <li>\( \delta \): The discount factor (\(0 < \delta < 1\)). This represents how much firms value future profits. A \( \delta \) close to 1 means the future is highly valued; a \( \delta \) close to 0 means only the present matters. It's related to the interest rate \(r\) and the probability \(p\) the game ends by \( \delta = (1-p)/(1+r) \).</li>
+    </ul>
+
+    <p>A firm thinks: "If I collude, I get \( \pi_f^C \) every period. The total <a href="https://en.wikipedia.org/wiki/Present_value" target="_blank">present value</a> of this infinite stream is \( \pi_f^C / (1-\delta) \)."</p>
+    <p>"If I cheat <em>this</em> period, I get \( \pi_f^D \) now, but then I get punished and receive \( \pi_f^N \) every period after that. The present value is \( \pi_f^D + \delta \pi_f^N / (1-\delta) \)."</p>
+
+    <p>Collusion is sustainable for firm \(f\) if the payoff from colluding is greater than or equal to the payoff from cheating:</p>
+    <div class="equation">
+    $$ \frac{\pi_f^C}{1-\delta} \ge \pi_f^D + \frac{\delta \pi_f^N}{1-\delta} $$
+    </div>
+    <p>Rearranging this gives the standard form of the IC constraint:</p>
+    <div class="equation" id="ic-constraint-eq">
+    $$ \pi_f^C \ge (1-\delta) \pi_f^D + \delta \pi_f^N $$
+    </div>
+    <p>This equation says: The per-period profit from collusion must be at least as large as a weighted average of the one-time cheating profit and the subsequent punishment profit. The weight is determined by the discount factor \( \delta \).</p>
+
+    <div class="interactive-container">
+        <h3>Interactive: When is Collusion Sustainable?</h3>
+        <p>Adjust the sliders below to see how the discount factor (\(\delta\)) and the relative profit levels affect whether the Incentive Compatibility constraint holds (i.e., whether collusion is sustainable). Assume the punishment profit (\(\pi^N\)) is fixed at 20.</p>
+        <div class="controls">
+            <label for="ic-delta">Discount Factor (\(\delta\)): <span id="ic-delta-value" class="output-value">0.5</span></label>
+            <input type="range" id="ic-delta" min="0.01" max="0.99" step="0.01" value="0.5">
+
+            <label for="ic-profit-c">Collusion Profit (\(\pi^C\)): <span id="ic-profit-c-value" class="output-value">50</span></label>
+            <input type="range" id="ic-profit-c" min="21" max="100" step="1" value="50">
+
+            <label for="ic-profit-d">Deviation Profit (\(\pi^D\)): <span id="ic-profit-d-value" class="output-value">70</span></label>
+            <input type="range" id="ic-profit-d" min="21" max="150" step="1" value="70">
+             <p>Punishment Profit (\(\pi^N\)) = <span class="output-value">20</span> (fixed)</p>
+        </div>
+        <div id="ic-result" class="explanation">
+            Calculating...
+        </div>
+        <p><strong>Interpretation:</strong></p>
+        <ul>
+            <li>Higher \(\delta\) (future matters more) makes collusion <span class="highlight">easier</span> to sustain.</li>
+            <li>Higher deviation profit \(\pi^D\) (more temptation to cheat) makes collusion <span class="highlight">harder</span> to sustain.</li>
+            <li>Higher collusion profit \(\pi^C\) (more benefit from cooperating) makes collusion <span class="highlight">easier</span> to sustain.</li>
+             <li>Lower punishment profit \(\pi^N\) (harsher punishment) makes collusion <span class="highlight">easier</span> to sustain.</li>
+        </ul>
+    </div>
+
+    <h2>Adding Reality: The Transmission Network</h2>
+
+    <p>Electricity markets aren't just abstract quantity decisions. Power flows over a physical network of transmission lines connecting different locations (nodes). This network has limitations:</p>
+    <ol>
+        <li><strong>Physics:</strong> Power flow follows Kirchhoff's laws. Injecting power at one point affects flows across the entire network, sometimes in counter-intuitive ways (e.g., loop flows).</li>
+        <li><strong>Capacity Limits:</strong> Lines can only carry so much power before they overheat or become unstable. Congestion occurs when the desired power flow exceeds a line's capacity.</li>
+    </ol>
+    <p>In many modern markets, an <a href="https://en.wikipedia.org/wiki/Independent_system_operator" target="_blank">Independent System Operator (ISO)</a> manages the grid. The ISO's typical goal is to maximize overall market efficiency (social surplus: consumer benefit minus producer cost) subject to the physical constraints of the network. To do this, the ISO determines:</p>
+    <ul>
+        <li>Which generators should produce how much power.</li>
+        <li>How power flows across the network.</li>
+        <li><a href="https://en.wikipedia.org/wiki/Locational_marginal_pricing" target="_blank">Locational Marginal Prices (LMPs)</a>: The price of electricity at different nodes. LMPs can differ across locations due to transmission congestion. If a line is congested, the price will be higher on the receiving end than the sending end, reflecting the cost of congestion.</li>
+    </ul>
+
+    <p>This paper incorporates these features. Firms don't just choose a total quantity; they decide how much to generate at specific locations. Their decisions interact with the ISO's dispatch and pricing, which in turn are constrained by the network.</p>
+
+    <div class="interactive-container">
+        <h3>Conceptual Network Visualization</h3>
+        <p>Imagine a simple 5-node network based on the paper's example. Nodes 1 and 2 have generation (supply). Nodes 3, 4, and 5 have demand. Lines connect them, but some lines (e.g., 3-4, 4-5) might have limited capacity.</p>
+         <div class="network-vis">
+             <svg id="network-svg" width="400" height="200"></svg>
+         </div>
+        <p>If firms try to sell a lot of power from Nodes 1/2 to Nodes 4/5, the lines might become congested. The ISO would then manage the flow, potentially limiting output from some generators or causing prices at Nodes 4 and 5 to rise significantly higher than at Nodes 1 and 2.</p>
+         <p><em>(Note: This is a static visualization for conceptual understanding. The simulation below explores the effects.)</em></p>
+    </div>
+
+
+    <h2>Modeling Collusion with Constraints</h2>
+
+    <p>The paper extends the Harrington et al. framework. Firms aim to find a collusive generation plan (quantities at each node, \(g_{fi}\)) that maximizes their joint objective (related to the Nash Bargaining solution: \( \max \prod (\pi_f - \pi_f^N) \)) subject to:</p>
+    <ol>
+        <li><strong>Feasibility Constraints:</strong> Each firm's generation at each node cannot exceed its capacity there (\(g_{fi} \in X_{fi}\)).</li>
+        <li><strong>ISO Operation (Implicit):</strong> The generation plan \(g\) implies market prices \(p\) and firm profits \(\pi_f(g)\) that result from the ISO optimizing the dispatch considering network constraints. This is modeled as an equilibrium constraint within the firms' problem – making it a complex <a href="https://en.wikipedia.org/wiki/Mathematical_program_with_equilibrium_constraints" target="_blank">MPEC</a>.</li>
+        <li><strong>Incentive Compatibility:</strong> The crucial constraint \( \pi_f(g) \ge (1-\delta)\pi_f^D(G_{-f}) + \delta \pi_f^N \) must hold for all firms \(f\). Here, \(\pi_f(g)\) is the collusive profit considering network effects, \(\pi_f^D(G_{-f})\) is the deviation profit (also considering network effects, though simplified in the paper for tractability), and \(\pi_f^N\) is the punishment profit from a static Nash-Cournot game (modeled as a simpler Complementarity Problem in the paper).</li>
+    </ol>
+
+    <p>The key insight is that transmission constraints change the profits \( \pi_f^C, \pi_f^D, \pi_f^N \). Congestion can isolate markets, potentially increasing the market power of local generators. This might make collusion easier <em>or</em> harder to sustain, depending on how congestion affects the profits in the IC constraint.</p>
+
+    <h2>Simulation: Exploring Market Outcomes</h2>
+    <p>Let's simulate the outcomes in the 5-node network under different scenarios, based on the paper's findings. We'll compare:</p>
+    <ul>
+        <li><strong>Perfect Competition (PC):</strong> Many small firms, price equals marginal cost (adjusted for congestion).</li>
+        <li><strong>Nash-Cournot (NC):</strong> Oligopoly, static game, firms choose quantities considering rivals, results in Nash equilibrium prices/profits.</li>
+        <li><strong>Tacit Collusion (TC):</strong> Oligopoly, repeated game, firms sustain cooperation using the threat of punishment (if IC constraint holds for the given \(\delta\)).</li>
+    </ul>
+    <p>We will also toggle transmission constraints ON (limited line capacities, causing potential congestion) and OFF (infinite line capacities, no congestion) to see the impact.</p>
+
+    <div class="interactive-container">
+        <h3>Market Simulation (5-Node Example)</h3>
+        <div class="controls">
+             <label for="sim-delta">Discount Factor (\(\delta\)) for Collusion: <span id="sim-delta-value" class="output-value">0.5</span></label>
+             <input type="range" id="sim-delta" min="0.01" max="0.99" step="0.01" value="0.5">
+             <br>
+             <label for="sim-constraints">Transmission Constraints:</label>
+             <button id="constraints-on" class="active">ON</button>
+             <button id="constraints-off">OFF</button>
+             <br>
+             <label>Select Scenario:</label>
+             <button id="scenario-pc">Perfect Comp.</button>
+             <button id="scenario-nc">Nash-Cournot</button>
+             <button id="scenario-tc">Tacit Collusion</button>
+        </div>
+
+         <div style="display: flex; flex-wrap: wrap; justify-content: space-between;">
+            <div style="flex-basis: 48%;">
+                <h4>Network State & Prices</h4>
+                 <div class="network-vis">
+                     <svg id="sim-network-svg" width="350" height="180"></svg>
+                 </div>
+                 <div id="sim-prices" class="result-box">Select a scenario...</div>
+            </div>
+            <div style="flex-basis: 48%;">
+                 <h4>Market Results</h4>
+                 <div id="sim-results-chart" style="width: 100%; height: 200px;"></div>
+                 <div id="sim-summary" class="result-box">Select a scenario...</div>
+            </div>
+        </div>
+        <div id="collusion-sustainability" class="explanation" style="margin-top: 1em; display: none;">Collusion Status: Checking...</div>
+
+    </div>
+
+    <h2>Key Findings and Implications</h2>
+
+    <p>As the simulation based on the paper's example often shows:</p>
+    <ul>
+        <li>Moving from Perfect Competition -> Nash-Cournot -> Tacit Collusion generally leads to:
+            <ul>
+                <li>Higher prices</li>
+                <li>Lower total generation</li>
+                <li>Higher firm profits</li>
+                <li>Lower consumer surplus (benefit consumers get minus what they pay)</li>
+                <li>Lower overall social surplus (total market efficiency)</li>
+            </ul>
+        </li>
+        <li><strong>Impact of Transmission Constraints:</strong> The paper's crucial finding, often visible in the simulation, is that transmission constraints can <em>magnify</em> the difference between competitive and collusive outcomes.
+            <ul>
+                <li>Under competition, constraints might <em>lower</em> the average price if excess generation capacity gets trapped in low-demand areas.</li>
+                <li>Under collusion, firms can strategically exploit constraints. They might reduce output specifically in ways that <em>create or worsen</em> congestion, allowing them to significantly raise prices in energy-hungry areas that become isolated by the bottlenecks. This can make collusive profits <em>much</em> higher with constraints than without them.</li>
+                <li>Constraints can change whether collusion is sustainable for a given \(\delta\). If constraints significantly boost potential collusive profits (\(\pi^C\)) or deviation profits (\(\pi^D\)), or alter the punishment (\(\pi^N\)), they directly affect the IC constraint. The paper suggests constraints often make collusion <em>easier</em> to sustain or more profitable when sustainable.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <p>This research highlights that simply having multiple firms isn't enough to guarantee competitive outcomes in electricity markets. The physical realities of the transmission network interact strongly with firms' strategic behavior. Market designers and regulators need to consider these interactions carefully, as network limitations can inadvertently create opportunities for firms to exercise market power, especially through tacit collusion.</p>
+
+    <h2>Conclusion</h2>
+    <p>Modeling tacit collusion in electricity markets is complex, especially when incorporating the intricacies of transmission networks. This paper provides a framework (MPEC) for analyzing this behavior and shows, through examples, that network constraints are not just a technical detail but a critical factor influencing market power and the potential for collusion. Understanding these dynamics is essential for designing electricity markets that are both reliable and reasonably competitive.</p>
+
+
+<script>
+// --- MathJax Configuration ---
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']],
+    processEscapes: true
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+
+// --- Incentive Compatibility Interactive ---
+const icDeltaSlider = document.getElementById('ic-delta');
+const icProfitCSlider = document.getElementById('ic-profit-c');
+const icProfitDSlider = document.getElementById('ic-profit-d');
+const icDeltaValue = document.getElementById('ic-delta-value');
+const icProfitCValue = document.getElementById('ic-profit-c-value');
+const icProfitDValue = document.getElementById('ic-profit-d-value');
+const icResult = document.getElementById('ic-result');
+const profitN_ic = 20; // Fixed punishment profit for this example
+
+function updateICResult() {
+    const delta = parseFloat(icDeltaSlider.value);
+    const piC = parseFloat(icProfitCSlider.value);
+    const piD = parseFloat(icProfitDSlider.value);
+    const piN = profitN_ic;
+
+    icDeltaValue.textContent = delta.toFixed(2);
+    icProfitCValue.textContent = piC.toFixed(0);
+    icProfitDValue.textContent = piD.toFixed(0);
+
+    // Calculate the right-hand side (RHS) of the IC constraint
+    const rhs = (1 - delta) * piD + delta * piN;
+
+    // Check if collusion is sustainable
+    const sustainable = piC >= rhs;
+
+    // Update the result display
+    let resultText = `Required Condition: \\( \\pi^C \\ge (1-\\delta)\\pi^D + \\delta\\pi^N \\) <br>`;
+    resultText += `Your Values: \\( ${piC.toFixed(0)} \\ge (1-${delta.toFixed(2)}) \\times ${piD.toFixed(0)} + ${delta.toFixed(2)} \\times ${piN.toFixed(0)} \\) <br>`;
+    resultText += `Calculation: \\( ${piC.toFixed(0)} \\ge ${rhs.toFixed(2)} \\) <br>`;
+    resultText += `<strong>Result: Collusion is ${sustainable ? '<span style="color: green;">SUSTAINABLE</span>' : '<span style="color: red;">NOT SUSTAINABLE</span>'}</strong>`;
+
+    icResult.innerHTML = resultText;
+
+    // Rerender MathJax for the updated content
+    if (window.MathJax && window.MathJax.typeset) {
+         // Use Promise version for MathJax v3
+        MathJax.typesetPromise([icResult]).catch(function (err) {
+            console.error('MathJax typesetting error:', err);
+        });
+    }
+}
+
+icDeltaSlider.addEventListener('input', updateICResult);
+icProfitCSlider.addEventListener('input', updateICResult);
+icProfitDSlider.addEventListener('input', updateICResult);
+
+// Initial calculation
+updateICResult();
+
+
+// --- Conceptual Network Visualization ---
+const networkNodes = [
+    { id: 1, name: "Node 1 (Gen)", x: 50, y: 50 },
+    { id: 2, name: "Node 2 (Gen)", x: 50, y: 150 },
+    { id: 3, name: "Node 3 (Load)", x: 200, y: 100 },
+    { id: 4, name: "Node 4 (Load)", x: 350, y: 50 },
+    { id: 5, name: "Node 5 (Load)", x: 350, y: 150 }
+];
+
+const networkLinks = [
+    { source: 1, target: 3 },
+    { source: 2, target: 3 },
+    { source: 1, target: 2 }, // Link between generators
+    { source: 3, target: 4, capacity: true }, // Constrained line
+    { source: 3, target: 5 },
+    { source: 4, target: 5, capacity: true }  // Constrained line
+];
+
+const svgNetwork = d3.select("#network-svg");
+const widthNetwork = +svgNetwork.attr("width");
+const heightNetwork = +svgNetwork.attr("height");
+
+// Draw links
+svgNetwork.selectAll(".link")
+    .data(networkLinks)
+    .enter().append("line")
+    .attr("class", "link")
+    .attr("x1", d => networkNodes.find(n => n.id === d.source).x)
+    .attr("y1", d => networkNodes.find(n => n.id === d.source).y)
+    .attr("x2", d => networkNodes.find(n => n.id === d.target).x)
+    .attr("y2", d => networkNodes.find(n => n.id === d.target).y)
+    .style("stroke-width", 2)
+    .style("stroke", d => d.capacity ? "orange" : "#999"); // Highlight potentially constrained lines
+
+// Draw nodes
+svgNetwork.selectAll(".node")
+    .data(networkNodes)
+    .enter().append("circle")
+    .attr("class", "node")
+    .attr("r", 8)
+    .attr("cx", d => d.x)
+    .attr("cy", d => d.y);
+
+// Draw labels
+svgNetwork.selectAll(".node-label")
+    .data(networkNodes)
+    .enter().append("text")
+    .attr("class", "node-label")
+    .attr("x", d => d.x + 10)
+    .attr("y", d => d.y + 4)
+    .text(d => d.name);
+
+
+// --- Market Simulation ---
+
+// --- Simulation Parameters & State ---
+let simDelta = 0.5;
+let constraintsOn = true;
+let currentScenario = 'none'; // 'pc', 'nc', 'tc'
+
+const simDeltaSlider = document.getElementById('sim-delta');
+const simDeltaValue = document.getElementById('sim-delta-value');
+const constraintsOnBtn = document.getElementById('constraints-on');
+const constraintsOffBtn = document.getElementById('constraints-off');
+const scenarioPcBtn = document.getElementById('scenario-pc');
+const scenarioNcBtn = document.getElementById('scenario-nc');
+const scenarioTcBtn = document.getElementById('scenario-tc');
+const simPricesDiv = document.getElementById('sim-prices');
+const simSummaryDiv = document.getElementById('sim-summary');
+const simNetworkSvg = d3.select("#sim-network-svg");
+const simResultsChartDiv = document.getElementById('sim-results-chart');
+const collusionSustainabilityDiv = document.getElementById('collusion-sustainability');
+
+// --- Simplified Model Data (Inspired by Paper's Example & Findings) ---
+// Costs: Firm 1 (Nodes 1, 2), Firm 2 (Node 2)
+// Using simple linear marginal costs for web simulation simplicity
+const marginalCosts = {
+    f1_n1: 15,
+    f1_n2: 15,
+    f2_n2: 18
+};
+// Capacities (simplified total per firm)
+const capacities = { f1: 200, f2: 100 }; // f1: 150@N1 + 50@N2
+
+// Demand (simplified linear inverse demand: P = P0 - slope * Q)
+// P0 values roughly based on Table 1, slopes chosen for effect
+const demandParams = {
+    n1: { p0: 40, slope: 0.1 }, // Node 1 also has some local demand
+    n2: { p0: 35, slope: 0.1 }, // Node 2 also has some local demand
+    n3: { p0: 32, slope: 0.05 },
+    n4: { p0: 30, slope: 0.08 },
+    n5: { p0: 40, slope: 0.09 }
+};
+
+// Transmission line capacities (relative limits for constrained case)
+const lineLimits = {
+    '3-4': 40, // Lower capacity
+    '4-5': 30, // Even lower capacity
+    'other': 1000 // Effectively unconstrained for others
+};
+
+// --- Simulation Logic ---
+
+// Function to calculate market outcomes (highly simplified)
+// This does *not* run a real optimization/equilibrium solver.
+// It returns *plausible outcomes* based on the paper's descriptions
+// for the different scenarios and constraint states.
+function calculateOutcomes(scenario, constraints, delta) {
+    let results = {
+        prices: { n1: 0, n2: 0, n3: 0, n4: 0, n5: 0 },
+        generation: { f1: 0, f2: 0, total: 0 },
+        profits: { f1: 0, f2: 0, total: 0 },
+        consumerSurplus: 0,
+        socialSurplus: 0,
+        congestion: { '3-4': false, '4-5': false }, // Indicate if lines are likely congested
+        collusionSustainable: false // Only relevant for TC scenario
+    };
+
+    // Base values (Perfect Competition, No Constraints)
+    let basePrice = 20;
+    let baseGenF1 = 180;
+    let baseGenF2 = 90;
+
+    // Adjustments based on scenario and constraints
+    if (scenario === 'pc') {
+        results.prices = { n1: basePrice, n2: basePrice, n3: basePrice, n4: basePrice, n5: basePrice };
+        results.generation = { f1: baseGenF1, f2: baseGenF2, total: baseGenF1 + baseGenF2 };
+        if (constraints) {
+            // Constraints can trap generation, lowering price where produced, raising where consumed
+            results.prices = { n1: 18, n2: 19, n3: 22, n4: 28, n5: 30 }; // Example prices with congestion
+            results.congestion = { '3-4': true, '4-5': true };
+            // Total generation might be slightly lower due to bottlenecks
+            results.generation = { f1: 170, f2: 85, total: 255 };
+        }
+    } else if (scenario === 'nc') {
+        let ncPriceBoost = 5;
+        let ncGenReductionF1 = 30;
+        let ncGenReductionF2 = 15;
+        results.prices = { n1: basePrice + ncPriceBoost, n2: basePrice + ncPriceBoost, n3: basePrice + ncPriceBoost, n4: basePrice + ncPriceBoost, n5: basePrice + ncPriceBoost };
+        results.generation = { f1: baseGenF1 - ncGenReductionF1, f2: baseGenF2 - ncGenReductionF2, total: baseGenF1 - ncGenReductionF1 + baseGenF2 - ncGenReductionF2 };
+        if (constraints) {
+            // Constraints amplify market power - higher prices esp. at loads
+            results.prices = { n1: 26, n2: 27, n3: 30, n4: 35, n5: 38 };
+            results.congestion = { '3-4': true, '4-5': true };
+             // Generation might be slightly different due to strategic response to constraints
+            results.generation = { f1: 145, f2: 70, total: 215 };
+        }
+    } else if (scenario === 'tc') {
+        // Check sustainability first (simplified check)
+        // Need hypothetical profits for C, D, N states (these are illustrative!)
+        let piC = constraints ? 1500 : 1200; // Collusion profit higher with constraints
+        let piD = constraints ? 1800 : 1600; // Deviation profit higher with constraints
+        let piN = constraints ? 800 : 900;   // Punishment profit might be lower or higher
+
+        results.collusionSustainable = piC >= (1 - delta) * piD + delta * piN;
+        collusionSustainabilityDiv.style.display = 'block';
+        collusionSustainabilityDiv.innerHTML = `Collusion Status: ${results.collusionSustainable ? '<strong style="color:green;">Sustainable</strong>' : '<strong style="color:red;">Not Sustainable</strong>'} at δ = ${delta.toFixed(2)}`;
+
+        if (results.collusionSustainable) {
+            let tcPriceBoost = 10;
+            let tcGenReductionF1 = 50;
+            let tcGenReductionF2 = 25;
+             results.prices = { n1: basePrice + tcPriceBoost, n2: basePrice + tcPriceBoost, n3: basePrice + tcPriceBoost, n4: basePrice + tcPriceBoost, n5: basePrice + tcPriceBoost };
+             results.generation = { f1: baseGenF1 - tcGenReductionF1, f2: baseGenF2 - tcGenReductionF2, total: baseGenF1 - tcGenReductionF1 + baseGenF2 - tcGenReductionF2 };
+
+            if (constraints) {
+                // Constraints GREATLY amplify collusive market power
+                results.prices = { n1: 35, n2: 36, n3: 40, n4: 45, n5: 48 }; // Much higher prices
+                results.congestion = { '3-4': true, '4-5': true };
+                // Firms might reduce generation even more strategically
+                results.generation = { f1: 120, f2: 60, total: 180 };
+            }
+        } else {
+            // If collusion isn't sustainable, assume they revert to Nash-Cournot
+            collusionSustainabilityDiv.innerHTML += " (Reverting to Nash-Cournot outcome)";
+            return calculateOutcomes('nc', constraints, delta); // Recursive call for NC outcome
+        }
+    }
+
+    // Calculate simplified profits and surplus (very approximate)
+    // Profit = (Avg Price - Avg Cost) * Quantity
+    // Consumer Surplus = Approx Area under demand curve above price
+    // Social Surplus = Profit + Consumer Surplus
+    let avgPrice = d3.mean(Object.values(results.prices));
+    let avgCostF1 = marginalCosts.f1_n1; // Simplification
+    let avgCostF2 = marginalCosts.f2_n2; // Simplification
+
+    results.profits.f1 = Math.max(0, (avgPrice - avgCostF1) * results.generation.f1);
+    results.profits.f2 = Math.max(0, (avgPrice - avgCostF2) * results.generation.f2);
+    results.profits.total = results.profits.f1 + results.profits.f2;
+
+    // Very rough consumer surplus estimate
+    let avgP0 = d3.mean(Object.values(demandParams).map(d => d.p0));
+    results.consumerSurplus = 0.5 * results.generation.total * Math.max(0, avgP0 - avgPrice); // Triangle approximation
+
+    results.socialSurplus = results.profits.total + results.consumerSurplus;
+
+    return results;
+}
+
+
+// --- Visualization Update Functions ---
+
+function updateNetworkVisualization(prices, congestion) {
+    simNetworkSvg.selectAll("*").remove(); // Clear previous drawing
+
+    const nodes = JSON.parse(JSON.stringify(networkNodes)); // Deep copy
+    const links = JSON.parse(JSON.stringify(networkLinks)); // Deep copy
+
+    // Color scale for prices
+    const priceValues = Object.values(prices);
+    const minPrice = d3.min(priceValues);
+    const maxPrice = d3.max(priceValues);
+    // Handle case where all prices are the same or zero
+     const priceColor = (minPrice !== undefined && maxPrice !== undefined && minPrice < maxPrice)
+        ? d3.scaleLinear().domain([minPrice, maxPrice]).range(["lightblue", "darkred"])
+        : () => "steelblue"; // Default color if range is invalid
+
+
+    // Draw links first
+    simNetworkSvg.selectAll(".link")
+        .data(links)
+        .enter().append("line")
+        .attr("class", d => {
+            let linkId = `${d.source}-${d.target}`;
+            let reverseId = `${d.target}-${d.source}`;
+            let isCongested = congestion[linkId] || congestion[reverseId] || false;
+            return isCongested ? "link link-congested" : "link link-normal";
+        })
+        .attr("x1", d => nodes.find(n => n.id === d.source).x * 0.8 + 10) // Adjust coords for smaller SVG
+        .attr("y1", d => nodes.find(n => n.id === d.source).y * 0.8 + 10)
+        .attr("x2", d => nodes.find(n => n.id === d.target).x * 0.8 + 10)
+        .attr("y2", d => nodes.find(n => n.id === d.target).y * 0.8 + 10);
+
+    // Draw nodes
+    simNetworkSvg.selectAll(".node")
+        .data(nodes)
+        .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 8)
+        .attr("cx", d => d.x * 0.8 + 10)
+        .attr("cy", d => d.y * 0.8 + 10)
+        .style("fill", d => priceColor(prices[`n${d.id}`] || 0));
+
+    // Draw node labels (ID and Price)
+    simNetworkSvg.selectAll(".node-label")
+        .data(nodes)
+        .enter().append("text")
+        .attr("class", "node-label")
+        .attr("x", d => d.x * 0.8 + 22) // Position label slightly offset
+        .attr("y", d => d.y * 0.8 + 14)
+        .text(d => `N${d.id}: $${(prices[`n${d.id}`] || 0).toFixed(2)}`);
+
+     // Add legend for congestion
+     simNetworkSvg.append("line").attr("x1", 250).attr("y1", 160).attr("x2", 280).attr("y2", 160).attr("class", "link link-congested");
+     simNetworkSvg.append("text").attr("x", 285).attr("y", 165).text("Congested").attr("class", "node-label");
+     simNetworkSvg.append("line").attr("x1", 250).attr("y1", 175).attr("x2", 280).attr("y2", 175).attr("class", "link link-normal");
+     simNetworkSvg.append("text").attr("x", 285).attr("y", 180).text("Normal").attr("class", "node-label");
+}
+
+function updateResultsDisplay(results) {
+    // Update Price List
+    simPricesDiv.innerHTML = "<strong>Locational Prices ($/MWh):</strong>";
+    let priceList = "<ul>";
+    for (const node in results.prices) {
+        priceList += `<li>Node ${node.substring(1)}: ${results.prices[node].toFixed(2)}</li>`;
+    }
+    priceList += "</ul>";
+    simPricesDiv.innerHTML += priceList;
+    if (results.congestion['3-4'] || results.congestion['4-5']) {
+         simPricesDiv.innerHTML += `<p style="color:red;">Congestion detected on load lines.</p>`;
+    } else {
+         simPricesDiv.innerHTML += `<p style="color:green;">No significant congestion.</p>`;
+    }
+
+
+    // Update Summary Box
+    simSummaryDiv.innerHTML = `
+        <p><strong>Total Generation:</strong> ${results.generation.total.toFixed(0)} MWh</p>
+        <p><strong>Firm 1 Gen:</strong> ${results.generation.f1.toFixed(0)} MWh | <strong>Firm 2 Gen:</strong> ${results.generation.f2.toFixed(0)} MWh</p>
+        <p><strong>Total Profit:</strong> $${results.profits.total.toFixed(0)}</p>
+         <p><strong>Firm 1 Profit:</strong> $${results.profits.f1.toFixed(0)} | <strong>Firm 2 Profit:</strong> $${results.profits.f2.toFixed(0)}</p>
+        <p><strong>Consumer Surplus:</strong> $${results.consumerSurplus.toFixed(0)}</p>
+        <p><strong>Social Surplus:</strong> $${results.socialSurplus.toFixed(0)}</p>
+    `;
+
+    // Update Bar Chart
+    updateBarChart(results);
+}
+
+// --- Bar Chart for Key Metrics ---
+const chartMargin = { top: 20, right: 20, bottom: 30, left: 50 };
+const chartWidth = 350 - chartMargin.left - chartMargin.right;
+const chartHeight = 200 - chartMargin.top - chartMargin.bottom;
+
+const chartSvg = d3.select("#sim-results-chart").append("svg")
+    .attr("width", chartWidth + chartMargin.left + chartMargin.right)
+    .attr("height", chartHeight + chartMargin.top + chartMargin.bottom)
+  .append("g")
+    .attr("transform", `translate(${chartMargin.left},${chartMargin.top})`);
+
+const chartX = d3.scaleBand().range([0, chartWidth]).padding(0.1);
+const chartY = d3.scaleLinear().range([chartHeight, 0]);
+
+const chartXAxis = chartSvg.append("g")
+    .attr("transform", `translate(0,${chartHeight})`)
+    .attr("class", "axis");
+
+const chartYAxis = chartSvg.append("g")
+    .attr("class", "axis");
+
+// Tooltip
+const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip");
+
+function updateBarChart(results) {
+    const data = [
+        { metric: "Profit", value: results.profits.total },
+        { metric: "Cons. Surplus", value: results.consumerSurplus },
+        { metric: "Soc. Surplus", value: results.socialSurplus }
+    ];
+
+    // Adjust domain dynamically, ensure non-negative
+    const maxY = d3.max(data, d => d.value);
+    chartX.domain(data.map(d => d.metric));
+    chartY.domain([0, Math.max(10, maxY * 1.1)]); // Ensure Y axis starts at 0 and has some headroom
+
+    chartXAxis.call(d3.axisBottom(chartX));
+    chartYAxis.transition().duration(300).call(d3.axisLeft(chartY).ticks(5));
+
+    const bars = chartSvg.selectAll(".profit-bar")
+        .data(data, d => d.metric); // Key function for object constancy
+
+    bars.enter().append("rect")
+        .attr("class", "profit-bar")
+        .attr("x", d => chartX(d.metric))
+        .attr("width", chartX.bandwidth())
+        .attr("y", chartHeight) // Start from bottom for enter transition
+        .attr("height", 0)
+        .on("mouseover", (event, d) => {
+            tooltip.transition().duration(200).style("opacity", .9);
+            tooltip.html(`${d.metric}: $${d.value.toFixed(0)}`)
+                   .style("left", (event.pageX + 5) + "px")
+                   .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", () => {
+            tooltip.transition().duration(500).style("opacity", 0);
+        })
+      .merge(bars) // Apply transitions to both entering and updating bars
+        .transition().duration(500)
+        .attr("x", d => chartX(d.metric))
+        .attr("y", d => chartY(Math.max(0, d.value))) // Ensure y is not negative
+        .attr("height", d => chartHeight - chartY(Math.max(0, d.value))); // Ensure height is not negative
+
+     bars.exit()
+        .transition().duration(500)
+        .attr("y", chartHeight)
+        .attr("height", 0)
+        .remove();
+}
+
+
+// --- Event Listeners ---
+simDeltaSlider.addEventListener('input', (e) => {
+    simDelta = parseFloat(e.target.value);
+    simDeltaValue.textContent = simDelta.toFixed(2);
+    // Recalculate only if TC is the current scenario
+    if (currentScenario === 'tc') runSimulation();
+    else if (currentScenario !== 'none') {
+         // Update sustainability message even if not TC scenario
+         let piC = constraintsOn ? 1500 : 1200;
+         let piD = constraintsOn ? 1800 : 1600;
+         let piN = constraintsOn ? 800 : 900;
+         let sustainable = piC >= (1 - simDelta) * piD + simDelta * piN; // Corrected delta usage
+         collusionSustainabilityDiv.style.display = 'block';
+         collusionSustainabilityDiv.innerHTML = `Collusion Status: Would be ${sustainable ? '<strong style="color:green;">Sustainable</strong>' : '<strong style="color:red;">Not Sustainable</strong>'} at δ = ${simDelta.toFixed(2)}`;
+    }
+});
+
+constraintsOnBtn.addEventListener('click', () => {
+    constraintsOn = true;
+    constraintsOnBtn.classList.add('active');
+    constraintsOffBtn.classList.remove('active');
+    if (currentScenario !== 'none') runSimulation();
+});
+
+constraintsOffBtn.addEventListener('click', () => {
+    constraintsOn = false;
+    constraintsOffBtn.classList.add('active');
+    constraintsOnBtn.classList.remove('active');
+    if (currentScenario !== 'none') runSimulation();
+});
+
+scenarioPcBtn.addEventListener('click', () => {
+    currentScenario = 'pc';
+    setActiveButton(scenarioPcBtn);
+    runSimulation();
+});
+scenarioNcBtn.addEventListener('click', () => {
+    currentScenario = 'nc';
+    setActiveButton(scenarioNcBtn);
+    runSimulation();
+});
+scenarioTcBtn.addEventListener('click', () => {
+    currentScenario = 'tc';
+    setActiveButton(scenarioTcBtn);
+    runSimulation();
+});
+
+function setActiveButton(activeBtn) {
+    [scenarioPcBtn, scenarioNcBtn, scenarioTcBtn].forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.fontWeight = 'normal';
+    });
+    activeBtn.classList.add('active');
+    activeBtn.style.fontWeight = 'bold';
+}
+
+function runSimulation() {
+    if (currentScenario === 'none') return;
+
+    const results = calculateOutcomes(currentScenario, constraintsOn, simDelta);
+    updateNetworkVisualization(results.prices, results.congestion);
+    updateResultsDisplay(results);
+     // Hide/show collusion sustainability message appropriately
+    collusionSustainabilityDiv.style.display = (currentScenario === 'tc' || currentScenario === 'none') ? 'block' : 'none'; // Show for TC or if no scenario selected yet
+     if (currentScenario !== 'tc') {
+         // Update sustainability message even if not TC scenario
+         let piC = constraintsOn ? 1500 : 1200;
+         let piD = constraintsOn ? 1800 : 1600;
+         let piN = constraintsOn ? 800 : 900;
+         let sustainable = piC >= (1 - simDelta) * piD + simDelta * piN; // Corrected delta usage
+         collusionSustainabilityDiv.innerHTML = `Collusion Status: Would be ${sustainable ? '<strong style="color:green;">Sustainable</strong>' : '<strong style="color:red;">Not Sustainable</strong>'} at δ = ${simDelta.toFixed(2)}`;
+     }
+}
+
+// --- Initial State ---
+// Set initial delta display
+simDeltaValue.textContent = parseFloat(simDeltaSlider.value).toFixed(2);
+// Set initial constraint button state
+constraintsOnBtn.classList.add('active');
+// Draw initial empty chart axes
+updateBarChart({ profits: { total: 0 }, consumerSurplus: 0, socialSurplus: 0 }); // Draw empty chart initially
+
+
+</script>
+
+</body>
+</html>
