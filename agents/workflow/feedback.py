@@ -1,3 +1,4 @@
+import time
 import re
 import asyncio
 from pathlib import Path
@@ -77,6 +78,7 @@ def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int 
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent # Need to go up two levels from agents/workflow
 
+
 @dataclass
 class Feedbackctx:
     """ctx object for the feedback loop."""
@@ -99,6 +101,7 @@ class Feedbackctx:
             self.logger.info(f"Taking intermediate screenshot: {screenshot_path}")
             relative_temp_html_url = f"https://localhost:5173/sites-wip/{temp_html_path.name}"
             screenshot_iter_name = f"{papername}_feedback_iter{iteration}"
+            time.sleep(0.5) # Need the vite server to load it
             await take_screenshot(relative_temp_html_url, screenshot_iter_name, output_dir=self.screenshot_dir) # Use await here
             self.logger.info(f"Intermediate screenshot saved: {screenshot_path}")
 
