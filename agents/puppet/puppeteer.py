@@ -14,8 +14,8 @@ class Log:
 
 @dataclasses.dataclass
 class Result:
-    screenshot_path: str
-    logs: list[Log]
+    screenshot_path: str = ""
+    logs: list[Log] = dataclasses.field(default_factory=list)
 
 
 

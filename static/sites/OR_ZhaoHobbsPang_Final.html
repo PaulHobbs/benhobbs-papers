@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untangling Emissions Allowance Allocation in Power Markets</title>
+    <script>
+        // Configure MathJax
+        MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+        </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        h1 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.3em;
+        }
+
+        h2 {
+            border-bottom: 1px solid #bdc3c7;
+            padding-bottom: 0.2em;
+        }
+
+        code {
+            background-color: #ecf0f1;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+
+        .interactive-container {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        input[type="radio"], input[type="checkbox"] {
+             margin-right: 5px;
+        }
+
+        .param-label {
+             display: inline-block;
+             min-width: 120px;
+             margin-right: 10px;
+        }
+
+        .value-display {
+            font-weight: bold;
+            color: #3498db;
+            margin-left: 10px;
+        }
+
+        .explanation {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .equation {
+            margin: 1.5em 0;
+            padding: 1em;
+            background-color: #f0f0f0;
+            border-left: 3px solid #3498db;
+            overflow-x: auto;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .axis-label {
+            font-size: 0.9em;
+            fill: #555;
+        }
+
+        .tick text {
+            font-size: 0.8em;
+            fill: #666;
+        }
+
+        .tick line {
+            stroke: #ccc;
+        }
+
+        .domain {
+            stroke: #888;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 8px;
+            border: 1px solid #ccc;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .control-group label {
+            margin-bottom: 8px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+         table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>Untangling Emissions Allowance Allocation in Power Markets</h1>
+    <p><em>Based on "Long-Run Equilibrium Modeling of Emissions Allowance Allocation Systems in Electric Power Markets" by Zhao, Hobbs, and Pang (2009).</em></p>
+
+    <p>Climate change is a pressing global issue, and reducing carbon dioxide (CO₂) emissions is crucial. One popular policy tool used by governments, like in the <a href="https://en.wikipedia.org/wiki/European_Union_Emissions_Trading_System" target="_blank">European Union</a> and some <a href="https://en.wikipedia.org/wiki/Regional_Greenhouse_Gas_Initiative" target="_blank">U.S. states</a>, is called "cap-and-trade".</p>
+
+    <p>Imagine the government sets a limit (a "cap") on the total amount of CO₂ that power plants can emit. Then, it creates permits, often called "allowances," where each allowance lets a company emit a certain amount (e.g., one ton) of CO₂. Companies that need to emit CO₂ must hold enough allowances to cover their emissions. The "trade" part means companies can buy and sell these allowances from each other. If the cap is strict enough, allowances become valuable, creating a market price for emitting CO₂.</p>
+
+    <p>This system is designed to reduce pollution cost-effectively. Companies that can cut emissions cheaply will do so and sell their extra allowances, while those facing high reduction costs can buy allowances instead. In theory, this leads to the cheapest overall pollution reduction.</p>
+
+    <h2>The Billion-Dollar Question: Who Gets the Allowances First?</h2>
+
+    <p>A critical, and often contentious, part of setting up a cap-and-trade system is deciding how to distribute the allowances initially. This isn't just about fairness; the paper we're exploring shows it can dramatically affect how well the system works and how much it costs society.</p>
+
+    <p>There are three main ways to do this:</p>
+    <ol>
+        <li><strong>Auctioning:</strong> The government sells allowances to the highest bidders. This generates revenue that can be used for other purposes (like tax cuts or funding green projects).</li>
+        <li><strong>Grandfathering:</strong> Allowances are given away for free, usually based on companies' <em>past</em> emissions or historical activity. This is often politically popular with existing industries.</li>
+        <li><strong>Contingent Allocation:</strong> Allowances are given away for free, but the amount a company receives depends on its <em>present or recent</em> decisions – things like how much electricity it produces, the type of power plant it builds, or its fuel use.</li>
+    </ol>
+
+    <p>While auctioning and grandfathering (based on fixed past actions) are generally considered economically efficient (they don't distort companies' future decisions much), <strong>contingent allocation</strong> is different. Because the number of free allowances received depends on <em>current actions</em>, it can act like a subsidy (or penalty) for certain behaviors, potentially warping investment and operational decisions away from the most efficient outcomes.</p>
+
+    <p>This paper digs deep into the long-term effects of these different allocation methods, particularly the potentially distorting contingent rules, in the complex world of electricity markets.</p>
+
+    <h2>Why Contingent Allocation Can Be Problematic: An Intuitive Look</h2>
+
+    <p>Let's imagine a simplified scenario. A power company needs to build a new plant. It can choose between:</p>
+    <ul>
+        <li>A cheaper-to-build but higher-emitting natural gas "peaker" plant (runs only during high demand).</li>
+        <li>A more expensive-to-build but lower-emitting combined cycle gas plant (more efficient, runs more often).</li>
+        <li>An even more expensive-to-build coal plant (dirtiest option).</li>
+    </ul>
+
+    <p>Now, let's introduce a CO₂ cap and allowances with a market price. Normally, the company factors the cost of buying allowances into its decision. But what if the government uses a contingent allocation rule?</p>
+
+    <div class="interactive-container">
+        <h3>Interactive Example: Investment Choice</h3>
+        <p>Choose an allocation rule and see how it might influence the decision to build a certain type of power plant. We simplify greatly: assume a fixed allowance price and look only at the <em>effective</em> investment cost after accounting for free allowances under different rules.</p>
+
+        <div class="control-group">
+            <label for="allowancePriceSlider">Assumed Allowance Price ($/ton CO₂): <span id="allowancePriceValue" class="value-display">30</span></label>
+            <input type="range" id="allowancePriceSlider" min="0" max="100" value="30" step="1">
+        </div>
+
+        <div class="control-group">
+             <label>Allocation Rule for New Plants:</label>
+             <input type="radio" id="ruleAuction" name="allocationRule" value="auction" checked> <label for="ruleAuction" class="param-label">Auction/Grandfathering (No free allowances for new plants)</label><br>
+             <input type="radio" id="ruleContingentCoal" name="allocationRule" value="contingentCoal"> <label for="ruleContingentCoal" class="param-label">Contingent: More free allowances per MW for Coal (like Rule I/II bias)</label><br>
+             <input type="radio" id="ruleContingentSales" name="allocationRule" value="contingentSales"> <label for="ruleContingentSales" class="param-label">Contingent: Allowances based on Sales (like Rule III)</label>
+        </div>
+
+        <div id="investmentDecisionViz">
+             <!-- Visualization will be generated here -->
+             <table>
+                 <thead>
+                     <tr><th>Plant Type</th><th>Base Capital Cost ($/MW)</th><th>Operating Cost ($/MWh, approx)</th><th>Emissions (ton/MWh)</th><th><em>Effective</em> Capital Cost ($/MW)</th></tr>
+                 </thead>
+                 <tbody>
+                     <tr id="rowCoal"><td>Coal</td><td>120,000</td><td>20</td><td>1.0</td><td class="effective-cost"></td></tr>
+                     <tr id="rowCCGT"><td>Gas CCGT</td><td>75,000</td><td>40</td><td>0.35</td><td class="effective-cost"></td></tr>
+                     <tr id="rowCT"><td>Gas Peaker (CT)</td><td>50,000</td><td>80</td><td>0.6</td><td class="effective-cost"></td></tr>
+                 </tbody>
+             </table>
+             <p class="explanation" id="investmentExplanation">The 'Effective Capital Cost' reflects the initial cost minus the estimated value of free allowances received under the selected rule. Lower effective cost makes a plant more attractive, <em>even if it's dirtier</em>.</p>
+        </div>
+    </div>
+
+    <p>As the simulation above hints, if a contingent rule gives more valuable free allowances to dirtier technologies (like coal), it can artificially lower their effective cost, potentially leading companies to build <em>more</em> high-emitting plants than they would otherwise, undermining the goal of the cap-and-trade system!</p>
+
+    <h2>Modeling the Electricity Market</h2>
+
+    <p>To analyze these effects rigorously, the paper develops a sophisticated mathematical model of a long-run electricity market equilibrium. Here are the key ingredients:</p>
+
+    <ul>
+        <li><strong>Generators (Firms):</strong> Different types of power plants exist (coal, gas combined cycle, gas turbines in the paper's example). Each has:
+            <ul>
+                <li>An investment cost ($F_f$ per MW per year).</li>
+                <li>A marginal operating cost ($MC_{ft}$ per MWh, mostly fuel).</li>
+                <li>An emissions rate ($E_f$ tons of CO₂ per MWh).</li>
+            </ul>
+            Firms decide how much capacity ($cap_f$) of each type to build and how much energy ($s_{ft}$) to produce in each time period, aiming to maximize profit. In the long run, competition drives profits to zero (including covering investment costs).
+        </li>
+        <li><strong>Consumers (Demand):</strong> Demand for electricity varies over time (e.g., higher during hot summer afternoons). The model uses multiple time periods ($t=1...T$) within a year, each with its own demand curve ($d_t(p_t)$) that depends on the energy price ($p_t$).</li>
+        <li><strong>Markets:</strong>
+            <ul>
+                <li><strong>Energy Market:</strong> Generators sell electricity in each period $t$. The price $p_t$ balances supply and demand.</li>
+                <li><strong>Capacity Market (Optional):</strong> In some systems, there's a requirement for total available capacity ($CAP$) to ensure reliability. Generators get paid a capacity price ($p_c$) for the capacity they build.</li>
+                <li><strong>Emissions Allowance Market:</strong> Total allowances are capped ($E$). Allowances are either auctioned/grandfathered ($E_A$) or allocated contingently based on rules. Generators buy/sell allowances at the market price ($p_e$).</li>
+            </ul>
+        </li>
+        <li><strong>Equilibrium:</strong> The model finds a state where all markets clear (supply=demand), firms maximize profits (earning zero profit in the long run), and the allocation rules are satisfied simultaneously. This is formulated as a <a href="https://en.wikipedia.org/wiki/Complementarity_theory" target="_blank">Nonlinear Complementarity Problem (NCP)</a>, a type of mathematical problem suitable for modeling equilibria with constraints.</li>
+    </ul>
+
+    <h2>The Allocation Rules, Modeled Mathematically</h2>
+
+    <p>The paper focuses on three specific <em>contingent</em> allocation rules, comparing them to the baseline where new plants get no free allowances (equivalent to auctioning or grandfathering to non-operating entities).</p>
+
+    <p>Let $E - E_A$ be the total amount of allowances available for contingent allocation to new plants. Let $a_f$ be the amount of free allowances a firm $f$ receives <em>per unit</em> (either per MW of capacity or per MWh of sales, depending on the rule).</p>
+
+    <ol>
+        <li><strong>Rule I: Capacity-Based (Potential Emissions):</strong> Allowances are allocated based on capacity built, weighted by a factor $R_f$ (related to the plant's <em>potential</em> emissions, e.g., its emission rate). A firm $f$ gets $a_f \times cap_f$ allowances. The rate $a_f$ itself depends on the overall market:
+            $$ a_f = \alpha R_f $$
+            where $\alpha$ is a market-wide value ensuring the total allocated allowances $\sum_f a_f cap_f$ equals $E - E_A$. Firms perceive $a_f$ as fixed when making decisions, but it adjusts in equilibrium. This can heavily favor plants with high $R_f$, even if they don't run much.
+        </li>
+        <li><strong>Rule II: Capacity-Based (Actual Emissions Share):</strong> Similar to Rule I, allocation is $a_f \times cap_f$, but the weighting factor $R_f$ is implicitly tied to the <em>actual average emissions</em> of technology $f$ across the market.
+             $$ a_f = \hat{\alpha} R_f \left( \frac{\sum_t H_t s_{ft}}{cap_f} \right) \quad \text{(Simplified interpretation)}$$
+             Again, $\hat{\alpha}$ ensures the total allocation $\sum_f a_f cap_f = E - E_A$. While firms still perceive it as capacity-based, the <em>rate</em> $a_f$ ultimately depends on how much plants of type $f$ actually run and emit market-wide.
+        </li>
+        <li><strong>Rule III: Sales-Based (Output):</strong> Allowances are allocated directly based on energy produced ($s_{ft}$). A firm $f$ gets $a_f \times \sum_t H_t s_{ft}$ allowances (where $H_t$ is hours in period t). Here, $R_f$ might be uniform (e.g., $R_f=1$) or technology-specific.
+             $$ a_f = \tilde{\alpha} R_f $$
+             where $\tilde{\alpha}$ ensures total allocation $\sum_{f,t} a_f H_t s_{ft} = E - E_A$. Firms <em>know</em> that producing more directly yields more free allowances, acting like a per-MWh revenue boost.
+        </li>
+    </ol>
+
+    <p>The crucial difference lies in what the allocation is tied to (capacity vs. sales) and how firms perceive the link between their actions and the allowances received.</p>
+
+    <h2>Simulating the Long-Run Market: Exploring the Distortions</h2>
+
+    <p>The paper uses its model to simulate a hypothetical electricity market with coal, combined cycle gas (CCGT), and gas peaker (CT) plants under different CO₂ caps and allocation rules. Let's explore the kinds of results they found interactively.</p>
+
+    <div class="interactive-container">
+        <h3>Interactive Simulation: Market Outcomes</h3>
+        <p>Adjust the CO₂ cap tightness and the percentage of allowances given freely under different contingent rules. Observe the impact on the long-run mix of power plants built, how they operate (capacity factors), the allowance price, and overall costs. (Note: This is a simplified representation based on the paper's findings, not a full NCP solver).</p>
+
+        <div class="control-group">
+            <label>CO₂ Cap:</label>
+             <input type="radio" id="capTight" name="co2Cap" value="tight" checked> <label for="capTight" class="param-label">Tight (e.g., 20 Mton/yr)</label>
+             <input type="radio" id="capLoose" name="co2Cap" value="loose"> <label for="capLoose" class="param-label">Loose (e.g., 40 Mton/yr)</label>
+        </div>
+
+        <div class="control-group">
+            <label>Allocation Rule:</label>
+             <input type="radio" id="simRuleAuction" name="simAllocationRule" value="auction" checked> <label for="simRuleAuction" class="param-label">Auction/Grandfathering (0% Free)</label><br>
+             <input type="radio" id="simRuleI" name="simAllocationRule" value="ruleI"> <label for="simRuleI" class="param-label">Rule I (Capacity/Potential)</label><br>
+             <input type="radio" id="simRuleII" name="simAllocationRule" value="ruleII"> <label for="simRuleII" class="param-label">Rule II (Capacity/Actual Share)</label><br>
+             <input type="radio" id="simRuleIII" name="simAllocationRule" value="ruleIII"> <label for="simRuleIII" class="param-label">Rule III (Sales/Output)</label>
+        </div>
+
+        <div class="control-group" id="freePercentSliderGroup">
+             <label for="freePercentSlider">Percentage of Allowances Allocated Freely: <span id="freePercentValue" class="value-display">100</span>%</label>
+             <input type="range" id="freePercentSlider" min="0" max="100" value="100" step="5">
+        </div>
+
+        <h4>Simulation Results:</h4>
+        <div id="marketSimulationViz" style="display: flex; flex-wrap: wrap; gap: 20px;">
+             <div id="capacityMixChart" style="flex: 1 1 45%;">
+                 <p style="text-align: center; font-weight: bold;">Capacity Mix (MW)</p>
+                 <!-- D3 Capacity Mix Chart -->
+             </div>
+             <div id="capacityFactorChart" style="flex: 1 1 45%;">
+                  <p style="text-align: center; font-weight: bold;">Capacity Factors (%)</p>
+                 <!-- D3 Capacity Factor Chart -->
+             </div>
+             <div id="costPriceIndicators" style="flex: 1 1 100%; margin-top: 15px;">
+                  <p style="text-align: center; font-weight: bold;">Indicators</p>
+                  <p>Allowance Price ($/ton): <strong id="indicatorPe" class="value-display">N/A</strong></p>
+                  <p>Relative Social Cost Increase (%): <strong id="indicatorSocialCost" class="value-display">N/A</strong></p>
+                  <p>Relative Generation Cost Increase (%): <strong id="indicatorGenCost" class="value-display">N/A</strong></p>
+             </div>
+        </div>
+         <p class="explanation">Relative costs are compared to a baseline case with no CO₂ constraint. Capacity Factor is the actual energy generated divided by the maximum possible generation if the plant ran 100% of the time.</p>
+
+    </div>
+
+    <h3>Key Insights from the Simulations</h3>
+
+    <p>The paper's simulations (and our interactive exploration above) reveal several crucial points:</p>
+
+    <ul>
+        <li><strong>Capacity-Based Rules (I & II) Cause Major Distortions:</strong> When a large fraction of allowances are given free based on capacity (especially Rule I, tied to potential emissions), investment gets heavily skewed towards higher-emitting plants (like coal in their example). This happens because the value of the free allowances makes building these plants artificially cheap, even if they are not the most economical to run considering carbon costs.</li>
+        <li><strong>Operational Inefficiency:</strong> Under high percentages of free allocation with Rules I/II, the economic "dispatch order" can flip! Normally, cheaper-to-run plants operate first. But the high allowance price (driven up partly by the demand for allowances from the subsidized dirty plants) can make cleaner plants (like CCGT) effectively cheaper to run on the margin than coal, leading to coal plants being built but then run inefficiently at low capacity factors, while gas plants run more.</li>
+        <li><strong>Sales-Based Rule (III) is Less Distorting:</strong> Allocating based on actual energy sales (output) causes much smaller distortions in investment and operation. It acts more like a general energy subsidy, which is less damaging than specifically subsidizing dirty capacity.</li>
+        <li><strong>Costs Increase Significantly:</strong> The distortions from capacity-based rules aren't just theoretical; they lead to significantly higher <em>social costs</em> (loss of overall economic welfare) and <em>generation costs</em> compared to achieving the same emissions cap via auctioning or grandfathering (0% free allocation to new plants). In some cases (Rule II, loose cap), contingent allocation inflated the cost by over 10 times!</li>
+        <li><strong>Counterintuitive Effects:</strong> Sometimes, distortions were worse under a <em>looser</em> CO₂ cap (Rule I). Also, the presence of a capacity market or minimum-run constraints on coal plants (making them less flexible) could slightly mitigate some distortions but didn't eliminate the core problem.</li>
+    </ul>
+
+    <h2>The Math: Equilibrium Conditions (A Glimpse)</h2>
+    <p>The core of the model lies in the equilibrium conditions, expressed as a Nonlinear Complementarity Problem (NCP). We won't dive into the full complexity, but let's look at a couple of key conditions to get the flavor.</p>
+
+    <p>For each firm $f$ and time period $t$, the decision to produce energy ($s_{ft}$) is governed by profitability. In equilibrium, a plant only produces if the price covers its costs (including allowances). This is captured by complementarity conditions like (simplified):</p>
+    <div class="equation">
+     $0 \le s_{ft} \quad \perp \quad (\text{Marginal Cost}_{ft} + p_e E_f - \text{Allowance Subsidy}_{ft}) - p_t + \mu_{ft} \ge 0$
+    </div>
+    <p>Where:</p>
+    <ul>
+        <li>$s_{ft}$ is energy produced.</li>
+        <li>$\perp$ means "is complementary to": if $s_{ft} > 0$, the expression on the right must be zero (price equals marginal cost); if the expression is positive (cost exceeds price), then $s_{ft}$ must be zero.</li>
+        <li>$p_e E_f$ is the cost of emissions allowances.</li>
+        <li>"Allowance Subsidy" is zero for auctioning, but positive for contingent rules (e.g., $p_e a_f$ for Rule III, related to sales).</li>
+        <li>$p_t$ is the energy price.</li>
+        <li>$\mu_{ft}$ relates to the capacity constraint ($s_{ft} \le cap_f$).</li>
+    </ul>
+
+    <p>Similarly, the decision to invest in capacity ($cap_f$) depends on whether the revenue from selling energy and capacity (plus the value of free allowances) covers the investment cost $F_f$. A simplified condition looks like:</p>
+     <div class="equation">
+     $0 \le cap_f \quad \perp \quad F_f - (\sum_t \mu_{ft} + p_c + \text{Value of Free Allowances}_f) \ge 0$
+    </div>
+    <p>Where "Value of Free Allowances" depends on the rule (e.g., $p_e a_f$ for Rule I/II, related to capacity).</p>
+
+    <p>These conditions, along with market clearing equations (total supply = total demand for energy, capacity, allowances), define the equilibrium. The paper proves that under reasonable conditions, such an equilibrium exists.</p>
+
+
+    <h2>Conclusions and Policy Implications</h2>
+
+    <p>The research provides strong quantitative evidence that the seemingly technical detail of how emissions allowances are initially allocated can have profound long-term consequences for electricity markets.</p>
+
+    <ul>
+        <li><strong>Contingent allocation rules, especially those based on capacity (Rules I and II), can significantly distort investment decisions</strong>, leading to an overbuilt, inefficient mix of power plants.</li>
+        <li>These distortions translate into <strong>higher overall costs</strong> for achieving environmental goals compared to non-distorting methods like auctioning or grandfathering based on fixed historical data.</li>
+        <li>Allocating allowances based on <strong>energy sales (Rule III) is far less distorting</strong> than allocating based on capacity.</li>
+        <li>Policymakers should be wary of contingent allocation schemes, particularly those rewarding capacity, as they may inadvertently subsidize pollution and increase the cost of climate action. While potentially politically appealing, they risk undermining the efficiency benefits of cap-and-trade.</li>
+    </ul>
+
+    <p>This work highlights the importance of careful economic modeling when designing environmental regulations. Getting the details right matters, potentially saving billions of dollars and achieving climate goals more effectively.</p>
+
+    <hr>
+    <p><em>Disclaimer: This webpage is a simplified, interactive interpretation of the cited academic paper for educational purposes. The simulations are illustrative and do not replicate the full complexity or exact numerical results of the original research. Refer to the original paper for complete details and methodology.</em></p>
+
+
+    <script>
+        // --- Interactive Example: Investment Choice ---
+        const allowancePriceSlider = document.getElementById('allowancePriceSlider');
+        const allowancePriceValue = document.getElementById('allowancePriceValue');
+        const allocationRuleRadios = document.querySelectorAll('input[name="allocationRule"]');
+        const investmentExplanation = document.getElementById('investmentExplanation');
+
+        const baseCosts = { coal: 120000, ccgt: 75000, ct: 50000 };
+        const baseEmissions = { coal: 1.0, ccgt: 0.35, ct: 0.6 };
+        // Assume some plausible hours/capacity factors for allowance value estimation
+        const typicalCapacityFactors = { coal: 0.7, ccgt: 0.6, ct: 0.1 };
+        const hoursPerYear = 8760;
+
+        function updateInvestmentViz() {
+            const price = parseFloat(allowancePriceSlider.value);
+            allowancePriceValue.textContent = price;
+            let selectedRule = 'auction';
+            allocationRuleRadios.forEach(radio => {
+                if (radio.checked) {
+                    selectedRule = radio.value;
+                }
+            });
+
+            let explanationText = "";
+
+            // Calculate effective costs
+            for (const plant in baseCosts) {
+                let freeAllowanceValue = 0;
+                const capitalCost = baseCosts[plant];
+                const emissionRate = baseEmissions[plant];
+                const capFactor = typicalCapacityFactors[plant];
+
+                if (selectedRule === 'contingentCoal') {
+                    // Rule I/II Bias: Give more allowances per MW to coal
+                    // This is highly simplified: Assume allowance value is proportional to emission rate * price
+                    // Let's say coal gets allowances worth 80% of its potential emissions cost at typical operation
+                    // CCGT gets 40%, CT gets 20% (arbitrary scaling for demo)
+                    let scaleFactor = 0;
+                    if (plant === 'coal') scaleFactor = 0.8 * emissionRate * hoursPerYear * capFactor ; // Value per MW
+                    else if (plant === 'ccgt') scaleFactor = 0.4 * emissionRate * hoursPerYear * capFactor;
+                    else if (plant === 'ct') scaleFactor = 0.2 * emissionRate * hoursPerYear * capFactor;
+                     freeAllowanceValue = scaleFactor * price;
+                     explanationText = "Rule I/II (Simplified): Free allowances based on capacity, biased towards dirtier plants, significantly reduce their effective capital cost.";
+
+                } else if (selectedRule === 'contingentSales') {
+                     // Rule III: Acts like a per-MWh subsidy. Harder to show as reduced capital cost directly.
+                     // Let's show *no change* in capital cost for simplicity, but update explanation.
+                     freeAllowanceValue = 0;
+                     explanationText = "Rule III: Free allowances based on sales act like an operating subsidy, not directly reducing capital cost in this simplified view. Investment decisions are less distorted.";
+                } else { // Auction
+                     freeAllowanceValue = 0;
+                     explanationText = "Auction/Grandfathering: New plants receive no free allowances. Investment decisions reflect true capital and carbon costs.";
+                }
+
+                const effectiveCost = Math.max(0, capitalCost - freeAllowanceValue);
+                const row = document.getElementById(`row${plant.charAt(0).toUpperCase() + plant.slice(1)}`);
+                 if (row) {
+                    row.querySelector('.effective-cost').textContent = Math.round(effectiveCost).toLocaleString();
+                 }
+            }
+             investmentExplanation.textContent = explanationText;
+        }
+
+        allowancePriceSlider.addEventListener('input', updateInvestmentViz);
+        allocationRuleRadios.forEach(radio => radio.addEventListener('change', updateInvestmentViz));
+        updateInvestmentViz(); // Initial call
+
+        // --- Market Simulation ---
+        const capTightRadio = document.getElementById('capTight');
+        const capLooseRadio = document.getElementById('capLoose');
+        const simRuleRadios = document.querySelectorAll('input[name="simAllocationRule"]');
+        const freePercentSlider = document.getElementById('freePercentSlider');
+        const freePercentValue = document.getElementById('freePercentValue');
+        const freePercentSliderGroup = document.getElementById('freePercentSliderGroup');
+
+        const indicatorPe = document.getElementById('indicatorPe');
+        const indicatorSocialCost = document.getElementById('indicatorSocialCost');
+        const indicatorGenCost = document.getElementById('indicatorGenCost');
+
+        // --- D3 Chart Setup ---
+        const margin = { top: 20, right: 30, bottom: 40, left: 60 };
+        const width = 380 - margin.left - margin.right;
+        const height = 250 - margin.top - margin.bottom;
+
+        // Capacity Mix Chart
+        const svgCapacity = d3.select("#capacityMixChart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const xCapacity = d3.scaleBand().range([0, width]).padding(0.1);
+        const yCapacity = d3.scaleLinear().range([height, 0]);
+        const colorCapacity = d3.scaleOrdinal()
+            .domain(['coal', 'ccgt', 'ct'])
+            .range(['#7d5a4f', '#f4a261', '#e9c46a']); // Brown, Orange, Yellow
+
+        svgCapacity.append("g").attr("class", "x-axis").attr("transform", `translate(0,${height})`);
+        svgCapacity.append("g").attr("class", "y-axis");
+        svgCapacity.append("text") // Y-axis label
+             .attr("transform", "rotate(-90)")
+             .attr("y", 0 - margin.left + 10)
+             .attr("x", 0 - (height / 2))
+             .attr("dy", "1em")
+             .style("text-anchor", "middle")
+             .attr("class", "axis-label")
+             .text("Capacity (MW)");
+
+        // Add Legend for Capacity Mix
+        const legendCapacity = svgCapacity.append("g")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 10)
+            .attr("text-anchor", "start")
+            .attr("transform", `translate(${width - 80}, 0)`); // Adjust position
+
+        const legendCapacityItems = legendCapacity.selectAll(".legend-item")
+            .data(colorCapacity.domain())
+            .enter().append("g")
+            .attr("class", "legend-item")
+            .attr("transform", (d, i) => `translate(0, ${i * 20})`);
+
+        legendCapacityItems.append("rect")
+            .attr("x", 0)
+            .attr("width", 15)
+            .attr("height", 15)
+            .attr("fill", colorCapacity);
+
+        legendCapacityItems.append("text")
+            .attr("x", 20)
+            .attr("y", 7.5)
+            .attr("dy", "0.32em")
+            .text(d => d === 'ct' ? 'Gas Peaker' : (d === 'ccgt' ? 'Gas CCGT' : 'Coal'));
+
+
+        // Capacity Factor Chart
+        const svgCapFactor = d3.select("#capacityFactorChart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const yCapFactor = d3.scaleLinear().range([height, 0]).domain([0, 100]); // Percentage
+        const colorCapFactor = d3.scaleOrdinal()
+             .domain(['coal', 'ccgt']) // Only showing Coal and CCGT CFs typically
+             .range(['#7d5a4f', '#f4a261']);
+
+        svgCapFactor.append("g").attr("class", "x-axis").attr("transform", `translate(0,${height})`); // Placeholder X axis
+        svgCapFactor.append("g").attr("class", "y-axis").call(d3.axisLeft(yCapFactor).ticks(5).tickFormat(d => d + "%"));
+        svgCapFactor.append("text") // Y-axis label
+             .attr("transform", "rotate(-90)")
+             .attr("y", 0 - margin.left + 10)
+             .attr("x", 0 - (height / 2))
+             .attr("dy", "1em")
+             .style("text-anchor", "middle")
+             .attr("class", "axis-label")
+             .text("Capacity Factor (%)");
+
+         // Add Legend for Capacity Factor
+        const legendCapFactor = svgCapFactor.append("g")
+            .attr("font-family", "sans-serif")
+            .attr("font-size", 10)
+            .attr("text-anchor", "start")
+            .attr("transform", `translate(${width - 80}, 0)`); // Adjust position
+
+        const legendCapFactorItems = legendCapFactor.selectAll(".legend-item")
+            .data(colorCapFactor.domain())
+            .enter().append("g")
+            .attr("class", "legend-item")
+            .attr("transform", (d, i) => `translate(0, ${i * 20})`);
+
+        legendCapFactorItems.append("line") // Use lines for legend
+            .attr("x1", 0)
+            .attr("x2", 15)
+            .attr("y1", 7.5)
+            .attr("y2", 7.5)
+            .attr("stroke", colorCapFactor)
+            .attr("stroke-width", 2);
+
+        legendCapFactorItems.append("text")
+            .attr("x", 20)
+            .attr("y", 7.5)
+            .attr("dy", "0.32em")
+            .text(d => d === 'ccgt' ? 'Gas CCGT' : 'Coal');
+
+
+        // Tooltip
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip");
+
+        // --- Simulation Logic (Simplified Interpolation based on paper's trends) ---
+        function getSimulatedData(capLevel, rule, freePercent) {
+            // Base cases (0% free = Auction/Grandfathering)
+            // Data roughly inspired by Table 1 Runs 3, 6, 9, 12, 15, 18 and Figs 2-5 trends
+            const base = {
+                tight: { pe: 22.5, socialCost: 19.3, genCost: 17.6, capacity: { coal: 850, ccgt: 8100, ct: 2050 }, cf: { coal: 98, ccgt: 51 } },
+                loose: { pe: 11.0, socialCost: 0.9, genCost: 0.1, capacity: { coal: 6080, ccgt: 2870, ct: 2050 }, cf: { coal: 71, ccgt: 24 } }
+            };
+
+            // Max distortion cases (100% free)
+            const maxDistortion = {
+                 tight: {
+                     ruleI: { pe: 34.4, socialCost: 31.6, genCost: 28.7, capacity: { coal: 3100, ccgt: 5500, ct: 5400 }, cf: { coal: 28, ccgt: 73 } }, // High CT build
+                     ruleII: { pe: 30.8, socialCost: 25.0, genCost: 23.8, capacity: { coal: 2460, ccgt: 8540, ct: 0 }, cf: { coal: 34, ccgt: 49 } }, // Inverted CFs
+                     ruleIII: { pe: 22.5, socialCost: 19.4, genCost: 18.8, capacity: { coal: 820, ccgt: 8210, ct: 1970 }, cf: { coal: 98, ccgt: 51 } } // Minimal distortion
+                 },
+                 loose: {
+                     ruleI: { pe: 32.5, socialCost: 29.2, genCost: 26.5, capacity: { coal: 12150, ccgt: 560, ct: 1215 }, cf: { coal: 54, ccgt: 99 } }, // Massive coal build
+                     ruleII: { pe: 30.8, socialCost: 11.8, genCost: 10.6, capacity: { coal: 10140, ccgt: 860, ct: 0 }, cf: { coal: 43, ccgt: 75 } }, // High coal, inverted CFs
+                     ruleIII: { pe: 11.0, socialCost: 1.0, genCost: 1.1, capacity: { coal: 5960, ccgt: 3080, ct: 1960 }, cf: { coal: 72, ccgt: 25 } } // Minimal distortion
+                 }
+            };
+
+            if (rule === 'auction') {
+                 return base[capLevel];
+            }
+
+            const baseData = base[capLevel];
+            const maxData = maxDistortion[capLevel][rule];
+            const p = freePercent / 100; // Interpolation factor
+
+            // Simple linear interpolation for demonstration
+            // For costs/prices, distortion often accelerates > 80%, but linear is simpler here
+            const interpolate = (baseVal, maxVal, factor) => baseVal + (maxVal - baseVal) * factor;
+
+            // Special handling for CF inversion in Rule II
+            let cfCoal = interpolate(baseData.cf.coal, maxData.cf.coal, p);
+            let cfCCGT = interpolate(baseData.cf.ccgt, maxData.cf.ccgt, p);
+            // if (rule === 'ruleII' && p > 0.5) { // Simulate CF flip more sharply
+            //      cfCoal = interpolate(baseData.cf.coal, maxData.cf.coal, p*p); // Accelerate change
+            //      cfCCGT = interpolate(baseData.cf.ccgt, maxData.cf.ccgt, p*p);
+            // }
+
+
+            return {
+                pe: interpolate(baseData.pe, maxData.pe, p),
+                socialCost: interpolate(baseData.socialCost, maxData.socialCost, p),
+                genCost: interpolate(baseData.genCost, maxData.genCost, p),
+                capacity: {
+                    coal: interpolate(baseData.capacity.coal, maxData.capacity.coal, p),
+                    ccgt: interpolate(baseData.capacity.ccgt, maxData.capacity.ccgt, p),
+                    ct: interpolate(baseData.capacity.ct, maxData.capacity.ct, p)
+                },
+                cf: {
+                    coal: cfCoal,
+                    ccgt: cfCCGT
+                }
+            };
+        }
+
+        function updateMarketViz() {
+            const capLevel = capTightRadio.checked ? 'tight' : 'loose';
+            let selectedRule = 'auction';
+             simRuleRadios.forEach(radio => {
+                 if (radio.checked) selectedRule = radio.value;
+             });
+            const freePercent = (selectedRule === 'auction') ? 0 : parseFloat(freePercentSlider.value);
+            freePercentValue.textContent = freePercent;
+
+            // Show/hide slider
+            freePercentSliderGroup.style.display = (selectedRule === 'auction') ? 'none' : 'block';
+
+            const data = getSimulatedData(capLevel, selectedRule, freePercent);
+
+            // Update Indicators
+            indicatorPe.textContent = data.pe.toFixed(1);
+            indicatorSocialCost.textContent = data.socialCost.toFixed(1);
+            indicatorGenCost.textContent = data.genCost.toFixed(1);
+
+            // Update Capacity Mix Chart
+            const capacityData = [
+                { type: 'coal', value: data.capacity.coal },
+                { type: 'ccgt', value: data.capacity.ccgt },
+                { type: 'ct', value: data.capacity.ct }
+            ];
+             const plantOrder = ['ct', 'ccgt', 'coal']; // Order for stacking
+             const stackGen = d3.stack().keys(plantOrder).value((d, key) => d[key]);
+             // Need data in a different format for stacking: [{group: 'Capacity', coal: val, ccgt: val, ct: val}]
+             const capacityStackData = [{
+                 group: 'Capacity',
+                 coal: data.capacity.coal,
+                 ccgt: data.capacity.ccgt,
+                 ct: data.capacity.ct
+             }];
+             const stackedData = stackGen(capacityStackData);
+
+            xCapacity.domain(['Capacity']); // Single group
+            yCapacity.domain([0, d3.max(capacityData, d => d.value) * 1.5]); // Adjust domain dynamically, maybe sum for stacked?
+             yCapacity.domain([0, d3.sum(capacityData, d => d.value) * 1.1]); // Domain based on total stack height
+
+            svgCapacity.select(".x-axis").call(d3.axisBottom(xCapacity));
+            svgCapacity.select(".y-axis").transition().duration(300).call(d3.axisLeft(yCapacity));
+
+            svgCapacity.selectAll(".capacity-bar-group")
+                .data(stackedData)
+                .join("g")
+                 .attr("class", "capacity-bar-group")
+                 .attr("fill", d => colorCapacity(d.key))
+                 .selectAll("rect")
+                 .data(d => d)
+                 .join("rect")
+                  .attr("x", d => xCapacity(d.data.group))
+                  .attr("y", d => yCapacity(d[1]))
+                  .attr("height", d => yCapacity(d[0]) - yCapacity(d[1]))
+                  .attr("width", xCapacity.bandwidth())
+                  .on("mouseover", function (event, d) {
+                      const key = d3.select(this.parentNode).datum().key;
+                      tooltip.transition().duration(200).style("opacity", .9);
+                      tooltip.html(`${key === 'ct' ? 'Gas Peaker' : (key === 'ccgt' ? 'Gas CCGT' : 'Coal')}: ${Math.round(d.data[key])} MW`)
+                          .style("left", (event.pageX + 5) + "px")
+                          .style("top", (event.pageY - 28) + "px");
+                  })
+                  .on("mouseout", function (d) {
+                      tooltip.transition().duration(500).style("opacity", 0);
+                  });
+
+
+            // Update Capacity Factor Chart
+            const cfData = [
+                 {type: 'coal', value: data.cf.coal},
+                 {type: 'ccgt', value: data.cf.ccgt}
+            ];
+
+            // Create simple points for CF - X axis isn't meaningful here, just position them
+            svgCapFactor.selectAll(".cf-point")
+                 .data(cfData)
+                 .join("circle")
+                 .attr("class", "cf-point")
+                 .attr("cx", (d, i) => width / 3 * (i + 1)) // Space them out
+                 .attr("cy", d => yCapFactor(d.value))
+                 .attr("r", 5)
+                 .attr("fill", d => colorCapFactor(d.type))
+                 .on("mouseover", function (event, d) {
+                      tooltip.transition().duration(200).style("opacity", .9);
+                      tooltip.html(`${d.type === 'ccgt' ? 'Gas CCGT' : 'Coal'} CF: ${d.value.toFixed(1)}%`)
+                          .style("left", (event.pageX + 5) + "px")
+                          .style("top", (event.pageY - 28) + "px");
+                  })
+                  .on("mouseout", function (d) {
+                      tooltip.transition().duration(500).style("opacity", 0);
+                  });
+
+            // Add lines connecting points to legend for clarity (optional)
+             svgCapFactor.selectAll(".cf-line")
+                  .data(cfData)
+                  .join("line")
+                  .attr("class", "cf-line")
+                  .attr("x1", (d, i) => width / 3 * (i + 1))
+                  .attr("y1", d => yCapFactor(d.value))
+                  .attr("x2", width - 80) // Point towards legend
+                  .attr("y2", (d, i) => i * 20 + 7.5) // Align with legend item
+                  .attr("stroke", d => colorCapFactor(d.type))
+                  .attr("stroke-dasharray", "2,2")
+                  .attr("stroke-width", 1);
+
+        }
+
+
+        // Event Listeners for Market Sim
+        capTightRadio.addEventListener('change', updateMarketViz);
+        capLooseRadio.addEventListener('change', updateMarketViz);
+        simRuleRadios.forEach(radio => radio.addEventListener('change', updateMarketViz));
+        freePercentSlider.addEventListener('input', updateMarketViz);
+
+        updateMarketViz(); // Initial call
+
+    </script>
+
+</body>
+
+</html>

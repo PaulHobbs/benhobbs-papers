@@ -18,7 +18,6 @@ This document outlines the steps required to implement the paper site generation
         *   `task_fix_links`: Implement the logic to call Gemini for link fixing and markdown conversion.
         *   `task_run_feedback_loop`: Implement the iterative feedback loop. **Inside the loop, save intermediate HTML and call the screenshot function.**
         *   `task_save_final_html`: Implement saving the final HTML string to a file.
-        *   `task_take_screenshot`: Implement calling the Puppeteer screenshot function.
         *   `task_extract_metadata`: Implement metadata extraction logic (HTML title, PDF metadata via PyPDF2 and Gemini).
         *   `task_update_index`: Implement loading `sites.json`, merging/sorting entries, and writing back.
 

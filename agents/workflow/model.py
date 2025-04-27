@@ -141,11 +141,14 @@ class FakeGeminiClient:
 
 # --- Client Factory ---
 
+import absl.flags as flags
+_DRY_RUN = flags.DEFINE_bool('dry-run', False, 'uses a fake gemini client.')
+
 # Remove @cache as the result now depends on the dry_run argument
 # Caching could be added back with dry_run as part of the cache key if needed,
 # but for simplicity, let's remove it for now.
-# @cache # Removed cache
-def client(dry_run: bool = False) -> genai.Client | FakeGeminiClient:
+@cache
+def client() -> genai.Client | FakeGeminiClient:
     """
     Returns a real or fake Gemini client based on the dry_run flag.
 
@@ -158,13 +161,14 @@ def client(dry_run: bool = False) -> genai.Client | FakeGeminiClient:
     Raises:
         ValueError: If not in dry_run mode and GEMINI_API_KEY is not set.
     """
+    dry_run = _DRY_RUN.value
     if dry_run:
         # Return a new instance each time to avoid potential state issues if
         # the fake client becomes stateful later.
         return FakeGeminiClient()
-    else:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY environment variable not set and not in dry_run mode.")
-        # Consider adding caching back here for the real client if performance is critical
-        return genai.Client(api_key=api_key)
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise ValueError("GEMINI_API_KEY environment variable not set and not in dry_run mode.")
+    # Consider adding caching back here for the real client if performance is critical
+    return genai.Client(api_key=api_key)

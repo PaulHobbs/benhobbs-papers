@@ -11,7 +11,6 @@ from agents.workflow.tasks import (
     task_fix_links,
     task_run_feedback_loop,
     task_save_final_html,
-    task_take_screenshot,
     task_extract_metadata,
     task_update_index,
 )
@@ -71,19 +70,11 @@ def create_sites_flow(pdf_paths: List[Path], incremental: bool = False):
             fixed_html = task_fix_links(initial_html, papername)
             final_html = task_run_feedback_loop(fixed_html, papername) # Add max_iterations if needed
             final_html_path = task_save_final_html(final_html, papername)
-            # Run screenshot and metadata extraction concurrently? Prefect handles async tasks.
-            # screenshot_path_future = task_take_screenshot.submit(final_html_path, papername) # Use .submit for async
-            # metadata_future = task_extract_metadata.submit(final_html, pdf_path, papername)
-            # For simplicity now, run sequentially
-            screenshot_path = asyncio.run(task_take_screenshot(final_html_path, papername)) # task_take_screenshot is async
             metadata = task_extract_metadata(final_html, pdf_path, papername)
 
             # --- Collect Results ---
             # metadata = metadata_future.result()
             # screenshot_path = screenshot_path_future.result() # Wait for screenshot if needed
-
-            # Optionally add screenshot path to metadata if needed downstream
-            metadata["screenshot_path"] = str(screenshot_path)
 
             processed_metadata.append(metadata)
             logger.info(f"Successfully processed {papername}")

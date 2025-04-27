@@ -283,8 +283,8 @@ def task_save_final_html(final_html: str, papername: str) -> Path:
     logger.info(f"Saving final HTML for {papername}")
 
     # Define output directory and ensure it exists
-    project_root = Path(__file__).parent.parent
-    output_dir = project_root / "static" / "sites"
+    _PROJECT_ROOT = Path(__file__).parent.parent
+    output_dir = _PROJECT_ROOT / "static" / "sites"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{papername}.html"
 
@@ -295,49 +295,6 @@ def task_save_final_html(final_html: str, papername: str) -> Path:
         return output_path
     except Exception as e:
         logger.error(f"Failed to save final HTML for {papername} to {output_path}: {e}")
-        raise # Re-raise the exception to fail the task
-
-
-@task(retries=1, retry_delay_seconds=10) # Give screenshot a bit more time/retries
-async def task_take_screenshot(final_html_path: Path, papername: str) -> Path:
-    """
-    Takes a screenshot of the final generated HTML site using Puppeteer.
-    Returns the path to the saved screenshot.
-    """
-    logger = get_run_logger()
-    logger.info(f"Taking final screenshot for {papername} from {final_html_path}")
-
-    # Define screenshot directory and ensure it exists
-    project_root = Path(__file__).parent.parent
-    screenshot_dir = project_root / "static" / "screenshots"
-    screenshot_dir.mkdir(parents=True, exist_ok=True)
-
-    # Construct the relative URL path expected by the screenshot tool
-    # Assumes the web server root corresponds to the project root or 'static' dir
-    relative_site_url = f"/static/sites/{final_html_path.name}"
-    final_screenshot_path = screenshot_dir / f"{papername}.png" # Expected final path
-
-    try:
-        # The take_screenshot function might return the actual path it saved to
-        # We pass the papername as the base name and the desired output directory
-        saved_path_str = await take_screenshot(
-            url=relative_site_url,
-            name=papername,
-            output_dir=screenshot_dir
-        )
-        # Ensure the returned path is a Path object
-        saved_path = Path(saved_path_str) if saved_path_str else final_screenshot_path
-
-        if saved_path.exists():
-             logger.info(f"Final screenshot successfully saved to: {saved_path}")
-             return saved_path
-        else:
-             # This case might happen if take_screenshot fails silently or returns None/empty
-             logger.error(f"take_screenshot reported success but file not found at {saved_path}")
-             raise FileNotFoundError(f"Screenshot file not found after take_screenshot call: {saved_path}")
-
-    except Exception as e:
-        logger.error(f"Failed to take final screenshot for {papername}: {e}")
         raise # Re-raise the exception to fail the task
 
 
@@ -398,6 +355,8 @@ def task_extract_metadata(final_html: str, pdf_path: Path, papername: str) -> Di
     return metadata
 
 
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 @task
 def task_update_index(new_metadata_list: List[Dict[str, any]]):
     """
@@ -407,8 +366,7 @@ def task_update_index(new_metadata_list: List[Dict[str, any]]):
     logger = get_run_logger()
     logger.info(f"Updating sites index with {len(new_metadata_list)} entries.")
 
-    project_root = Path(__file__).parent.parent
-    index_path = project_root / "src/lib/sites.json"
+    index_path = _PROJECT_ROOT / "src/lib/sites.json"
 
     # Load existing sites
     try:

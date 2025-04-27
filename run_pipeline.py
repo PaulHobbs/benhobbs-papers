@@ -61,5 +61,6 @@ def main(argv):
         update_metadata_flow(paper_names=paper_names_to_update)
         print("Update flow finished.")
 
+
 if __name__ == "__main__":
     app.run(main)

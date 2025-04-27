@@ -90,9 +90,12 @@ class Feedbackctx:
         Saves intermediate HTML, takes a screenshot, and uploads it to Gemini.
         Returns the uploaded file object or None on failure.
         """
-        temp_html_path = _PROJECT_ROOT / "sites-wip" / f"{papername}_feedback_iter{iteration}.html"
-        screenshot_path = self.screenshot_dir / f"{papername}_feedback_iter{iteration}.png"
+        # under static, this will make the site available at 'https://localhost:5173/sites-wip/<sitename>'
+        iter_name = f"{papername}_feedback_iter{iteration}"
+        temp_html_path = _PROJECT_ROOT / "static" / "sites-wip" / f"{iter_name}.html"
+        screenshot_path = self.screenshot_dir / f"{iter_name}.png"
         self.logger.info(f"Saving intermediate HTML for screenshot: {temp_html_path}")
+        temp_html_path.parent.mkdir(parents=True, exist_ok=True)
         with open(temp_html_path, "w", encoding="utf-8") as f:
             f.write(current_html_content)
 
@@ -100,9 +103,8 @@ class Feedbackctx:
         try:
             self.logger.info(f"Taking intermediate screenshot: {screenshot_path}")
             relative_temp_html_url = f"https://localhost:5173/sites-wip/{temp_html_path.name}"
-            screenshot_iter_name = f"{papername}_feedback_iter{iteration}"
             time.sleep(0.5) # Need the vite server to load it
-            await take_screenshot(relative_temp_html_url, screenshot_iter_name, output_dir=self.screenshot_dir) # Use await here
+            await take_screenshot(relative_temp_html_url, iter_name, output_dir=self.screenshot_dir) # Use await here
             self.logger.info(f"Intermediate screenshot saved: {screenshot_path}")
 
             # Upload screenshot to Gemini
