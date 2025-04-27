@@ -3,11 +3,9 @@ from functools import cache
 from google import genai  # type: ignore
 from google.genai import types  # type: ignore
 from pathlib import Path
-import datetime
 import os
 import PyPDF2
 import re
-import json
 from pydantic import BaseModel
 
 
@@ -118,17 +116,3 @@ def _pdf_site_path(pdf_path: Path) -> str:
     return m.group(1)
 
 
-def create_site_entry(papername: str, html_content: str, pdf_path: Path) -> dict:
-    """Creates a dictionary entry for sites.json."""
-    pub_date = extract_publication_date(pdf_path)
-    meta = extract_pdf_meta_with_gemini(pdf_path)
-    return {
-        "paper": papername,
-        "path": f"/sites/{papername}.html",
-        "title": extract_title(html_content),
-        "authors": meta.authors,
-        "pdf_title": meta.title,
-        "pdf_site": _pdf_site_path(pdf_path),
-        "publication_date": pub_date,
-        "generated": datetime.datetime.now().isoformat(),
-    }
