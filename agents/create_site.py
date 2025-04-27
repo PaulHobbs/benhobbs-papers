@@ -19,37 +19,70 @@ import time
 _PRIMARY_MODEL = "gemini-2.5-pro-exp-03-25"
 _FALLBACK_MODEL = "gemini-2.5-pro-preview-03-25"
 _PROMPT = f"""
-I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (https://ciechanow.ski/).
-
-The goal is a single HTML file (with Javascript and CSS inlined) that serves as a professional, well-decorated, and highly intuitive blog post exploring the paper's main concepts. A layman with a high school education in mathematics and should be able to build understanding of the paper's mathematical model and contributions mainly through interacting with javascript simulations and visualizations.
-
-**Requirements:**
-
-1.  **Technical:**
-    * Use simulation when appropriate. Use interaction to demonstrate the mathematical concepts and build intuition for the ideas. Every visualization should always have some interactive component, always preferred over static charts.
-    * Prioritize **interactive Javascript visualizations** to build intuition *before* introducing complex equations.
-    * If you must make a chart, prefer using D3.js.
-    * Use **MathJax** to render ALL mathematical notation. Ensure LaTeX delimiters (`$...$` for inline, `$$...$$` for display) are used correctly in the output HTML.
-    * For any custom diagrams or simple simulations needed beyond standard charts, use **plain Javascript** or **p5.js** if appropriate.
-
-2.  **Content Flow & Explanation:**
-    * Start with a clear, high-level introduction to the problem the paper addresses.
-    * Gradually build up the necessary concepts. **Define terms of art clearly** and provide Wikipedia links where helpful (e.g., `<a href="WIKI_URL" target="_blank">Term</a>`).
-    * Focus on the **core mathematical model or central idea** of the paper. Don't try to cover everything; aim for depth on the key concept.
-
-3.  **Handling Mathematical Models:**
-    * When appropriate, write a Monte Carlo simulation which explores how the modeled system might evolve.
-    * When the paper presents constrained optimization models, create interactive visualizations that allow users to adjust key input parameters (e.g., costs, resource limits, demand levels) via sliders or input fields.
-    * Make visualizations genuinely interactive: use sliders for parameters, tooltips on hover for data points, potentially buttons to trigger calculation updates or simulation steps.
-    * Use many small visualizations of ideas to build up intuition, rather than just relying on one or two.
-
-5.  **Output Format & Quality:**
-    * Produce a **single, self-contained HTML file**.
-    * Include **comments in the Javascript code** explaining the logic, especially for visualizations and interactive elements.
-    * Ensure the final output is polished, professional, and technically accurate according to the paper's content.
-    * You'll probably need to generate the HTML body first before adding scripts and styles at the bottom, given your autoregressive generation of the page. 
-
-Please generate the HTML file based on the provided paper content and these instructions.
+<p>I&#39;d like you to translate the core ideas of the provided academic paper into an interactive website, drawing
+    inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (<a
+        href="https://ciechanow.ski/">https://ciechanow.ski/</a>).</p>
+<p>The goal is a single HTML file (with Javascript and CSS inlined) that serves as a professional, well-decorated, and
+    highly intuitive blog post exploring the paper&#39;s main concepts. A layman with a high school education in
+    mathematics and should be able to build understanding of the paper&#39;s mathematical model and contributions mainly
+    through interacting with javascript simulations and visualizations.</p>
+<p><strong>Requirements:</strong></p>
+<ol>
+    <li>
+        <p><strong>Technical:</strong></p>
+        <ul>
+            <li>Use simulation when appropriate. Use interaction to demonstrate the mathematical concepts and build
+                intuition for the ideas. Every visualization should always have some interactive component, always
+                preferred over static charts.</li>
+            <li>Prioritize <strong>interactive Javascript visualizations</strong> to build intuition <em>before</em>
+                introducing complex equations.</li>
+            <li>If you must make a chart, prefer using D3.js.</li>
+            <li>Use <strong>MathJax</strong> to render ALL mathematical notation. Ensure LaTeX delimiters
+                (<code>$...$</code> for inline, <code>$$...$$</code> for display) are used correctly in the output HTML.
+            </li>
+            <li>For any custom diagrams or simple simulations needed beyond standard charts, use <strong>plain
+                    Javascript</strong> or <strong>p5.js</strong> if appropriate.</li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Content Flow &amp; Explanation:</strong></p>
+        <ul>
+            <li>Start with a clear, high-level introduction to the problem the paper addresses.</li>
+            <li>Gradually build up the necessary concepts. <strong>Define terms of art clearly</strong> and provide
+                Wikipedia links where helpful (e.g.,
+                <code>&lt;a href=&quot;WIKI_URL&quot; target=&quot;_blank&quot;&gt;Term&lt;/a&gt;</code>).</li>
+            <li>Focus on the <strong>core mathematical model or central idea</strong> of the paper. Don&#39;t try to
+                cover everything; aim for depth on the key concept.</li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Handling Mathematical Models:</strong></p>
+        <ul>
+            <li>When appropriate, write a Monte Carlo simulation which explores how the modeled system might evolve.
+            </li>
+            <li>When the paper presents constrained optimization models, create interactive visualizations that allow
+                users to adjust key input parameters (e.g., costs, resource limits, demand levels) via sliders or input
+                fields.</li>
+            <li>Make visualizations genuinely interactive: use sliders for parameters, tooltips on hover for data
+                points, potentially buttons to trigger calculation updates or simulation steps.</li>
+            <li>Use many small visualizations of ideas to build up intuition, rather than just relying on one or two.
+            </li>
+        </ul>
+    </li>
+    <li>
+        <p><strong>Output Format &amp; Quality:</strong></p>
+        <ul>
+            <li>Produce a <strong>single, self-contained HTML file</strong>.</li>
+            <li>Include <strong>comments in the Javascript code</strong> explaining the logic, especially for
+                visualizations and interactive elements.</li>
+            <li>Ensure the final output is polished, professional, and technically accurate according to the paper&#39;s
+                content.</li>
+            <li>You&#39;ll probably need to generate the HTML body first before adding scripts and styles at the bottom,
+                given your autoregressive generation of the page. </li>
+        </ul>
+    </li>
+</ol>
+<p>Please generate the HTML file based on the provided paper content and these instructions.</p>
 """.strip()
 
 
@@ -144,7 +177,6 @@ def generate(pdf: str):
 
     model_to_use = _PRIMARY_MODEL
     try:
-        print(f"Attempting generation with primary model: {model_to_use}")
         chunks = client().models.generate_content_stream(
             model=model_to_use,
             contents=contents,
@@ -153,7 +185,7 @@ def generate(pdf: str):
         result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
         return _parse_html(result)
     except google_exceptions.ResourceExhausted as e:
-        print(f"Resource exhausted for primary model ({model_to_use}): {e}. Falling back...")
+        print(f"\nResource exhausted for primary model ({model_to_use}): {e}. Falling back...")
         model_to_use = _FALLBACK_MODEL
         # Optional: Add a small delay before retrying
         # time.sleep(1)
@@ -167,10 +199,10 @@ def generate(pdf: str):
             result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
             return _parse_html(result)
         except Exception as fallback_e:
-            print(f"Generation failed with fallback model ({model_to_use}) as well: {fallback_e}")
+            print(f"\nGeneration failed with fallback model ({model_to_use}) as well: {fallback_e}")
             raise fallback_e # Re-raise the exception from the fallback attempt
     except Exception as primary_e:
-        print(f"An unexpected error occurred with the primary model ({model_to_use}): {primary_e}")
+        print(f"\nAn unexpected error occurred with the primary model ({model_to_use}): {primary_e}")
         raise primary_e # Re-raise other unexpected exceptions
 
 
@@ -219,13 +251,13 @@ _HTML = re.compile(
 
 def _parse_html(output: str) -> str:
     """Extract HTML content from markdown code block.
-    
+
     Args:
         output: String containing markdown with HTML code block
-        
+
     Returns:
         Extracted HTML content as string
-        
+
     Raises:
         ValueError: If no valid HTML code block is found
     """
@@ -238,7 +270,7 @@ def _parse_html(output: str) -> str:
             f"2. Well-formed HTML content between the markers\n"
             f"Received:\n{snippet}"
         )
-    
+
     return match.group(1).strip()
 
 

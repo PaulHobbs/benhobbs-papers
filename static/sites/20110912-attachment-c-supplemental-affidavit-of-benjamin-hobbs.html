@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Untangling the Waters: Optimizing Dam Removals in Lake Erie</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.3em;
+        }
+
+        h2 {
+            font-size: 1.8em;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.2em;
+        }
+
+        h3 {
+            font-size: 1.4em;
+        }
+
+        p,
+        li {
+            margin-bottom: 1em;
+            font-size: 1.05em;
+        }
+
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .math-display {
+            overflow-x: auto;
+            margin: 1em 0;
+        }
+
+        .interactive-section {
+            background-color: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .slider-container {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider-container label {
+            min-width: 150px;
+            /* Adjust as needed */
+            font-weight: bold;
+        }
+
+        .slider-container input[type="range"] {
+            flex-grow: 1;
+            cursor: pointer;
+        }
+
+        .slider-container output {
+            font-weight: bold;
+            min-width: 50px;
+            /* Ensure space for value */
+            text-align: right;
+        }
+
+        .viz-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            min-height: 200px;
+            /* Ensure space for visualizations */
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .dam {
+            cursor: pointer;
+            transition: fill 0.3s ease;
+        }
+
+        .dam.selected {
+            fill: #e74c3c;
+            /* Red when selected */
+            stroke: #c0392b;
+            stroke-width: 2px;
+        }
+
+        .dam.candidate {
+            fill: #3498db;
+            /* Blue when candidate */
+        }
+
+        .dam.disabled {
+            fill: #bdc3c7;
+            /* Grey when disabled */
+            cursor: not-allowed;
+        }
+
+        .habitat {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .habitat.accessible {
+            opacity: 0.3;
+            /* Light green */
+        }
+
+        svg {
+            display: block;
+            margin: auto;
+        }
+
+        button {
+            padding: 8px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .explanation {
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Untangling the Waters: Optimizing Dam Removals in Lake Erie</h1>
+
+    <p>Lake Erie, the shallowest and warmest of the Great Lakes, is incredibly productive but also heavily impacted by
+        human activity. Decades of stressors, including nutrient pollution and habitat loss, have taken their toll. One
+        significant stressor? Dams. Thousands of dams fragment the rivers and streams flowing into the lake, blocking
+        fish from reaching crucial historical <a href="https://en.wikipedia.org/wiki/Spawning"
+            target="_blank">spawning</a> and nursery grounds.</p>
+
+    <p>Removing dams can be a powerful tool for river restoration. It can reopen habitat for native fish like the
+        economically important <a href="https://en.wikipedia.org/wiki/Walleye" target="_blank">walleye</a>. However, dam
+        removal isn't simple. It costs money, might benefit invasive species like the parasitic <a
+            href="https://en.wikipedia.org/wiki/Sea_lamprey" target="_blank">sea lamprey</a>, and removing one dam can
+        affect the potential benefits of removing others upstream or downstream. With limited resources, how do managers
+        decide *which* dams to remove to get the biggest ecological bang for their buck?</p>
+
+    <p>This is where the research by Zheng, Hobbs, and Koonce (2009) comes in. They developed a mathematical model to
+        help tackle this complex "portfolio problem": selecting the best set of dams to remove across multiple Lake Erie
+        watersheds, considering multiple competing objectives.</p>
+
+    <h2>The Challenge: Dams, Fish, and Trade-offs</h2>
+
+    <p>Imagine a simplified river system flowing into Lake Erie. Dams act as barriers.</p>
+
+    <div class="interactive-section">
+        <h3>Visualizing Habitat Access</h3>
+        <p>Click on the dams (blue rectangles) in the river below to simulate removing them. Notice how removing a
+            downstream dam makes the habitat upstream potentially accessible to fish migrating from the lake
+            (represented by the green areas).</p>
+        <div class="viz-container">
+            <svg id="river-viz" width="600" height="200"></svg>
+        </div>
+        <div class="explanation">
+            Fish like walleye need to migrate upstream from the lake to find suitable gravelly areas (habitat) to lay
+            their eggs. Dams block this migration. Removing a dam opens up the river section immediately upstream.
+            However, habitat further upstream only becomes accessible if *all* downstream dams are also removed.
+        </div>
+    </div>
+
+    <p>Restoring access seems good, right? But there are complications:</p>
+    <ul>
+        <li><strong>Good Fish vs. Bad Fish:</strong> Reopening rivers helps native walleye, which supports valuable
+            fisheries. But it can *also* help the invasive sea lamprey find muddy areas to establish nurseries for their
+            young. Lampreys harm valuable fish in the lake.</li>
+        <li><strong>Costs:</strong> Removing dams isn't free. Costs vary depending on the dam's size, type, and original
+            purpose. Furthermore, if lampreys gain access, controlling them adds significant, ongoing costs.</li>
+        <li><strong>Ecosystem Complexity:</strong> The lake is a complex web. More walleye might prey on other fish.
+            Changes in one part of the system ripple through others.</li>
+        <li><strong>Multiple Objectives:</strong> Managers care about many things: walleye populations, overall fish
+            community health, native species prevalence, recreational fishing opportunities, commercial harvests, and,
+            of course, the cost.</li>
+    </ul>
+
+    <h2>Measuring "Goodness": Combining Objectives</h2>
+
+    <p>How do you compare different dam removal plans when they affect so many different things? The researchers used a
+        technique called <a href="https://en.wikipedia.org/wiki/Multiple-criteria_decision_analysis"
+            target="_blank">Multicriteria Value Analysis (MVA)</a>. The basic idea is to:</p>
+    <ol>
+        <li>Identify key criteria representing ecosystem health (like walleye biomass, ratio of native to total species,
+            etc.).</li>
+        <li>Define how "good" different levels of each criterion are (using value functions).</li>
+        <li>Assign weights based on how important each criterion is relative to others.</li>
+        <li>Combine these into a single "Ecosystem Health Index" score.</li>
+    </ol>
+
+    <div class="interactive-section">
+        <h3>Building an Ecosystem Health Score (Conceptual)</h3>
+        <p>Imagine we have just three (simplified) criteria. Adjust the sliders to see how changes in individual
+            criteria and their assigned importance (weights) affect the overall score. (Note: This is illustrative; the
+            actual study used 8 criteria derived from a complex Lake Erie ecosystem model).</p>
+        <div class="slider-container">
+            <label for="crit1-slider">Walleye Biomass:</label>
+            <input type="range" id="crit1-slider" min="0" max="100" value="50">
+            <output id="crit1-value">50</output>
+            <label for="crit1-weight">Weight:</label>
+            <input type="range" id="crit1-weight" min="0" max="100" value="40">
+            <output id="crit1-weight-value">40%</output>
+        </div>
+        <div class="slider-container">
+            <label for="crit2-slider">Native Species Ratio:</label>
+            <input type="range" id="crit2-slider" min="0" max="100" value="70">
+            <output id="crit2-value">70</output>
+            <label for="crit2-weight">Weight:</label>
+            <input type="range" id="crit2-weight" min="0" max="100" value="30">
+            <output id="crit2-weight-value">30%</output>
+        </div>
+        <div class="slider-container">
+            <label for="crit3-slider">Perch Harvest:</label>
+            <input type="range" id="crit3-slider" min="0" max="100" value="60">
+            <output id="crit3-value">60</output>
+            <label for="crit3-weight">Weight:</label>
+            <input type="range" id="crit3-weight" min="0" max="100" value="30">
+            <output id="crit3-weight-value">30%</output>
+        </div>
+        <div>
+            <strong>Overall Health Score: <span id="health-score"></span></strong>
+        </div>
+        <div class="explanation">
+            The total score is calculated as: (Criterion 1 Value × Weight 1) + (Criterion 2 Value × Weight 2) +
+            (Criterion 3 Value × Weight 3). Weights are normalized to sum to 100%. This allows decision-makers to
+            explicitly state their priorities.
+        </div>
+    </div>
+
+    <p>This Ecosystem Health Index ($z_1$ in the paper) becomes one major objective. The other major objective is
+        minimizing the total Cost ($x_9$), which includes dam removal and potential lamprey control.</p>
+
+    <h2>The Optimization Puzzle: Finding the Best Portfolio</h2>
+
+    <p>The core of the paper is a <a
+            href="https://en.wikipedia.org/wiki/Integer_programming#Mixed-integer_linear_programming"
+            target="_blank">Mixed Integer Linear Program (MILP)</a>. Think of it like trying to fill a shopping basket
+        (the portfolio of dams to remove) to get the maximum "value" (Ecosystem Health) without exceeding your budget
+        (Total Cost), while following certain rules.</p>
+
+    <p>The key decision for each potential dam $j$ is whether to remove it or not. This is represented by a binary
+        variable $d_j$:
+        $$ d_j = \begin{cases} 1 & \text{if dam } j \text{ is removed} \\ 0 & \text{if dam } j \text{ is not removed}
+        \end{cases} $$
+    </p>
+
+    <p>The model aims to maximize the Ecosystem Health Index ($z_1$), which is a weighted sum of individual criteria
+        values ($x_i$), each influenced by the dam removal decisions:</p>
+    <div class="math-display">
+        $$ \text{Maximize } z_1 = \sum_{i=1}^{8} W_i V_i(x_i) $$
+    </div>
+    <p>Where $W_i$ are the importance weights and $V_i(x_i)$ are the value functions for each ecological criterion
+        $x_i$. The values $x_i$ themselves change based on the predicted increase in walleye recruitment ($\Delta
+        yoy_{walleye}$) resulting from the selected dams ($d_j$).</p>
+
+    <p>This maximization is subject to several constraints:</p>
+    <ul>
+        <li><strong>Budget Constraint:</strong> The total cost cannot exceed a given budget $B$. Cost includes dam
+            removal ($c_j^{dam}$) and potential lamprey treatment ($c_j^{lamprey}$) if lamprey habitat is opened.
+            <div class="math-display">$$ x_9 = \sum_{j \in J} (c_j^{dam} + c_j^{lamprey}) d_j \leq B $$</div>
+        </li>
+        <li><strong>Upstream/Downstream Logic:</strong> A dam $n$ cannot be removed ($d_n=1$) unless the dam $j$
+            immediately downstream of it is also removed ($d_j=1$). This ensures connectivity.
+            <div class="math-display">$$ d_n \leq d_j \quad \text{for all } n \text{ directly upstream of } j $$</div>
+        </li>
+        <li><strong>Ecological Linkages:</strong> Equations link the removal decisions ($d_j$) to habitat changes (using
+            Habitat Suitability Indices - HSI), then to fish recruitment changes ($\Delta yoy_{walleye}$), and finally
+            to the lake-wide ecological criteria ($x_i$) using results from the Lake Erie Ecological Model (LEEM).</li>
+    </ul>
+
+    <div class="interactive-section">
+        <h3>Simplified Dam Selection Puzzle</h3>
+        <p>Let's try a miniature version. Below is a river with 5 dams. Each has a removal cost and provides a certain
+            'Ecosystem Benefit' if removed (a simplified score). Your budget is limited. Try to select dams to maximize
+            the total benefit without exceeding the budget. Remember the rule: you can only select an upstream dam if
+            the one directly downstream is also selected. Click dams to select/deselect.</p>
+        <div class="viz-container">
+            <svg id="puzzle-viz" width="600" height="250"></svg>
+        </div>
+        <div>
+            <strong>Budget:</strong> $<span id="puzzle-budget">10</span> M
+            <strong>Selected Cost:</strong> $<span id="puzzle-cost">0</span> M
+            <strong>Selected Benefit:</strong> <span id="puzzle-benefit">0</span>
+        </div>
+        <div id="puzzle-message" style="color: red; margin-top: 10px;"></div>
+        <div class="explanation">
+            This simple puzzle mimics the core choices and constraints of the MILP. An optimization solver can explore
+            *all* possible combinations (which grows incredibly fast with more dams!) and find the mathematically best
+            solution for a given budget and set of benefits/costs. The paper analyzed 139 potential dams!
+        </div>
+    </div>
+
+    <h2>Exploring the Trade-offs: The Efficiency Frontier</h2>
+
+    <p>By running the MILP model with different budget levels ($B$), the researchers traced out an "efficiency
+        frontier". This curve shows the maximum possible Ecosystem Health score achievable for any given level of
+        spending.</p>
+
+    <div class="interactive-section">
+        <h3>Ecosystem Health vs. Cost</h3>
+        <p>The chart below shows the results from the paper (similar to Figure 4a). Each point represents an optimal
+            portfolio of dams found by the MILP for a specific budget. Hover over points to see details. Notice that
+            initial spending yields large health gains, but returns diminish as the budget increases (the curve
+            flattens).</p>
+        <div class="viz-container">
+            <svg id="tradeoff-chart" width="600" height="400"></svg>
+        </div>
+        <div class="tooltip" id="chart-tooltip"></div>
+        <div class="explanation">
+            This curve is crucial for decision-making. It shows the "best" you can do for any given budget and
+            highlights the trade-off: achieving higher ecosystem health requires more spending. Points *below* this
+            curve represent inefficient choices (getting less health for the same or more cost). The MILP helps find the
+            points *on* the curve.
+        </div>
+    </div>
+
+    <h2>What if Priorities Change? Sensitivity to Lamprey Concerns</h2>
+
+    <p>The initial model focused on maximizing the combined health score. But what if decision-makers are particularly
+        worried about increasing sea lamprey populations? The researchers explored this by adding a penalty to the
+        objective function based on the amount of potential lamprey habitat opened up.</p>
+
+    <p>They introduced a weight, $WL$, representing the importance placed on *avoiding* lamprey habitat increase. $WL=0$
+        means no special concern (original model), while a higher $WL$ means lamprey avoidance is prioritized.</p>
+
+    <div class="interactive-section">
+        <h3>Impact of Lamprey Avoidance Weight (WL)</h3>
+        <p>Use the slider to adjust the weight given to avoiding lamprey habitat ($WL$). Observe how the optimal
+            solution for a fixed budget (e.g., $15M) changes. A higher $WL$ leads to lower overall ecosystem health
+            scores (as potentially beneficial dams that also open lamprey habitat are avoided) and selects a different
+            set of dams.</p>
+        <div class="slider-container">
+            <label for="wl-slider">Lamprey Avoidance Weight (WL):</label>
+            <input type="range" id="wl-slider" min="0" max="0.4" step="0.1" value="0">
+            <output id="wl-value">0.0</output>
+        </div>
+        <div>
+            <strong>Budget:</strong> $15 M (Fixed)
+            <br>
+            <strong>Selected Dams:</strong> <span id="sensitivity-dams">31</span>
+            <br>
+            <strong>Ecosystem Health (%):</strong> <span id="sensitivity-health">68.3</span>
+            <br>
+            <strong>Lamprey Habitat Opened (km, approx.):</strong> <span id="sensitivity-lamprey">237</span> km
+        </div>
+        <div class="viz-container">
+            <p id="sensitivity-message" style="text-align: center; font-style: italic;">(Visualizing the exact dam
+                locations is complex, but note how the number of dams and outcomes change significantly with WL)</p>
+            <!-- Placeholder for a potential future map visualization -->
+        </div>
+        <div class="explanation">
+            This sensitivity analysis shows how changing priorities (value judgments) directly impacts the recommended
+            actions. When lamprey avoidance is paramount ($WL \ge 0.4$), the model selects dams that open virtually *no*
+            lamprey habitat, even if it means sacrificing significant gains in the overall ecosystem health score and
+            removing more, potentially smaller, dams.
+        </div>
+    </div>
+
+    <h2>Conclusions: A Tool for Informed Decisions</h2>
+
+    <p>The research demonstrates how optimization modeling can be a powerful tool for complex environmental decisions
+        like dam removal. Key takeaways include:</p>
+    <ul>
+        <li><strong>Systematic Approach:</strong> It provides a structured way to evaluate thousands of possibilities and
+                complex interactions.</li>
+        <li><strong>Explicit Trade-offs:</strong> The model clearly shows the trade-offs between competing objectives like
+                ecosystem health and cost.</li>
+        <li><strong>Value Judgments Matter:</strong> The "best" solution depends on the relative importance assigned to
+                different objectives (like walleye benefit vs. lamprey risk).</li>
+        <li><strong>Screening Tool:</strong> While powerful, the model is a screening tool. Due to uncertainties in costs and
+                ecological responses, site-specific studies are crucial before actually removing any dams.</li>
+    </ul>
+
+    <p>By linking habitat changes in tributaries to their effects on the broader Lake Erie ecosystem and explicitly
+        considering costs and multiple objectives, this work provides a valuable framework for making more informed,
+        transparent, and potentially cost-effective decisions in river restoration.</p>
+
+    <hr style="margin-top: 30px;">
+    <p style="font-size: 0.9em; color: #777;">Based on: Zheng, P. Q., B. F. Hobbs, and J. F. Koonce (2009), Optimizing
+        multiple dam removals under multiple objectives: Linking tributary habitat and the Lake Erie ecosystem, Water
+        Resour. Res., 45, W12417, doi:10.1029/2008WR007589.</p>
+
+
+    <script>
+        // --- Visualization 1: Simple River Network ---
+        function setupRiverViz() {
+            const svg = d3.select("#river-viz");
+            const width = +svg.attr("width");
+            const height = +svg.attr("height");
+
+            // Clear previous elements
+            svg.selectAll("*").remove();
+
+            // River path
+            svg.append("path")
+                .attr("d", `M 50 ${height / 2} L ${width - 50} ${height / 2}`)
+                .attr("stroke", "#aed6f1")
+                .attr("stroke-width", 40)
+                .attr("fill", "none");
+
+            svg.append("text")
+                .attr("x", width - 40)
+                .attr("y", height / 2 + 5)
+                .attr("text-anchor", "start")
+                .text("Lake");
+
+            // Habitat sections
+            const habitatData = [
+                { id: 'h1', x1: 50, x2: 180 },
+                { id: 'h2', x1: 220, x2: 380 },
+                { id: 'h3', x1: 420, x2: 550 }
+            ];
+
+            svg.selectAll(".habitat-base")
+                .data(habitatData)
+                .enter().append("rect")
+                .attr("class", "habitat-base")
+                .attr("x", d => d.x1)
+                .attr("y", height / 2 - 20)
+                .attr("width", d => d.x2 - d.x1)
+                .attr("height", 40)
+                .attr("fill", "#abebc6") // Light green base color
+                .attr("opacity", 0.1); // Very faint base
+
+            svg.selectAll(".habitat")
+                .data(habitatData)
+                .enter().append("rect")
+                .attr("class", "habitat")
+                .attr("id", d => d.id)
+                .attr("x", d => d.x1)
+                .attr("y", height / 2 - 20)
+                .attr("width", d => d.x2 - d.x1)
+                .attr("height", 40)
+                .attr("fill", "#2ecc71"); // Green accessible color
+
+            // Dams
+            const damData = [
+                { id: 'd1', x: 200, removed: false, upstream: 'd2', habitat: 'h2' },
+                { id: 'd2', x: 400, removed: false, upstream: 'd3', habitat: 'h3' },
+                { id: 'd3', x: 570, removed: false, upstream: null, habitat: null } // Most upstream
+            ];
+
+            // Draw dams
+            svg.selectAll(".dam")
+                .data(damData)
+                .enter().append("rect")
+                .attr("class", "dam candidate") // Start as candidate
+                .attr("id", d => d.id)
+                .attr("x", d => d.x - 10)
+                .attr("y", height / 2 - 30)
+                .attr("width", 20)
+                .attr("height", 60)
+                .attr("stroke", "#2980b9")
+                .attr("stroke-width", 1)
+                .on("click", function (event, d) {
+                    toggleDamRemoval(d.id, damData);
+                    updateHabitatAccess(damData);
+                });
+
+            // Initial habitat state (only h1 accessible)
+            d3.select("#h1").classed("accessible", true);
+        }
+
+        function toggleDamRemoval(damId, damData) {
+            const dam = damData.find(d => d.id === damId);
+            if (dam) {
+                dam.removed = !dam.removed;
+                d3.select(`#${damId}`)
+                    .classed("candidate", !dam.removed) // Toggle candidate class
+                    .style("fill", dam.removed ? "#e74c3c" : "#3498db"); // Red if removed, blue if not
+            }
+        }
+
+        function updateHabitatAccess(damData) {
+            const isRemoved = (id) => damData.find(d => d.id === id)?.removed ?? false;
+
+            // Logic: Habitat is accessible if the dam immediately downstream is removed
+            // (or if it's the first segment)
+            d3.select("#h1").classed("accessible", true); // Always accessible from lake
+            d3.select("#h2").classed("accessible", isRemoved('d1'));
+            d3.select("#h3").classed("accessible", isRemoved('d1') && isRemoved('d2'));
+            // Dam 3 doesn't block habitat in this simple viz
+        }
+
+        // --- Visualization 2: Health Score Builder ---
+        function setupHealthScoreViz() {
+            const sliders = ['crit1', 'crit2', 'crit3'];
+            const inputs = sliders.map(id => document.getElementById(`${id}-slider`));
+            const weights = sliders.map(id => document.getElementById(`${id}-weight`));
+            const values = sliders.map(id => document.getElementById(`${id}-value`));
+            const weightValues = sliders.map(id => document.getElementById(`${id}-weight-value`));
+            const scoreDisplay = document.getElementById('health-score');
+
+            function calculateScore() {
+                let rawWeights = weights.map(w => +w.value);
+                let totalWeight = rawWeights.reduce((sum, w) => sum + w, 0);
+                // Avoid division by zero if all weights are zero
+                let normalizedWeights = totalWeight === 0 ? rawWeights.map(() => 0) : rawWeights.map(w => w / totalWeight);
+
+                let score = 0;
+                for (let i = 0; i < sliders.length; i++) {
+                    let value = +inputs[i].value;
+                    let weight = normalizedWeights[i];
+                    score += value * weight;
+
+                    // Update displays
+                    values[i].textContent = value;
+                    // Display weight as percentage, handle totalWeight=0 case
+                    weightValues[i].textContent = totalWeight === 0 ? '0%' : `${Math.round(weight * 100)}%`;
+                }
+                scoreDisplay.textContent = score.toFixed(1);
+            }
+
+            inputs.forEach(input => input.addEventListener('input', calculateScore));
+            weights.forEach(weight => weight.addEventListener('input', calculateScore));
+
+            // Initial calculation
+            calculateScore();
+        }
+
+
+        // --- Visualization 3: Dam Selection Puzzle ---
+        function setupPuzzleViz() {
+            const svg = d3.select("#puzzle-viz");
+            const width = +svg.attr("width");
+            const height = +svg.attr("height");
+            const budget = 10;
+            let currentCost = 0;
+            let currentBenefit = 0;
+
+            svg.selectAll("*").remove(); // Clear previous
+
+            // River path
+            svg.append("path")
+                .attr("d", `M 50 ${height / 2} L ${width - 50} ${height / 2}`)
+                .attr("stroke", "#aed6f1")
+                .attr("stroke-width", 30)
+                .attr("fill", "none");
+            svg.append("text")
+                .attr("x", width - 45)
+                .attr("y", height / 2 + 5)
+                .text("Lake");
+
+            const puzzleDams = [
+                { id: 'p1', x: 100, cost: 3, benefit: 5, selected: false, downstream: null, upstream: ['p2', 'p3'] },
+                { id: 'p2', x: 250, cost: 4, benefit: 8, selected: false, downstream: 'p1', upstream: ['p4'] },
+                { id: 'p3', x: 250, cost: 2, benefit: 4, selected: false, downstream: 'p1', upstream: ['p5'] }, // Fork
+                { id: 'p4', x: 400, cost: 5, benefit: 10, selected: false, downstream: 'p2', upstream: [] },
+                { id: 'p5', x: 400, cost: 3, benefit: 6, selected: false, downstream: 'p3', upstream: [] }
+            ];
+
+            // Draw river forks for p2/p3 and p4/p5 visually
+            svg.append("path").attr("d", `M 110 ${height / 2} L 240 ${height / 2 - 20}`).attr("stroke", "#aed6f1").attr("stroke-width", 20).attr("fill", "none");
+            svg.append("path").attr("d", `M 110 ${height / 2} L 240 ${height / 2 + 20}`).attr("stroke", "#aed6f1").attr("stroke-width", 20).attr("fill", "none");
+            svg.append("path").attr("d", `M 260 ${height / 2 - 20} L 390 ${height / 2 - 20}`).attr("stroke", "#aed6f1").attr("stroke-width", 20).attr("fill", "none");
+            svg.append("path").attr("d", `M 260 ${height / 2 + 20} L 390 ${height / 2 + 20}`).attr("stroke", "#aed6f1").attr("stroke-width", 20).attr("fill", "none");
+
+
+            function updatePuzzleDisplay() {
+                currentCost = puzzleDams.reduce((sum, d) => sum + (d.selected ? d.cost : 0), 0);
+                currentBenefit = puzzleDams.reduce((sum, d) => sum + (d.selected ? d.benefit : 0), 0);
+                d3.select("#puzzle-cost").text(currentCost);
+                d3.select("#puzzle-benefit").text(currentBenefit);
+
+                let message = "";
+                if (currentCost > budget) {
+                    message = "Budget exceeded!";
+                }
+                d3.select("#puzzle-message").text(message);
+
+                // Update dam appearance and enabled state
+                puzzleDams.forEach(dam => {
+                    const downstreamDam = puzzleDams.find(d => d.id === dam.downstream);
+                    const canSelect = !dam.downstream || downstreamDam?.selected;
+                    const isOverBudget = currentCost > budget && dam.selected;
+
+                    d3.select(`#${dam.id}`)
+                        .classed("selected", dam.selected)
+                        .classed("candidate", !dam.selected && canSelect)
+                        .classed("disabled", !dam.selected && !canSelect)
+                        .style("stroke", isOverBudget ? "orange" : (dam.selected ? "#c0392b" : (canSelect ? "#2980b9" : "#95a5a6")))
+                        .style("stroke-width", isOverBudget ? 3 : (dam.selected ? 2 : 1));
+                });
+            }
+
+            // Draw dams
+            svg.selectAll(".dam")
+                .data(puzzleDams)
+                .enter().append("rect")
+                .attr("class", "dam") // Base class
+                .attr("id", d => d.id)
+                .attr("x", d => d.x - 10)
+                // Adjust y for forks
+                .attr("y", d => (d.id === 'p2' || d.id === 'p4') ? height / 2 - 20 - 25 : ((d.id === 'p3' || d.id === 'p5') ? height / 2 + 20 - 25 : height / 2 - 25))
+                .attr("width", 20)
+                .attr("height", 50)
+                .on("click", function (event, d) {
+                    const downstreamDam = puzzleDams.find(ds => ds.id === d.downstream);
+                    const canSelect = !d.downstream || downstreamDam?.selected;
+
+                    if (d.selected) { // Always allow deselecting
+                        // Check if deselecting this dam invalidates upstream selections
+                        let canDeselect = true;
+                        puzzleDams.forEach(upDam => {
+                            if (upDam.downstream === d.id && upDam.selected) {
+                                canDeselect = false;
+                            }
+                        });
+                        if (canDeselect) {
+                            d.selected = false;
+                        } else {
+                            d3.select("#puzzle-message").text("Cannot deselect: Upstream dam is selected.");
+                            setTimeout(() => d3.select("#puzzle-message").text(""), 2000); // Clear message
+                        }
+
+                    } else if (canSelect) { // Allow selecting if downstream is selected
+                        // Check budget before selecting
+                        if (currentCost + d.cost <= budget) {
+                            d.selected = true;
+                        } else {
+                            d3.select("#puzzle-message").text("Cannot select: Exceeds budget.");
+                            setTimeout(() => d3.select("#puzzle-message").text(""), 2000); // Clear message
+                        }
+                    } else {
+                        d3.select("#puzzle-message").text("Cannot select: Downstream dam must be selected first.");
+                        setTimeout(() => d3.select("#puzzle-message").text(""), 2000); // Clear message
+                    }
+                    updatePuzzleDisplay();
+                });
+
+            d3.select("#puzzle-budget").text(budget);
+            updatePuzzleDisplay(); // Initial state
+        }
+
+
+        // --- Visualization 4: Trade-off Chart ---
+        function setupTradeoffChart() {
+            // Data from Table 2 (simplified and rescaled health to 0-100)
+            const data = [
+                { budget: 0, health: 0, dams: 0 },
+                { budget: 4.96, health: 35.18, dams: 9 },
+                { budget: 14.94, health: 68.31, dams: 31 },
+                { budget: 30.00, health: 96.35, dams: 66 },
+                { budget: 44.95, health: 99.92, dams: 130 }, // Assuming 130 dams is close to max possible for this budget
+                // Max budget from paper text is ~$49M (32+17), max health should be 100% conceptually if all removed
+                // Let's add a conceptual point near max
+                { budget: 49, health: 100, dams: 139 }
+            ];
+
+            const svg = d3.select("#tradeoff-chart");
+            const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+            const width = +svg.attr("width") - margin.left - margin.right;
+            const height = +svg.attr("height") - margin.top - margin.bottom;
+
+            svg.selectAll("*").remove(); // Clear previous
+
+            const g = svg.append("g")
+                .attr("transform", `translate(${margin.left},${margin.top})`);
+
+            // Scales
+            const xScale = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.budget) * 1.05]) // Add padding
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.health) * 1.05]) // Add padding
+                .range([height, 0]);
+
+            // Axes
+            g.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(d3.axisBottom(xScale))
+                .append("text")
+                .attr("fill", "#000")
+                .attr("x", width / 2)
+                .attr("y", margin.bottom - 10)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "14px")
+                .text("Economic Cost ($M)");
+
+
+            g.append("g")
+                .call(d3.axisLeft(yScale))
+                .append("text")
+                .attr("fill", "#000")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -margin.left + 15)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "14px")
+                .text("Ecosystem Health Index (%)");
+
+
+            // Tooltip
+            const tooltip = d3.select("#chart-tooltip");
+
+            // Line
+            g.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "#3498db")
+                .attr("stroke-width", 2)
+                .attr("d", d3.line()
+                    .x(d => xScale(d.budget))
+                    .y(d => yScale(d.health))
+                    // .curve(d3.curveMonotoneX) // Make it slightly smoother
+                );
+
+            // Points
+            g.selectAll("circle")
+                .data(data)
+                .enter().append("circle")
+                .attr("cx", d => xScale(d.budget))
+                .attr("cy", d => yScale(d.health))
+                .attr("r", 5)
+                .attr("fill", "#e74c3c")
+                .style("cursor", "pointer")
+                .on("mouseover", (event, d) => {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`Budget: $${d.budget.toFixed(2)}M<br/>Health: ${d.health.toFixed(1)}%<br/>Dams: ${d.dams}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", (d) => {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
+        }
+
+        // --- Visualization 5: Sensitivity Analysis ---
+        function setupSensitivityViz() {
+            const slider = document.getElementById('wl-slider');
+            const wlValueDisplay = document.getElementById('wl-value');
+            const damsDisplay = document.getElementById('sensitivity-dams');
+            const healthDisplay = document.getElementById('sensitivity-health');
+            const lampreyDisplay = document.getElementById('sensitivity-lamprey');
+
+            // Data from Table 3 for B=$15M
+            const sensitivityData = {
+                0.0: { dams: 31, health: 68.31, lampreyKm: 236.98 },
+                0.1: { dams: 61, health: 47.25, lampreyKm: 74.18 },
+                0.2: { dams: 56, health: 15.35, lampreyKm: 9.83 },
+                0.3: { dams: 53, health: 6.28, lampreyKm: 2.41 },
+                0.4: { dams: 51, health: 1.76, lampreyKm: 0 }
+            };
+
+            function updateSensitivity() {
+                const wl = parseFloat(slider.value);
+                wlValueDisplay.textContent = wl.toFixed(1);
+
+                // Find the closest data point (or exact match)
+                const dataPoint = sensitivityData[wl.toFixed(1)]; // Use fixed precision for matching keys
+
+                if (dataPoint) {
+                    damsDisplay.textContent = dataPoint.dams;
+                    healthDisplay.textContent = dataPoint.health.toFixed(1); // Use 1 decimal place for consistency
+                    lampreyDisplay.textContent = dataPoint.lampreyKm.toFixed(1); // Use 1 decimal place
+                } else {
+                    // Handle cases where slider value might not exactly match keys if step changes
+                    damsDisplay.textContent = "N/A";
+                    healthDisplay.textContent = "N/A";
+                    lampreyDisplay.textContent = "N/A";
+                }
+                // Update message or potential map highlight here in a full implementation
+                d3.select("#sensitivity-message").text(`With WL=${wl.toFixed(1)}, the model prioritizes dams that open less lamprey habitat (${lampreyDisplay.textContent} km), resulting in ${damsDisplay.textContent} dams removed and ${healthDisplay.textContent}% health score.`);
+            }
+
+            slider.addEventListener('input', updateSensitivity);
+
+            // Initial update
+            updateSensitivity();
+        }
+
+
+        // --- Run Setup Functions ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupRiverViz();
+            setupHealthScoreViz();
+            setupPuzzleViz();
+            setupTradeoffChart();
+            setupSensitivityViz();
+        });
+
+    </script>
+
+</body>
+
+</html>

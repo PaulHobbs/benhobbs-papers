@@ -1,5 +1,15 @@
 [
   {
+    "paper": "20110912-attachment-c-supplemental-affidavit-of-benjamin-hobbs",
+    "path": "/sites/20110912-attachment-c-supplemental-affidavit-of-benjamin-hobbs.html",
+    "title": "Untangling the Waters: Optimizing Dam Removals in Lake Erie",
+    "authors": [],
+    "pdf_title": "",
+    "pdf_site": "papers/20110912-attachment-c-supplemental-affidavit-of-benjamin-hobbs.pdf",
+    "publication_date": "2011-08-30",
+    "generated": "2025-04-26T17:07:06.590719"
+  },
+  {
     "paper": "2025_urban_heat_island",
     "path": "/sites/2025_urban_heat_island.html",
     "generated": "2025-04-16T23:27:26.100248",
@@ -46,6 +56,50 @@
     "pdf_title": "How Sampling and Averaging Historical Solar and Wind Data Can Distort Resource Adequacy"
   },
   {
+    "paper": "ECN_COMPETES_Bremen2008",
+    "path": "/sites/ECN_COMPETES_Bremen2008.html",
+    "title": "Optimizing Dam Removals in Lake Erie: An Interactive Exploration",
+    "authors": [
+      "\u00d6. \u00d6zdemir",
+      "J.S. Hers",
+      "E.B. Fisher",
+      "B.F. Hobbs",
+      "G. Brunekreeft"
+    ],
+    "pdf_title": "Abstract\u2014 The electricity market in Germany is likely to un- dergo several significant struct ural changes over the years to come.",
+    "pdf_site": "papers/ECN_COMPETES_Bremen2008.pdf",
+    "publication_date": "2012-06-17",
+    "generated": "2025-04-26T18:14:50.587296"
+  },
+  {
+    "paper": "Grid%20Expert%20Comment%20for%20EPA-HQ-OAR-2017-0355",
+    "path": "/sites/Grid%20Expert%20Comment%20for%20EPA-HQ-OAR-2017-0355.html",
+    "title": "Optimizing Dam Removals: Balancing Ecology and Economy in Lake Erie",
+    "authors": [
+      "Benjamin F. Hobbs",
+      "Brendan Kirby",
+      "Kenneth J. Lutz",
+      "James D. McCalley",
+      "Brian Parsons"
+    ],
+    "pdf_title": "Comment by Electricity Grid Experts Benjamin F. Hobbs, Brendan Kirby, Kenneth J. Lutz, James D. McCalley, and Brian Parsons on Docket ID No. EPA\u2013 HQ\u2013OAR\u20132017\u2013 0355, Proposed Repeal of Carbon Pollution Emission Guidelines for Existing Stationary Sources: Electric Utility Generating Units",
+    "pdf_site": "papers/Grid%20Expert%20Comment%20for%20EPA-HQ-OAR-2017-0355.pdf",
+    "publication_date": "2018-04-25",
+    "generated": "2025-04-26T17:13:40.833272"
+  },
+  {
+    "paper": "HobbsAffidavit_20131129-er14-504-000_Short",
+    "path": "/sites/HobbsAffidavit_20131129-er14-504-000_Short.html",
+    "title": "Optimizing Dam Removals: Balancing Ecology and Economy in Lake Erie",
+    "authors": [
+      "Benjamin F. Hobbs"
+    ],
+    "pdf_title": "AFFIDAVIT OF BENJAMIN F. HOBBS",
+    "pdf_site": "papers/HobbsAffidavit_20131129-er14-504-000_Short.pdf",
+    "publication_date": "2013-11-29",
+    "generated": "2025-04-26T17:10:33.648816"
+  },
+  {
     "paper": "IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset",
     "path": "/sites/IEEE_Indu_Applic_Mehrtash_2024_Assessing_the_Reliability_Benefits_of_Energy_Storage_as_a_Transmission_Asset.html",
     "title": "Wires vs. Batteries: Upgrading Our Electric Grid",
@@ -75,7 +129,7 @@
       "Reza Mahroo"
     ],
     "publication_date": "2023-03-21",
-    "pdf_title": "Necessity of Joint Resource and Transmission Expansion — Planning in Presence of System and Policy Uncertainties"
+    "pdf_title": "Necessity of Joint Resource and Transmission Expansion \u2014 Planning in Presence of System and Policy Uncertainties"
   },
   {
     "paper": "IET_Generation_Trans_Dist_-_2016_-_Ibrahim_Shayesteh_-_Scenario_reduction_network_aggregation_and_DC_linearisation",
@@ -153,6 +207,21 @@
     "pdf_title": "Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling"
   },
   {
+    "paper": "OH_Renewable_Sunrise_IEEEJune2007f",
+    "path": "/sites/OH_Renewable_Sunrise_IEEEJune2007f.html",
+    "title": "Untangling the Dam Problem: Balancing Ecology and Economics in Lake Erie",
+    "authors": [
+      "Keith E. Casey",
+      "Benjamin F. Hobbs",
+      "Dariush Shirmohammadi",
+      "Frank A Wolak"
+    ],
+    "pdf_title": "Benefit-Cost Analysis of Large-Scale Transmission for Renewable Generation: Principles & California Case Study",
+    "pdf_site": "papers/OH_Renewable_Sunrise_IEEEJune2007f.pdf",
+    "publication_date": "2012-07-04",
+    "generated": "2025-04-26T17:18:13.528460"
+  },
+  {
     "paper": "Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
     "path": "/sites/Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main.html",
     "title": "Interactive Exploration: How Market Rules Shape Our Power Grid",
@@ -203,22 +272,6 @@
     "pdf_title": "HOPE: Holistic Optimization Program for Electricity"
   },
   {
-    "paper": "Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft",
-    "path": "/sites/Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft.html",
-    "title": "Interactive Power Planning: Navigating an Uncertain Future",
-    "generated": "2025-04-18T00:04:14.566989",
-    "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
-    "pdf_site": "papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
-    "authors": [
-      "Elina Spyrou",
-      "Ben Hobbs",
-      "Deb Chattopadhyay",
-      "Neha Mukhi"
-    ],
-    "publication_date": "2024-02-12",
-    "pdf_title": "How to Assess Uncertainty-Aware Frameworks for Power System Planning?"
-  },
-  {
     "paper": "Spyrou_IEEE_Flexibility_Options_Paper__V2025_01_07",
     "path": "/sites/Spyrou_IEEE_Flexibility_Options_Paper__V2025_01_07.html",
     "title": "Flexibility Options: Making Grids Ready for Renewables",
@@ -236,5 +289,21 @@
     ],
     "publication_date": "2025-01-07",
     "pdf_title": "Flexibility Options: A Proposed Product for Managing Imbalance Risk"
+  },
+  {
+    "paper": "Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft",
+    "path": "/sites/Spyrou_IEEE_How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final_draft.html",
+    "title": "Interactive Power Planning: Navigating an Uncertain Future",
+    "generated": "2025-04-18T00:04:14.566989",
+    "pdf": "/Users/phobbs/code/bhobbs-papers/papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
+    "pdf_site": "papers/Spyrou IEEE How_to_Assess_Uncertainty-Aware_Frameworks_for_Power_System_Planning_2024_archival_final draft.pdf",
+    "authors": [
+      "Elina Spyrou",
+      "Ben Hobbs",
+      "Deb Chattopadhyay",
+      "Neha Mukhi"
+    ],
+    "publication_date": "2024-02-12",
+    "pdf_title": "How to Assess Uncertainty-Aware Frameworks for Power System Planning?"
   }
 ]
