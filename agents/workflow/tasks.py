@@ -1,19 +1,15 @@
 import asyncio
 import json
 import re
-import time
 from pathlib import Path
 from typing import Optional, Dict, List
 
-import prefect
 from bs4 import BeautifulSoup
 from google.genai import types, errors as google_errors  # type: ignore
 from prefect import task, get_run_logger
-from pydantic import BaseModel
-import PyPDF2
 
 # Assuming site_utils will be refactored as planned
-from agents.site_utils import client, extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path, PDFMeta
+from agents.site_utils import client, extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path
 # Assuming puppet script remains available
 from agents.puppet.puppeteer import take_screenshot
 
@@ -185,11 +181,9 @@ def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
         logger.info(f"Deleted uploaded file: {files[0].name}")
         return _parse_html(result)
 
-    except google_errors.ResourceExhausted as e:
+    except google_errors.ClientError as e:
         logger.warning(f"Resource exhausted for primary model ({model_to_use}): {e}. Falling back...")
         model_to_use = _FALLBACK_MODEL
-        # Optional: Add a small delay before retrying
-        # time.sleep(1)
         try:
             logger.info(f"Attempting generation with fallback model: {model_to_use}")
             chunks = gemini_client.models.generate_content_stream(

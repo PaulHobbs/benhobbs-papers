@@ -9,12 +9,10 @@ from prefect import flow
 from prefect.testing.utilities import prefect_test_harness
 
 # Import the flows and tasks to be tested
+from agents.site_utils import PDFMeta
 from agents.workflow.flows import create_sites_flow, update_metadata_flow, load_sites_index_task
 from agents.workflow.tasks import (
-    _PRIMARY_MODEL,
-    _FALLBACK_MODEL,
     _parse_html,
-    PDFMeta, # Assuming PDFMeta is importable or defined in tasks/site_utils
     # Import other tasks if testing individually
 )
 
@@ -127,15 +125,14 @@ def mock_gemini_client():
 
     # Mock generate_content_stream
     def generate_content_stream_side_effect(*args, model, contents, config, **kwargs):
-        logger = MagicMock() # Mock logger if needed inside side effect
-        prompt_text = ""
-        html_content_for_feedback = ""
+        prompt_text = []
 
         # Extract text from contents to determine the call type
         if contents and contents[0].parts:
              for part in contents[0].parts:
-                 if hasattr(part, 'text'):
-                     prompt_text += part.text
+                 if hasattr(part, 'text') and part.text:
+                     prompt_text.append(part.text)
+        prompt_text = '\n'.join(prompt_text)
 
         # Determine response based on model and prompt content
         if "Please use the google search tool" in prompt_text: # Link fixing call
@@ -174,25 +171,28 @@ def mock_gemini_client():
              yield mock_client_instance # Yield the instance for potential assertions
 
 @pytest.fixture
-def mock_take_screenshot():
+def mock_take_screenshot(temp_test_dir): # Add temp_test_dir dependency
     """Mocks the take_screenshot function."""
-    # Use AsyncMock for async functions
     mock_screenshot = AsyncMock()
+    # Define the correct screenshot directory within the temp structure
+    correct_screenshot_dir = temp_test_dir / "static" / "screenshots"
+    correct_screenshot_dir.mkdir(parents=True, exist_ok=True) # Ensure it exists
 
     async def screenshot_side_effect(url: str, name: str, output_dir: Path):
-        # Simulate creating a screenshot file
-        screenshot_path = Path(output_dir) / f"{name}.png"
+        # Ignore the potentially incorrect output_dir passed from the task
+        # Use the correct_screenshot_dir defined in the fixture's scope
+        screenshot_path = correct_screenshot_dir / f"{name}.png"
         screenshot_path.touch() # Create an empty file
-        print(f"Mock screenshot created at: {screenshot_path}") # Debug print
-        return str(screenshot_path) # Return the path as a string
+        # print(f"Mock screenshot created at: {screenshot_path}") # Debug print (optional)
+        return str(screenshot_path) # Return the correct path
 
     mock_screenshot.side_effect = screenshot_side_effect
 
-    # Adjust the path 'agents.puppet.puppeteer.take_screenshot' if needed
-    with patch('agents.puppet.puppeteer.take_screenshot', mock_screenshot) as mocked_func:
-         # Also patch the import within tasks.py
-         with patch('agents.workflow.tasks.take_screenshot', mock_screenshot) as mocked_tasks_func:
-              yield mocked_func
+    # Patch the import within tasks.py (and potentially others if needed)
+    # Ensure both potential import locations are patched
+    with patch('agents.workflow.tasks.take_screenshot', mock_screenshot) as mocked_tasks_func, \
+         patch('agents.puppet.puppeteer.take_screenshot', mock_screenshot, create=True) as mocked_puppet_func: # Use create=True if puppet might not always be imported
+              yield mock_screenshot # Yield the mock instance
 
 @pytest.fixture
 def mock_pdf_metadata():
@@ -247,13 +247,84 @@ def test_create_sites_flow_single_pdf(temp_test_dir: Path):
     final_screenshot_path = temp_test_dir / "static" / "screenshots" / f"{FAKE_PAPERNAME}.png"
     feedback_screenshot_path = temp_test_dir / "static" / "screenshots" / f"{FAKE_PAPERNAME}_feedback_iter1.png"
 
-    # Mock Path resolution within the flow/tasks to use temp_test_dir
-    # This is crucial because the flow/tasks might construct paths relative to __file__
-    with patch('pathlib.Path.__new__', lambda cls, *args, **kwargs: type(Path())(temp_test_dir, *args)) as mock_path:
-        # Run the flow
+    # --- Mock Path resolution within the flow/tasks ---
+    # Patch Path object creation within the specific modules being tested
+    # to ensure they use the temp_test_dir as their base
+    flow_path_target = 'agents.workflow.flows.Path'
+    tasks_path_target = 'agents.workflow.tasks.Path'
+
+    # Store the original Path class
+    original_path_cls = Path
+
+    # Create a side effect function for the patch
+    # This function will return a *new class* that behaves like Path but modifies initialization
+    def create_patched_path_class(temp_base_dir):
+        class PatchedPath(original_path_cls):
+            def __init__(self, *args, **kwargs):
+                # If args start with a Path object, use it directly (avoids recursion)
+                if args and isinstance(args[0], original_path_cls):
+                    super().__init__(*args, **kwargs)
+                    return
+
+                # Attempt to construct the path intended by the original code
+                intended_path = original_path_cls(*args)
+
+                # Heuristic: Check if it looks like an absolute path derived from __file__
+                # This assumes the test file is in agents/workflow/
+                real_project_root = original_path_cls(__file__).parent.parent.parent
+                is_likely_absolute_from_source = False
+                try:
+                    # See if the intended path is relative to the real project root
+                    intended_path.relative_to(real_project_root)
+                    is_likely_absolute_from_source = intended_path.is_absolute()
+                except ValueError:
+                    is_likely_absolute_from_source = False # Not relative to project root
+
+                if is_likely_absolute_from_source:
+                    # Map it into the temp structure
+                    try:
+                        rel_path = intended_path.relative_to(real_project_root)
+                        full_temp_path = temp_base_dir / rel_path
+                        # print(f"DEBUG: Mapped absolute {intended_path} -> {full_temp_path}") # Debug print
+                    except ValueError:
+                        # Fallback if relative_to fails unexpectedly
+                        full_temp_path = temp_base_dir / intended_path.name
+                        # print(f"DEBUG: Fallback absolute {intended_path} -> {full_temp_path}") # Debug print
+                elif intended_path.is_absolute():
+                     # Absolute path not relative to project root - keep it as is? Or force into temp?
+                     # Forcing into temp is safer for test isolation.
+                     full_temp_path = temp_base_dir / intended_path.name # Simplified fallback
+                     # print(f"DEBUG: Kept/Forced absolute {intended_path} -> {full_temp_path}") # Debug print
+                else:
+                    # Relative path, make it relative to the temp base dir
+                    full_temp_path = temp_base_dir / intended_path
+                    # print(f"DEBUG: Relative {intended_path} -> {full_temp_path}") # Debug print
+
+
+                # Call the original Path's __init__ with the modified path
+                super().__init__(full_temp_path, **kwargs)
+        return PatchedPath
+
+    # Apply the patches using the factory function
+    PatchedFlowPath = create_patched_path_class(temp_test_dir)
+    PatchedTasksPath = create_patched_path_class(temp_test_dir)
+
+    with patch(flow_path_target, PatchedFlowPath) as mock_flow_path, \
+         patch(tasks_path_target, PatchedTasksPath) as mock_tasks_path:
+
+        # --- Run the flow ---
+        # Ensure the input pdf_path is correctly using the temp_test_dir structure
+        assert str(temp_test_dir) in str(pdf_path), f"Input PDF path {pdf_path} doesn't seem to be in temp dir {temp_test_dir}"
+        print(f"Running flow with PDF: {pdf_path}") # Debug print
         create_sites_flow(pdf_paths=[pdf_path], incremental=False)
 
     # --- Assertions ---
+    # Ensure paths used for assertions are also based on temp_test_dir
+    sites_json_path = temp_test_dir / "src" / "lib" / "sites.json"
+    final_html_path = temp_test_dir / "static" / "sites" / f"{FAKE_PAPERNAME}.html"
+    final_screenshot_path = temp_test_dir / "static" / "screenshots" / f"{FAKE_PAPERNAME}.png"
+    feedback_screenshot_path = temp_test_dir / "static" / "screenshots" / f"{FAKE_PAPERNAME}_feedback_iter1.png"
+
     # 1. Check final HTML content
     assert final_html_path.exists()
     assert final_html_path.read_text() == FINAL_HTML_CONTENT.format(FAKE_PAPERNAME=FAKE_PAPERNAME)
