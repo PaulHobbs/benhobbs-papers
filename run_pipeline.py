@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import argparse
+from absl import app
+from absl import flags
 from pathlib import Path
 import sys
 
@@ -10,57 +11,31 @@ sys.path.insert(0, str(project_root))
 
 from agents.workflow.flows import create_sites_flow, update_metadata_flow
 
-def main():
-    parser = argparse.ArgumentParser(
-        description="Run Prefect workflows for generating or updating paper sites.",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Generate sites for specific PDFs, overwriting existing ones
-  python run_pipeline.py create papers/paper1.pdf papers/paper2.pdf
+FLAGS = flags.FLAGS
 
-  # Generate sites for all PDFs in the papers directory, only adding new ones
-  python run_pipeline.py create --incremental papers/*.pdf
+flags.DEFINE_enum('command', None, ['create', 'update'],
+                  'The command to execute: "create" or "update".',
+                  required=True)
+flags.DEFINE_multi_string('pdf_files', [],
+                          'Paths to the PDF files to process for the "create" command (supports glob patterns).')
+flags.DEFINE_boolean('incremental', False,
+                     'For the "create" command, only process papers not already in sites.json.')
+flags.DEFINE_multi_string('papers', [],
+                          'Specific paper names (slugs) to update for the "update" command. If omitted, updates all.')
+# Note: The --dry-run flag is defined in agents/workflow/model.py and will be available here too.
 
-  # Update metadata for all existing sites in sites.json
-  python run_pipeline.py update
+def main(argv):
+    # argv[0] is the program name, argv[1:] are the positional arguments.
+    # absl handles flag parsing before calling main.
 
-  # Update metadata for specific existing sites
-  python run_pipeline.py update --papers paper1_slug paper2_slug
-"""
-    )
+    if FLAGS.command == "create":
+        if not FLAGS.pdf_files:
+             print("Error: --pdf_files must be provided for the 'create' command.", file=sys.stderr)
+             sys.exit(1)
 
-    subparsers = parser.add_subparsers(dest="command", required=True, help="Sub-command help")
-
-    # --- Create command ---
-    parser_create = subparsers.add_parser("create", help="Generate new sites from PDFs")
-    parser_create.add_argument(
-        "pdf_files",
-        metavar="PDF_FILE",
-        nargs='+',
-        help="Paths to the PDF files to process (supports glob patterns like papers/*.pdf)."
-    )
-    parser_create.add_argument(
-        "--incremental",
-        action="store_true",
-        help="Only process papers that are not already present in sites.json."
-    )
-
-    # --- Update command ---
-    parser_update = subparsers.add_parser("update", help="Update metadata for existing sites")
-    parser_update.add_argument(
-        "--papers",
-        metavar="PAPER_NAME",
-        nargs='*', # 0 or more arguments
-        help="Specific paper names (slugs) to update. If omitted, updates all."
-    )
-
-    args = parser.parse_args()
-
-    if args.command == "create":
         # Expand glob patterns
         pdf_paths = []
-        for pattern in args.pdf_files:
+        for pattern in FLAGS.pdf_files:
             # Use rglob for potentially nested directories if needed, or just glob
             expanded_paths = list(project_root.glob(pattern))
             if not expanded_paths:
@@ -75,16 +50,16 @@ Examples:
             sys.exit(1)
 
         print(f"Running 'create_sites_flow' for {len(pdf_paths)} PDF(s)...")
-        create_sites_flow(pdf_paths=pdf_paths, incremental=args.incremental)
+        create_sites_flow(pdf_paths=pdf_paths, incremental=FLAGS.incremental)
         print("Create flow finished.")
 
-    elif args.command == "update":
+    elif FLAGS.command == "update":
         # If --papers is provided but empty list, it means update all (same as not providing it)
-        paper_names_to_update = args.papers if args.papers else None
+        paper_names_to_update = FLAGS.papers if FLAGS.papers else None
         target = "all sites" if paper_names_to_update is None else f"{len(paper_names_to_update)} specific site(s)"
         print(f"Running 'update_metadata_flow' for {target}...")
         update_metadata_flow(paper_names=paper_names_to_update)
         print("Update flow finished.")
 
 if __name__ == "__main__":
-    main()
+    app.run(main)
