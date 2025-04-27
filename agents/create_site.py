@@ -3,8 +3,7 @@ from __future__ import annotations
 import PyPDF2
 from bs4 import BeautifulSoup
 from site_utils import create_site_entry, client
-from google.genai import types  # type: ignore
-from google.api_core import exceptions as google_exceptions # type: ignore
+from google.genai import types, errors  # type: ignore
 from pathlib import Path
 from tqdm import tqdm
 from typing import Optional
@@ -184,7 +183,7 @@ def generate(pdf: str):
         )
         result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
         return _parse_html(result)
-    except google_exceptions.ResourceExhausted as e:
+    except errors.ClientError as e:
         print(f"\nResource exhausted for primary model ({model_to_use}): {e}. Falling back...")
         model_to_use = _FALLBACK_MODEL
         # Optional: Add a small delay before retrying

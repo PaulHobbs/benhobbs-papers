@@ -207,6 +207,75 @@
     "pdf_title": "Energy storage solutions to decarbonize electricity through enhanced capacity expansion modelling"
   },
   {
+    "paper": "OH_DuisbergOct2009_h",
+    "path": "/sites/OH_DuisbergOct2009_h.html",
+    "title": "Optimizing Dam Removals: A Balancing Act in Lake Erie",
+    "authors": [
+      "Benjamin F. Hobbs",
+      "Lin Fan",
+      "Catherine Norman",
+      "Javier Inon",
+      "Ming-Che Hu",
+      "Steve Stoft",
+      "Murty Bhavaraju",
+      "Harry van der Weijde",
+      "Anthony Patt",
+      "Keith Williges",
+      "Volker Krey"
+    ],
+    "pdf_title": "We Need Electric Policy Models with Uncertainty and Risk Aversion!",
+    "pdf_site": "papers/OH_DuisbergOct2009_h.pdf",
+    "publication_date": "2009-10-07",
+    "generated": "2025-04-26T20:20:12.776013"
+  },
+  {
+    "paper": "OH_EDF_Gas_Hobbs_April2010_f",
+    "path": "/sites/OH_EDF_Gas_Hobbs_April2010_f.html",
+    "title": "Optimizing Dam Removals: A Balancing Act",
+    "authors": [
+      "Benjamin F. Hobbs",
+      "K. Chyong",
+      "M. Boots",
+      "W. Lise",
+      "O. Ozdemir",
+      "F. Rijkers",
+      "Y. Smeers",
+      "R. Eggings",
+      "S. Gabriel",
+      "C. Hirschhausen",
+      "F. Holz"
+    ],
+    "pdf_title": "Imperfect Models of Imperfect Competition in EU Gas Markets: Great Potential, Great Shortcomings",
+    "pdf_site": "papers/OH_EDF_Gas_Hobbs_April2010_f.pdf",
+    "publication_date": "2010-04-08",
+    "generated": "2025-04-26T20:23:04.255274"
+  },
+  {
+    "paper": "OH_LoadSource_Apr2010",
+    "path": "/sites/OH_LoadSource_Apr2010.html",
+    "title": "Optimizing Dam Removals: Balancing Ecology and Economy in Lake Erie",
+    "authors": [
+      "Benjamin F. Hobbs"
+    ],
+    "pdf_title": "Upstream v. Downstream CO2Trading in Electricity Markets: What is the Cheapest Way to Sustainability?",
+    "pdf_site": "papers/OH_LoadSource_Apr2010.pdf",
+    "publication_date": "2010-04-08",
+    "generated": "2025-04-26T20:29:11.054407"
+  },
+  {
+    "paper": "OH_Newton_Hobbs_May2010",
+    "path": "/sites/OH_Newton_Hobbs_May2010.html",
+    "title": "Dams, Fish, and Dollars: Untangling the Choices on Lake Erie's Rivers",
+    "authors": [
+      "Benjamin F. Hobbs",
+      "Daniel Ralph"
+    ],
+    "pdf_title": "Electric Power Markets: Why is Electricity Different?",
+    "pdf_site": "papers/OH_Newton_Hobbs_May2010.pdf",
+    "publication_date": "2010-10-03",
+    "generated": "2025-04-26T20:26:17.585397"
+  },
+  {
     "paper": "OH_Renewable_Sunrise_IEEEJune2007f",
     "path": "/sites/OH_Renewable_Sunrise_IEEEJune2007f.html",
     "title": "Untangling the Dam Problem: Balancing Ecology and Economics in Lake Erie",
@@ -220,6 +289,18 @@
     "pdf_site": "papers/OH_Renewable_Sunrise_IEEEJune2007f.pdf",
     "publication_date": "2012-07-04",
     "generated": "2025-04-26T17:18:13.528460"
+  },
+  {
+    "paper": "OH_Torino_Lambda_Revised2011",
+    "path": "/sites/OH_Torino_Lambda_Revised2011.html",
+    "title": "Optimizing Dam Removals in Lake Erie: An Interactive Exploration",
+    "authors": [
+      "Benjamin F. Hobbs"
+    ],
+    "pdf_title": "The Evolution o f the U.S. Approach to Managing Congestion:\n\u201cLeave no \u03bb\u03bbBehind\u201d\nConference on\n\u201cElectricity Market Performance under Physical Constraints\u201d",
+    "pdf_site": "papers/OH_Torino_Lambda_Revised2011.pdf",
+    "publication_date": "2012-07-04",
+    "generated": "2025-04-26T20:14:36.460478"
   },
   {
     "paper": "Renewable_Energy_Focus_2023_1-s2.0-S1755008423000911-main",
