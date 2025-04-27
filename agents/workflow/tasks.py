@@ -1,22 +1,22 @@
 import json
 from pathlib import Path
 from typing import Optional, Dict, List
+import re
 
 from bs4 import BeautifulSoup
 from google.genai import types, errors as google_errors  # type: ignore
 from prefect import task, get_run_logger
 
 # Assuming site_utils will be refactored as planned
-from agents.site_utils import client, extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path
+from agents.site_utils import extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path
 # Assuming puppet script remains available
 from agents.puppet.puppeteer import take_screenshot
 from .feedback import task_run_feedback_loop  # import:keep
+from .model import client, PRIMARY_MODEL, FALLBACK_MODEL
 
 
 # --- Constants (Consider moving to config.py later) ---
 
-_PRIMARY_MODEL = "gemini-2.5-pro-exp-03-25"
-_FALLBACK_MODEL = "gemini-2.5-pro-preview-03-25"
 _PROMPT = f"""
 <p>I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing
     inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (<a
@@ -83,6 +83,194 @@ _PROMPT = f"""
 <p>Please generate the HTML file based on the provided paper content and these instructions.</p>
 """.strip()
 
+
+_HTML_RE = re.compile(
+    r'```html\s+(.*?)\s+```',  # Non-greedy match with whitespace handling
+    re.DOTALL | re.IGNORECASE  # Allow multiline and case variations
+)
+
+# --- Helper Functions ---
+
+def _parse_html(output: str) -> str:
+    """Extract HTML content from markdown code block."""
+    logger = get_run_logger()
+    match: Optional[re.Match[str]] = _HTML_RE.search(output)
+    if not match or not match.group(1):
+        snippet = output[:200] + ('...' if len(output) > 200 else '')
+        logger.error(
+            f"Failed to extract HTML block. The model's response should contain:\n"
+            f"1. A markdown code block wrapped in ```html\n"
+            f"2. Well-formed HTML content between the markers\n"
+            f"Received snippet:\n{snippet}"
+        )
+        # Return the original output if parsing fails, maybe feedback loop can fix it
+        return output
+        # Or raise ValueError("Failed to extract HTML block.") if strict parsing is required
+
+    return match.group(1).strip()
+
+# --- Prefect Tasks ---
+
+@task(retries=2, retry_delay_seconds=5)
+def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
+    """
+    Generates the initial HTML site explanation from a PDF using Gemini.
+    """
+    logger = get_run_logger()
+    logger.info(f"Starting initial HTML generation for {papername} from {pdf_path}")
+
+    try:
+        # Ensure client() is available and working
+        gemini_client = client()
+        if not gemini_client:
+            raise ConnectionError("Failed to initialize Gemini client.")
+
+        logger.info(f"Uploading PDF: {pdf_path}")
+        files = [
+            gemini_client.files.upload(file=str(pdf_path)),
+        ]
+        logger.info(f"PDF uploaded successfully: {files[0].uri}")
+
+    except Exception as e:
+        logger.error(f"Failed to upload PDF {pdf_path}: {e}")
+        raise  # Re-raise after logging
+
+    contents = [
+        types.Content(
+            role="user",
+            parts=[
+                types.Part.from_uri(
+                    file_uri=files[0].uri,
+                    mime_type=files[0].mime_type,
+                ),
+                types.Part.from_text(text=_PROMPT),
+            ],
+        ),
+    ]
+    generate_content_config = types.GenerateContentConfig(
+        temperature=0.7,
+        response_mime_type="text/plain",
+    )
+
+    model_to_use = PRIMARY_MODEL
+    try:
+        logger.info(f"Generating content with primary model: {model_to_use}")
+        chunks = gemini_client.models.generate_content_stream(
+            model=model_to_use,
+            contents=contents,
+            config=generate_content_config,
+        )
+        # Use tqdm for progress if desired, but might clutter Prefect logs
+        # result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
+        result = "".join(chunk.text for chunk in chunks)
+        logger.info(f"Successfully generated content with {model_to_use}")
+        # Clean up uploaded file
+        gemini_client.files.delete(name=files[0].name)
+        logger.info(f"Deleted uploaded file: {files[0].name}")
+        return _parse_html(result)
+
+    except google_errors.ClientError as e:
+        logger.warning(f"Resource exhausted for primary model ({model_to_use}): {e}. Falling back...")
+        model_to_use = FALLBACK_MODEL
+        try:
+            logger.info(f"Attempting generation with fallback model: {model_to_use}")
+            chunks = gemini_client.models.generate_content_stream(
+                model=model_to_use,
+                contents=contents,
+                config=generate_content_config,
+            )
+            result = "".join(chunk.text for chunk in chunks)
+            logger.info(f"Successfully generated content with fallback {model_to_use}")
+            return _parse_html(result)
+        except Exception as fallback_e:
+            logger.error(f"Generation failed with fallback model ({model_to_use}) as well: {fallback_e}")
+            raise
+        finally:
+            try:
+                # Clean up uploaded file
+                gemini_client.files.delete(name=files[0].name)
+                logger.info(f"Deleted uploaded file: {files[0].name}")
+            except Exception as delete_e:
+                logger.error(f"Failed to delete uploaded file after fallback failure: {delete_e}")
+
+    except Exception as primary_e:
+        logger.error(f"An unexpected error occurred with the primary model ({model_to_use}): {primary_e}")
+         # Clean up uploaded file even on failure
+        try:
+            gemini_client.files.delete(name=files[0].name)
+            logger.info(f"Deleted uploaded file after primary failure: {files[0].name}")
+        except Exception as delete_e:
+            logger.error(f"Failed to delete uploaded file after primary failure: {delete_e}")
+        raise primary_e # Re-raise other unexpected exceptions
+
+
+@task(retries=2, retry_delay_seconds=5)
+def task_fix_links(initial_html: str, papername: str) -> str:
+    """
+    Uses Gemini with Google Search to fix broken Wikipedia links and
+    convert any remaining markdown to HTML tags.
+    """
+    logger = get_run_logger()
+    logger.info(f"Starting link fixing for {papername}")
+
+    try:
+        gemini_client = client()
+        if not gemini_client:
+            raise ConnectionError("Failed to initialize Gemini client.")
+
+        contents = [
+            types.Content(
+                role="user",
+                parts=[
+                    types.Part.from_text(text=f"""
+Please use the google search tool to fix any broken links to wikipedia in this html:
+
+```html
+{initial_html}
+```
+
+The wikipedia links in the corrected HTML should point to the real articles in wikipedia.
+
+Also, any text which is accidentally using **markdown** should use <strong>html tags</strong> instead.
+
+Return only the complete, corrected HTML content within a ```html``` block.
+""")
+                ]
+            )
+        ]
+        # Use a fast model suitable for tool use
+        model = "gemini-2.5-flash-preview-04-17"
+        tools = [
+            types.Tool(google_search=types.GoogleSearch())
+        ]
+        generate_content_config = types.GenerateContentConfig(
+            temperature=0,
+            tools=tools,
+            response_mime_type="text/plain", # Expecting text containing the HTML block
+        )
+
+        logger.info(f"Calling Gemini ({model}) with search tool to fix links...")
+        chunks = gemini_client.models.generate_content_stream(
+            model=model,
+            contents=contents,
+            config=generate_content_config,
+        )
+        result = "".join(chunk.text for chunk in chunks)
+        logger.info(f"Successfully received response for link fixing.")
+
+        fixed_html = _parse_html(result)
+        # Basic check to see if parsing likely succeeded
+        if not fixed_html.strip().startswith('<'):
+             logger.warning(f"Link fixing parsing might have failed for {papername}. Result snippet: {fixed_html[:100]}")
+             # Decide whether to return original or potentially broken result
+             # Returning the potentially broken one allows feedback loop to try fixing it
+             # return initial_html
+        return fixed_html
+
+    except Exception as e:
+        logger.error(f"An error occurred during link fixing for {papername}: {e}")
+        # Return the original HTML if fixing fails
+        return initial_html
 
 
 @task
