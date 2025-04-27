@@ -1,4 +1,5 @@
 import re
+import asyncio
 from pathlib import Path
 from typing import Optional
 from dataclasses import dataclass
@@ -30,7 +31,7 @@ _HTML_RE = re.compile(
 
 
 @task(retries=1, retry_delay_seconds=5) # Fewer retries for the loop itself
-async def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int = 5) -> str:
+def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int = 6) -> str:
     """
     Runs an iterative feedback loop with Gemini to refine HTML content,
     taking screenshots at each iteration.
@@ -49,19 +50,16 @@ async def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations
             if not gemini_client:
                 raise ConnectionError("Failed to initialize Gemini client.")
 
-            screenshot_file = await ctx.take_and_upload_screenshot(
+            screenshot_file = asyncio.run(ctx.take_and_upload_screenshot(
                 gemini_client, papername, iteration, current_html_content
-            )
+            ))
 
-            # Call Gemini for feedback
             feedback_response = ctx.call_gemini_feedback(
                 gemini_client, current_html_content, screenshot_file
             )
 
-            # Process feedback response
-            is_complete, updated_html = ctx.process_feedback_response(feedback_response)
-
-            if is_complete:
+            updated_html = ctx.process_feedback_response(feedback_response)
+            if not updated_html:
                 ctx.logger.info(f"Feedback loop completed for {papername} after {iteration} iterations.")
                 break # Exit loop
 
@@ -69,7 +67,6 @@ async def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations
 
         except Exception as e:
             ctx.logger.error(f"Error during feedback loop iteration {iteration} for {papername}: {e}")
-            # Decide how to handle errors - break the loop for now
             break
 
     if iteration >= max_iterations:
@@ -167,7 +164,7 @@ class Feedbackctx:
 
         return feedback_response
 
-    def process_feedback_response(self, feedback_response: str) -> tuple[bool, Optional[str]]:
+    def process_feedback_response(self, feedback_response: str) -> Optional[str]:
         """
         Checks if the feedback response indicates completion and parses the HTML if not.
         Returns a tuple: (is_complete, updated_html).
@@ -177,14 +174,14 @@ class Feedbackctx:
             self.logger.info("Parsing feedback response...")
             updated_html = self._parse_html(feedback_response)
             self.logger.info("HTML updated based on feedback.")
-            return False, updated_html
+            return updated_html
         except ValueError:
             if len(feedback_response) < 20:
                 trimmed_response = feedback_response
             else:
                 trimmed_response = feedback_response[:20] + '...<snip>'
             self.logger.info("Found no HTML; assuming it looks good. (response=%s)" % trimmed_response)
-            return True, None
+            return None
 
     def _parse_html(self, output: str) -> str:
         """Extract HTML content from markdown code block."""
