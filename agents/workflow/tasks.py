@@ -6,13 +6,14 @@ import re
 from bs4 import BeautifulSoup
 from google.genai import types # type: ignore
 from prefect import task, get_run_logger
+from prefect.cache_policies import TASK_SOURCE, INPUTS
 
 from agents.site_utils import extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path
 from .feedback import task_run_feedback_loop  # import:keep
 from .model import client, generate_content_with_attachment, PRIMARY_MODEL, FALLBACK_MODEL, WEAKER_MODEL
 
+cache_policy = TASK_SOURCE + INPUTS
 
-# --- Constants (Consider moving to config.py later) ---
 
 _PROMPT = """
 <p>I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing
@@ -95,13 +96,13 @@ _HTML_RE = re.compile(
 
 # --- Prefect Tasks ---
 
-from prefect.cache_policies import FLOW_PARAMETERS
 
-@task()
+@task(cache_policy=cache_policy)
 def task_initial_sim(pdf_path: Path, papername: str) -> str:
     """
     Focuses on a single, nice simulation for the paper
     """
+    get_run_logger().info("START: intial JS sim gen...")
     gemini_client = client()
     file = gemini_client.files.upload(file=str(pdf_path))
     contents = [types.Content(
@@ -137,6 +138,7 @@ the model's fundamental dynamics by just playing around with it for a while.
         uploaded_file_name=file.name
     )
 
+    get_run_logger().info("COMPLETE: JS sim gen")
     # Parse ```...``` blocks so we can get rid of the greetings etc
     return '\n\n'.join(
         f'```{block}```'
@@ -144,7 +146,7 @@ the model's fundamental dynamics by just playing around with it for a while.
     )
 
 
-@task(cache_policy=FLOW_PARAMETERS)
+@task(cache_policy=cache_policy)
 def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
     """
     Generates the initial HTML site explanation from a PDF using Gemini.
@@ -183,7 +185,7 @@ def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
     )
 
 
-@task(retries=2, retry_delay_seconds=5)
+@task(cache_policy=cache_policy)
 def task_fix_links(initial_html: str, papername: str) -> str:
     """
     Uses Gemini with Google Search to fix broken Wikipedia links and
@@ -252,7 +254,7 @@ Return only the complete, corrected HTML content within a ```html``` block.
         return initial_html
 
 
-@task
+@task(cache_policy=cache_policy)
 def task_save_final_html(final_html: str, papername: str) -> Path:
     """
     Saves the final refined HTML content to the designated file path.
@@ -277,7 +279,7 @@ def task_save_final_html(final_html: str, papername: str) -> Path:
         raise # Re-raise the exception to fail the task
 
 
-@task
+@task(cache_policy=cache_policy)
 def task_extract_metadata(final_html: str, pdf_path: Path, papername: str) -> Dict[str, any]:
     """
     Extracts metadata from the final HTML content and the original PDF.
@@ -336,7 +338,8 @@ def task_extract_metadata(final_html: str, pdf_path: Path, papername: str) -> Di
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent
 
-@task
+
+@task(cache_policy=cache_policy)
 def task_update_index(new_metadata_list: List[Dict[str, any]]):
     """
     Updates the sites index file (src/lib/sites.json) with new or updated

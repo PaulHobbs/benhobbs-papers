@@ -15,23 +15,6 @@ from agents.workflow.tasks import (
     task_update_index,
 )
 
-# Helper task to load the index within the flow context if needed
-@task
-def load_sites_index_task(index_path: Path) -> Dict[str, Dict]:
-    """Loads the sites index from sites.json into a dictionary keyed by papername."""
-    logger = get_run_logger()
-    try:
-        with open(index_path, "r", encoding="utf-8") as f:
-            sites_list = json.load(f)
-        logger.info(f"Loaded {len(sites_list)} existing entries from {index_path}")
-        return {entry["paper"]: entry for entry in sites_list}
-    except FileNotFoundError:
-        logger.warning(f"Sites index file not found at {index_path}. Returning empty dict.")
-        return {}
-    except json.JSONDecodeError as e:
-         logger.error(f"Error decoding JSON from {index_path}: {e}. Returning empty dict.")
-         return {}
-
 
 @flow(name="Create or Update Interactive Paper Sites")
 def create_sites_flow(pdf_paths: List[Path], incremental: bool = False):
@@ -45,11 +28,11 @@ def create_sites_flow(pdf_paths: List[Path], incremental: bool = False):
     logger = get_run_logger()
     logger.info(f"Starting site creation flow for {len(pdf_paths)} PDFs. Incremental: {incremental}")
 
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     index_path = project_root / "src/lib/sites.json"
     existing_sites = {}
     if incremental:
-        existing_sites = load_sites_index_task(index_path)
+        existing_sites = _load_sites_index(index_path)
         logger.info(f"Incremental mode: Loaded {len(existing_sites)} existing site entries.")
 
     processed_metadata = []
@@ -110,7 +93,7 @@ def update_metadata_flow(paper_names: Optional[List[str]] = None):
     sites_dir = project_root / "static" / "sites"
     papers_dir = project_root / "papers" # Assuming PDF location
 
-    existing_sites_dict = load_sites_index_task(index_path)
+    existing_sites_dict = _load_sites_index_task(index_path)
     if not existing_sites_dict:
         logger.error("Cannot update metadata: sites.json is empty or could not be loaded.")
         return
@@ -190,3 +173,19 @@ def update_metadata_flow(paper_names: Optional[List[str]] = None):
         logger.info("No metadata successfully updated, skipping index update.")
 
     logger.info("Metadata update flow finished.")
+
+
+def _load_sites_index(index_path: Path) -> Dict[str, Dict]:
+    """Loads the sites index from sites.json into a dictionary keyed by papername."""
+    logger = get_run_logger()
+    try:
+        with open(index_path, "r", encoding="utf-8") as f:
+            sites_list = json.load(f)
+        logger.info(f"Loaded {len(sites_list)} existing entries from {index_path}")
+        return {entry["paper"]: entry for entry in sites_list}
+    except FileNotFoundError:
+        logger.warning(f"Sites index file not found at {index_path}. Returning empty dict.")
+        return {}
+    except json.JSONDecodeError as e:
+         logger.error(f"Error decoding JSON from {index_path}: {e}. Returning empty dict.")
+         return {}
