@@ -64,7 +64,7 @@ def create_sites_flow(pdf_paths: List[Path], incremental: bool = False):
 
         except Exception as e:
             logger.error(f"Failed to process {papername}: {e}", exc_info=True)
-            # Continue to next paper or stop flow? For now, continue.
+            break
 
     # --- Final Step: Update Index ---
     if processed_metadata:

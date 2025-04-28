@@ -36,8 +36,9 @@ async def take_screenshot(url: str, name: str, output_dir: str = None) -> Result
         print(f'Browser {level}: {msg}')
         result.logs.append(Log(level, msg))
 
-    page.on('console', lambda msg: onLog('info', msg.text()))
-    page.on('pageerror', lambda msg: onLog('error', msg.text()))
+    page.on('console', lambda msg: onLog('console', msg))
+    page.on('pageerror', lambda msg: onLog('error', str(msg)))
+    page.on('error', lambda msg: onLog('error', str(msg)))
 
     try:
         await page.goto(url, {

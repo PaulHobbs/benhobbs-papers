@@ -6,6 +6,7 @@ from typing import Optional
 from dataclasses import dataclass
 
 from prefect import task, get_run_logger
+from prefect.cache_policies import TASK_SOURCE, INPUTS
 from google.genai import types
 
 from agents.puppet.puppeteer import take_screenshot
@@ -23,6 +24,11 @@ HTML to review:
 ```html
 {html_content}
 ```
+
+Logs:
+---
+{logs}
+---
 """
 
 _HTML_RE = re.compile(
@@ -31,7 +37,7 @@ _HTML_RE = re.compile(
 )
 
 
-@task(retries=1, retry_delay_seconds=5) # Fewer retries for the loop itself
+@task(retries=1, retry_delay_seconds=5, cache_policy=TASK_SOURCE + INPUTS) # Fewer retries for the loop itself
 def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int = 6) -> str:
     """
     Runs an iterative feedback loop with Gemini to refine HTML content,
@@ -51,12 +57,12 @@ def task_run_feedback_loop(fixed_html: str, papername: str, max_iterations: int 
             if not gemini_client:
                 raise ConnectionError("Failed to initialize Gemini client.")
 
-            screenshot_file = asyncio.run(ctx.take_and_upload_screenshot(
+            screenshot_file, logs = asyncio.run(ctx.take_and_upload_screenshot(
                 gemini_client, papername, iteration, current_html_content
             ))
 
             feedback_response = ctx.call_gemini_feedback(
-                gemini_client, current_html_content, screenshot_file
+                gemini_client, current_html_content, screenshot_file, logs
             )
 
             updated_html = ctx.process_feedback_response(feedback_response)
@@ -85,7 +91,7 @@ class Feedbackctx:
     logger: object # Prefect logger type is not strictly defined, use object
     screenshot_dir: Path
 
-    async def take_and_upload_screenshot(self, gemini_client, papername: str, iteration: int, current_html_content: str):
+    async def take_and_upload_screenshot(self, gemini_client, papername: str, iteration: int, current_html_content: str) -> tuple[object, str]:
         """
         Saves intermediate HTML, takes a screenshot, and uploads it to Gemini.
         Returns the uploaded file object or None on failure.
@@ -104,7 +110,7 @@ class Feedbackctx:
             self.logger.info(f"Taking intermediate screenshot: {screenshot_path}")
             relative_temp_html_url = f"http://localhost:5173/sites-wip/{temp_html_path.name}"
             time.sleep(0.5) # Need the vite server to load it
-            await take_screenshot(relative_temp_html_url, iter_name, output_dir=self.screenshot_dir) # Use await here
+            result = await take_screenshot(relative_temp_html_url, iter_name, output_dir=self.screenshot_dir) # Use await here
             self.logger.info(f"Intermediate screenshot saved: {screenshot_path}")
 
             # Upload screenshot to Gemini
@@ -120,16 +126,16 @@ class Feedbackctx:
                 temp_html_path.unlink()
                 self.logger.info(f"Deleted temporary HTML file: {temp_html_path}")
 
-        return screenshot_file
+        return screenshot_file, '\n'.join(f'{row.level}: {row.msg}' for row in result.logs)
 
-    def call_gemini_feedback(self, gemini_client, current_html_content: str, screenshot_file: types.File) -> str:
+    def call_gemini_feedback(self, gemini_client, current_html_content: str, screenshot_file: types.File, logs: str) -> str:
         """
         Prepares content, calls Gemini API for feedback, and cleans up the uploaded file.
         Returns the raw response text.
         """
         # Prepare content for feedback model
         feedback_parts = [
-            types.Part.from_text(text=_FEEDBACK_PROMPT.format(html_content=current_html_content)),
+            types.Part.from_text(text=_FEEDBACK_PROMPT.format(html_content=current_html_content, logs=logs)),
             types.Part.from_uri(
                      file_uri=screenshot_file.uri,
                      mime_type=screenshot_file.mime_type,
