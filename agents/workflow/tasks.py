@@ -110,14 +110,18 @@ def task_initial_sim(pdf_path: Path, papername: str) -> str:
         parts=[
             types.Part.from_uri(file_uri=file.uri, mime_type=file.mime_type),
             types.Part.from_text(text="""
-Please make an interesting interactive javascript simulation using monte carlo which
+Please make an interesting interactive javascript visualization which
 demonstrates the key dynamic in the model or models in this paper.
 
 Make it as a fully-fledged, detailed and as complete as possible. This should be
 the capstone demonstration of what this paper is about, which could be used as a
 key element of discussion in an educational blog post about the paper's ideas.
 
-Ideally the simulation should inspire learning through play, and should be fun
+You can use monte carlo if it is useful for exploring the inherent randomness in
+the system - however, don't require tuning parameters or hitting "start" - just
+make it go.
+                                 
+Ideally the visualization should inspire learning through play, and should be fun
 to just toy around with. This requires it to have a certain amount of depth and
 emergent complexity as a result of the model's dynamics showing through the
 observables. The user should be able to make some gestalt mental connection to
@@ -264,9 +268,7 @@ def task_save_final_html(final_html: str, papername: str) -> Path:
     logger.info(f"Saving final HTML for {papername}")
 
     # Define output directory and ensure it exists
-    _PROJECT_ROOT = Path(__file__).parent.parent
     output_dir = _PROJECT_ROOT / "static" / "sites"
-    output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{papername}.html"
 
     try:

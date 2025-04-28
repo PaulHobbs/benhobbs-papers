@@ -32,19 +32,19 @@ async def take_screenshot(url: str, name: str, output_dir: str = None) -> Result
     result = Result()
     browser = await launch(headless=True, defaultViewport=None, args=['--no-sandbox']) # Use headless=True for server environments, add --no-sandbox for potential container environments
     page = await browser.newPage()
-    def onLog(level, msg):
+    def onLog(level:str, msg:str):
         print(f'Browser {level}: {msg}')
         result.logs.append(Log(level, msg))
 
-    page.on('console', lambda msg: onLog('info', msg))
-    page.on('pageerror', lambda msg: onLog('error', msg))
+    page.on('console', lambda msg: onLog('info', msg.text()))
+    page.on('pageerror', lambda msg: onLog('error', msg.text()))
 
     try:
         await page.goto(url, {
             'waitUntil': 'networkidle2',
             'timeout': 60000 # Increase timeout to 60 seconds
         })
-        await page.waitFor(500); # Wait a bit more for rendering
+        await page.waitFor(1500); # Wait a bit more for rendering
 
         # Ensure the screenshots directory exists
         screenshot_dir = output_dir or Path(__file__).parent.parent.parent / "static" / "sites" / "screenshots"
