@@ -4,20 +4,17 @@ from typing import Optional, Dict, List
 import re
 
 from bs4 import BeautifulSoup
-from google.genai import types, errors as google_errors  # type: ignore
+from google.genai import types # type: ignore
 from prefect import task, get_run_logger
 
-# Assuming site_utils will be refactored as planned
 from agents.site_utils import extract_publication_date, extract_pdf_meta_with_gemini, _pdf_site_path
-# Assuming puppet script remains available
-from agents.puppet.puppeteer import take_screenshot
 from .feedback import task_run_feedback_loop  # import:keep
-from .model import client, PRIMARY_MODEL, FALLBACK_MODEL
+from .model import client, generate_content_with_attachment, PRIMARY_MODEL, FALLBACK_MODEL, WEAKER_MODEL
 
 
 # --- Constants (Consider moving to config.py later) ---
 
-_PROMPT = f"""
+_PROMPT = """
 <p>I'd like you to translate the core ideas of the provided academic paper into an interactive website, drawing
     inspiration from the explanatory style of Bret Victor or Bartosz Ciechanowski (<a
         href="https://ciechanow.ski/">https://ciechanow.ski/</a>).</p>
@@ -80,6 +77,13 @@ _PROMPT = f"""
         </ul>
     </li>
 </ol>
+<example>
+  Here is an example simulation you could use in your post:
+
+  ---
+  {sim}
+  ---
+</example>
 <p>Please generate the HTML file based on the provided paper content and these instructions.</p>
 """.strip()
 
@@ -89,31 +93,58 @@ _HTML_RE = re.compile(
     re.DOTALL | re.IGNORECASE  # Allow multiline and case variations
 )
 
-# --- Helper Functions ---
-
-def _parse_html(output: str) -> str:
-    """Extract HTML content from markdown code block."""
-    logger = get_run_logger()
-    match: Optional[re.Match[str]] = _HTML_RE.search(output)
-    if not match or not match.group(1):
-        snippet = output[:200] + ('...' if len(output) > 200 else '')
-        logger.error(
-            f"Failed to extract HTML block. The model's response should contain:\n"
-            f"1. A markdown code block wrapped in ```html\n"
-            f"2. Well-formed HTML content between the markers\n"
-            f"Received snippet:\n{snippet}"
-        )
-        # Return the original output if parsing fails, maybe feedback loop can fix it
-        return output
-        # Or raise ValueError("Failed to extract HTML block.") if strict parsing is required
-
-    return match.group(1).strip()
-
 # --- Prefect Tasks ---
 
 from prefect.cache_policies import FLOW_PARAMETERS
 
-@task(retries=2, retry_delay_seconds=5, cache_policy=FLOW_PARAMETERS)
+@task()
+def task_initial_sim(pdf_path: Path, papername: str) -> str:
+    """
+    Focuses on a single, nice simulation for the paper
+    """
+    gemini_client = client()
+    file = gemini_client.files.upload(file=str(pdf_path))
+    contents = [types.Content(
+        role="user",
+        parts=[
+            types.Part.from_uri(file_uri=file.uri, mime_type=file.mime_type),
+            types.Part.from_text(text="""
+Please make an interesting interactive javascript simulation using monte carlo which
+demonstrates the key dynamic in the model or models in this paper.
+
+Make it as a fully-fledged, detailed and as complete as possible. This should be
+the capstone demonstration of what this paper is about, which could be used as a
+key element of discussion in an educational blog post about the paper's ideas.
+
+Ideally the simulation should inspire learning through play, and should be fun
+to just toy around with. This requires it to have a certain amount of depth and
+emergent complexity as a result of the model's dynamics showing through the
+observables. The user should be able to make some gestalt mental connection to
+the model's fundamental dynamics by just playing around with it for a while.
+""".strip()),
+        ],
+    )]
+
+    response = generate_content_with_attachment(
+        gemini_client,
+        contents=contents,
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.7,
+            response_mime_type="text/plain",
+        ),
+        primary_model=PRIMARY_MODEL,
+        fallback_model=FALLBACK_MODEL,
+        uploaded_file_name=file.name
+    )
+
+    # Parse ```...``` blocks so we can get rid of the greetings etc
+    return '\n\n'.join(
+        f'```{block}```'
+        for block in parse_codeblocks(response)
+    )
+
+
+@task(cache_policy=FLOW_PARAMETERS)
 def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
     """
     Generates the initial HTML site explanation from a PDF using Gemini.
@@ -121,89 +152,35 @@ def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
     logger = get_run_logger()
     logger.info(f"Starting initial HTML generation for {papername} from {pdf_path}")
 
-    try:
-        # Ensure client() is available and working
-        gemini_client = client()
-        if not gemini_client:
-            raise ConnectionError("Failed to initialize Gemini client.")
+    sim = task_initial_sim(pdf_path=pdf_path, papername=papername)
 
-        logger.info(f"Uploading PDF: {pdf_path}")
-        files = [
-            gemini_client.files.upload(file=str(pdf_path)),
-        ]
-        logger.info(f"PDF uploaded successfully: {files[0].uri}")
-
-    except Exception as e:
-        logger.error(f"Failed to upload PDF {pdf_path}: {e}")
-        raise  # Re-raise after logging
+    gemini_client = client()
+    file = gemini_client.files.upload(file=str(pdf_path))
 
     contents = [
         types.Content(
             role="user",
             parts=[
                 types.Part.from_uri(
-                    file_uri=files[0].uri,
-                    mime_type=files[0].mime_type,
+                    file_uri=file.uri,
+                    mime_type=file.mime_type,
                 ),
-                types.Part.from_text(text=_PROMPT),
+                types.Part.from_text(text=_PROMPT.format(sim=sim)),
             ],
         ),
     ]
-    generate_content_config = types.GenerateContentConfig(
-        temperature=0.7,
-        response_mime_type="text/plain",
+
+    return generate_content_with_attachment(
+        gemini_client,
+        contents=contents,
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.7,
+            response_mime_type="text/plain",
+        ),
+        primary_model=PRIMARY_MODEL,
+        fallback_model=FALLBACK_MODEL,
+        uploaded_file_name=file.name
     )
-
-    model_to_use = PRIMARY_MODEL
-    try:
-        logger.info(f"Generating content with primary model: {model_to_use}")
-        chunks = gemini_client.models.generate_content_stream(
-            model=model_to_use,
-            contents=contents,
-            config=generate_content_config,
-        )
-        # Use tqdm for progress if desired, but might clutter Prefect logs
-        # result = "".join(chunk.text for chunk in tqdm(chunks, desc=f"Generating with {model_to_use}"))
-        result = "".join(chunk.text for chunk in chunks)
-        logger.info(f"Successfully generated content with {model_to_use}")
-        # Clean up uploaded file
-        gemini_client.files.delete(name=files[0].name)
-        logger.info(f"Deleted uploaded file: {files[0].name}")
-        return _parse_html(result)
-
-    except google_errors.ClientError as e:
-        logger.warning(f"Resource exhausted for primary model ({model_to_use}): {e}. Falling back...")
-        model_to_use = FALLBACK_MODEL
-        try:
-            logger.info(f"Attempting generation with fallback model: {model_to_use}")
-            chunks = gemini_client.models.generate_content_stream(
-                model=model_to_use,
-                contents=contents,
-                config=generate_content_config,
-            )
-            result = "".join(chunk.text for chunk in chunks)
-            logger.info(f"Successfully generated content with fallback {model_to_use}")
-            return _parse_html(result)
-        except Exception as fallback_e:
-            logger.error(f"Generation failed with fallback model ({model_to_use}) as well: {fallback_e}")
-            raise
-        finally:
-            try:
-                # Clean up uploaded file
-                gemini_client.files.delete(name=files[0].name)
-                logger.info(f"Deleted uploaded file: {files[0].name}")
-            except Exception as delete_e:
-                logger.error(f"Failed to delete uploaded file after fallback failure: {delete_e}")
-
-    except Exception as primary_e:
-        logger.error(f"An unexpected error occurred with the primary model ({model_to_use}): {primary_e}")
-         # Clean up uploaded file even on failure
-        try:
-            gemini_client.files.delete(name=files[0].name)
-            logger.info(f"Deleted uploaded file after primary failure: {files[0].name}")
-        except Exception as delete_e:
-            logger.error(f"Failed to delete uploaded file after primary failure: {delete_e}")
-        raise primary_e # Re-raise other unexpected exceptions
 
 
 @task(retries=2, retry_delay_seconds=5)
@@ -241,19 +218,19 @@ Return only the complete, corrected HTML content within a ```html``` block.
             )
         ]
         # Use a fast model suitable for tool use
-        model = "gemini-2.5-flash-preview-04-17"
         tools = [
             types.Tool(google_search=types.GoogleSearch())
         ]
         generate_content_config = types.GenerateContentConfig(
             temperature=0,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
             tools=tools,
             response_mime_type="text/plain", # Expecting text containing the HTML block
         )
 
-        logger.info(f"Calling Gemini ({model}) with search tool to fix links...")
+        logger.info(f"Calling Gemini ({WEAKER_MODEL}) with search tool to fix links...")
         chunks = gemini_client.models.generate_content_stream(
-            model=model,
+            model=WEAKER_MODEL,
             contents=contents,
             config=generate_content_config,
         )
@@ -419,3 +396,48 @@ def task_update_index(new_metadata_list: List[Dict[str, any]]):
     except Exception as e:
         logger.error(f"Failed to write updated sites index to {index_path}: {e}")
         raise # Re-raise to fail the task
+
+
+def _parse_html(output: str) -> str:
+    """Extract HTML content from markdown code block."""
+    match = _HTML_RE.search(output)
+    if not match or not match.group(1):
+        raise ValueError("Failed to extract HTML block.")
+    return match.group(1).strip()
+
+    
+_CODEBLOCK_PATTERN = re.compile(r"```[^\n]*\n?(.*?)\n?```", re.DOTALL)
+def parse_codeblocks(markdown: str) -> list[str]:
+  """
+  Parses a Markdown string and extracts the content of fenced code blocks.
+
+  Args:
+    markdown: The Markdown string to parse.
+
+  Returns:
+    A list of strings, where each string is the content found
+    within a ```...``` code block. Leading/trailing whitespace
+    within the block (like the newline after the language specifier
+    or before the closing fence) is stripped. Returns an empty list
+    if no code blocks are found.
+  """
+  # Regex explanation:
+  # ```       # Match the literal opening triple backticks
+  # [^\n]* # Match optional language specifier (any characters except newline)
+  # \n?       # Match an optional newline immediately after the opening fence or language specifier
+  # (         # Start capturing group for the code content
+  #   .*?     # Match any character (including newlines due to re.DOTALL)
+  #           # non-greedily (.*?) to stop at the first closing fence
+  # )         # End capturing group
+  # \n?       # Match an optional newline immediately before the closing fence
+  # ```       # Match the literal closing triple backticks
+  #
+  # The re.DOTALL flag allows '.' to match newline characters, which is essential
+  # for capturing multi-line code blocks.
+  # re.findall returns only the captured group content.
+
+  matches = re.findall(_CODEBLOCK_PATTERN, markdown)
+  # Often, the content captured includes a leading newline (if code starts
+  # on the line after ```lang) and a trailing newline (if the code ends
+  # on the line before ```). We strip these for cleaner output.
+  return [content.strip() for content in matches]

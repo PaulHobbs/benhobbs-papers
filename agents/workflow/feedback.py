@@ -9,7 +9,7 @@ from prefect import task, get_run_logger
 from google.genai import types
 
 from agents.puppet.puppeteer import take_screenshot
-from .model import client, FALLBACK_MODEL
+from .model import client, PRIMARY_MODEL, FALLBACK_MODEL, generate_content_with_attachment
 
 # --- Constants ---
 
@@ -122,7 +122,7 @@ class Feedbackctx:
 
         return screenshot_file
 
-    def call_gemini_feedback(self, gemini_client, current_html_content: str, screenshot_file: Optional[types.File]) -> str:
+    def call_gemini_feedback(self, gemini_client, current_html_content: str, screenshot_file: types.File) -> str:
         """
         Prepares content, calls Gemini API for feedback, and cleans up the uploaded file.
         Returns the raw response text.
@@ -130,15 +130,11 @@ class Feedbackctx:
         # Prepare content for feedback model
         feedback_parts = [
             types.Part.from_text(text=_FEEDBACK_PROMPT.format(html_content=current_html_content)),
-        ]
-        if screenshot_file:
-             feedback_parts.append(
-                 types.Part.from_uri(
+            types.Part.from_uri(
                      file_uri=screenshot_file.uri,
                      mime_type=screenshot_file.mime_type,
                  )
-             )
-
+        ]
         feedback_contents = [
             types.Content(
                 role="user",
@@ -146,28 +142,17 @@ class Feedbackctx:
             ),
         ]
 
-        feedback_generate_config = types.GenerateContentConfig(
-            temperature=0.05, # Low temperature for stability
-            response_mime_type="text/plain",
-        )
-
-        self.logger.info(f"Calling Gemini ({FALLBACK_MODEL}) for feedback...")
-        feedback_chunks = gemini_client.models.generate_content_stream(
-            model=FALLBACK_MODEL, # Using fallback model for stability/cost
+        return generate_content_with_attachment(
+            gemini_client,
             contents=feedback_contents,
-            config=feedback_generate_config,
+            generate_content_config=types.GenerateContentConfig(
+                temperature=0.05, # Low temperature for stability
+                response_mime_type="text/plain",
+            ),
+            primary_model=PRIMARY_MODEL,
+            fallback_model=FALLBACK_MODEL,
+            uploaded_file_name=screenshot_file.name,
         )
-        feedback_response = "".join(chunk.text for chunk in feedback_chunks)
-
-        # Clean up uploaded screenshot file
-        if screenshot_file:
-            try:
-                gemini_client.files.delete(name=screenshot_file.name)
-                self.logger.info(f"Deleted uploaded screenshot file: {screenshot_file.name}")
-            except Exception as delete_e:
-                self.logger.error(f"Failed to delete uploaded screenshot file: {delete_e}")
-
-        return feedback_response
 
     def process_feedback_response(self, feedback_response: str) -> Optional[str]:
         """

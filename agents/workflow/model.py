@@ -1,19 +1,26 @@
-from google import genai  # type: ignore
-from google.genai import types as genai_types # For type hints
 from functools import cache
+from pathlib import Path
+from unittest.mock import MagicMock
+import json # For parsing fake responses
+import logging
 import os
 import time
-from unittest.mock import MagicMock
-from pathlib import Path
-import logging
-import json # For parsing fake responses
+
+import absl.flags as flags
+from google import genai  # type: ignore
+from google.genai import types
+import google.api_core.exceptions as google_errors
+
+_DRY_RUN = flags.DEFINE_bool('dry-run', False, 'uses a fake gemini client.')
+_USE_FALLBACK_MODEL = flags.DEFINE_bool(
+    'use-fallback-model', False,
+    'Whether to use a fallback model when out of quota.')
 
 # --- Constants ---
 PRIMARY_MODEL = "gemini-2.5-pro-exp-03-25"
 FALLBACK_MODEL = "gemini-2.5-pro-preview-03-25"
-WEAK_MODEL = "gemini-2.0-flash-001"
-
-# --- Fake Client for Dry Run ---
+WEAK_MODEL = "gemini-2.0-flash-001" 
+WEAKER_MODEL = "gemini-2.5-flash-preview-04-17"
 
 logger = logging.getLogger(__name__)
 # Configure basic logging if not already configured elsewhere
@@ -47,7 +54,7 @@ class FakeGeminiClient:
 
     class _FakeFiles:
         def upload(self, file: str) -> MagicMock:
-            mock_file = MagicMock(spec=genai_types.File) # Use spec for better mocking
+            mock_file = MagicMock(spec=types.File) # Use spec for better mocking
             file_path = Path(file)
             mock_file.uri = f"fake-uri:///{file_path.name}"
             # Guess mime type based on suffix, default to pdf
@@ -76,7 +83,7 @@ class FakeGeminiClient:
             # Handle both list[Content] and single Content object
             if isinstance(contents, list):
                 content_obj = contents[0]
-            elif isinstance(contents, genai_types.Content):
+            elif isinstance(contents, types.Content):
                  content_obj = contents
             else:
                  logger.warning(f"[DRY RUN] Unexpected contents type: {type(contents)}")
@@ -116,7 +123,7 @@ class FakeGeminiClient:
             mock_chunk.text = response_text
             return [mock_chunk] # Return as iterable list
 
-        def generate_content(self, model: str, contents: list | genai_types.Content, config: dict, **kwargs) -> FakeGeminiResponse:
+        def generate_content(self, model: str, contents: list | types.Content, config: dict, **kwargs) -> FakeGeminiResponse:
             """Fakes the non-streaming response, used for JSON mode."""
             logger.info(f"[DRY RUN] Faking generate_content call for model {model} with config {config}")
             # Simulate API delay
@@ -140,13 +147,6 @@ class FakeGeminiClient:
 
 
 # --- Client Factory ---
-
-import absl.flags as flags
-_DRY_RUN = flags.DEFINE_bool('dry-run', False, 'uses a fake gemini client.')
-
-# Remove @cache as the result now depends on the dry_run argument
-# Caching could be added back with dry_run as part of the cache key if needed,
-# but for simplicity, let's remove it for now.
 @cache
 def client() -> genai.Client | FakeGeminiClient:
     """
@@ -172,3 +172,90 @@ def client() -> genai.Client | FakeGeminiClient:
         raise ValueError("GEMINI_API_KEY environment variable not set and not in dry_run mode.")
     # Consider adding caching back here for the real client if performance is critical
     return genai.Client(api_key=api_key)
+
+
+logger = logging.getLogger(__name__)
+
+
+def _call_gemini_stream(
+    gemini_client,
+    model_name: str,
+    contents: list[object],
+    generate_content_config: types.GenerateContentConfig,
+) -> str:
+    """Helper to call generate_content_stream and join chunks."""
+    logger.info(f"Calling model: {model_name}")
+    chunks = gemini_client.models.generate_content_stream(
+        model=model_name,
+        contents=contents,
+        config=generate_content_config,
+    )
+    result = "".join(chunk.text for chunk in chunks)
+    logger.info(f"Successfully received content from {model_name}")
+    return result
+
+
+def generate_content_with_attachment(
+    gemini_client,
+    contents: list[object],
+    generate_content_config: types.GenerateContentConfig,
+    uploaded_file_name: str, # Need the file name to delete
+    primary_model: str = PRIMARY_MODEL,
+    fallback_model: str = FALLBACK_MODEL,
+) -> str:
+    """
+    Calls the Gemini model with provided content and configuration,
+    handling primary/fallback models and file cleanup.
+
+    Args:
+        gemini_client: The initialized Gemini client.
+        contents: The content to send to the model (including file parts).
+        generate_content_config: The generation configuration.
+        uploaded_file_name: The resource name of the uploaded file to delete afterwards.
+        primary_model: The name of the primary model to use.
+        fallback_model: The name of the fallback model to use on ResourceExhausted error.
+
+    Returns:
+        The generated text result.
+
+    Raises:
+        Exception: If generation fails with both primary and fallback models,
+                   or if an unexpected error occurs.
+    """
+    result = ""
+    try:
+        result = _call_gemini_stream(
+            gemini_client=gemini_client,
+            model_name=primary_model,
+            contents=contents,
+            generate_content_config=generate_content_config,
+        )
+
+    except google_errors.ResourceExhausted as e:
+        if not _USE_FALLBACK_MODEL.value:
+            raise
+        logger.warning(f"Resource exhausted for primary model ({primary_model}): {e}. Falling back...")
+        try:
+            result = _call_gemini_stream(
+                gemini_client=gemini_client,
+                model_name=fallback_model,
+                contents=contents,
+                generate_content_config=generate_content_config,
+            )
+        except Exception as fallback_e:
+            logger.error(f"Generation failed with fallback model ({fallback_model}) as well: {fallback_e}")
+            raise # Re-raise fallback error
+
+    except Exception as primary_e:
+        logger.error(f"An unexpected error occurred with the primary model ({primary_model}): {primary_e}")
+        raise primary_e # Re-raise other primary errors
+
+    finally:
+        # Clean up uploaded file in finally block to ensure it runs after success or failure
+        try:
+            gemini_client.files.delete(name=uploaded_file_name)
+            logger.info(f"Deleted uploaded file: {uploaded_file_name}")
+        except Exception as delete_e:
+            logger.error(f"Failed to delete uploaded file: {delete_e}")
+
+    return result
