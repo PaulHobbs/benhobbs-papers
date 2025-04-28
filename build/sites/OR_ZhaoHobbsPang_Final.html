@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Explainer: Allocating Emissions Allowances in Power Markets</title>
+    <!-- MathJax Configuration -->
+    <script>
+    MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+        },
+        svg: {
+            fontCache: 'global'
+        }
+    };
+    </script>
+    <!-- MathJax Library -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <!-- D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- CSS Styles -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 2rem auto;
+            max-width: 800px;
+            padding: 0 1rem;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+
+        h1, h2, h3 {
+            color: #2a2a2a;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+
+        h2 {
+            font-size: 1.6em;
+        }
+
+        h3 {
+            font-size: 1.3em;
+        }
+
+        p, li {
+            margin-bottom: 1rem;
+        }
+
+        code {
+            background-color: #f0f0f0;
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .interactive-container {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .interactive-container h3 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .value-display {
+            font-weight: bold;
+            color: #0056b3;
+            display: inline-block;
+            min-width: 50px; /* Ensure space for values */
+            text-align: right;
+        }
+
+        .explanation {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 1rem;
+            padding-left: 1rem;
+            border-left: 3px solid #ccc;
+        }
+
+        .chart-container {
+            margin-top: 1.5rem;
+            min-height: 350px; /* Ensure space for chart rendering */
+            position: relative; /* Needed for tooltip positioning */
+        }
+
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .axis-label {
+            font-size: 0.8em;
+            fill: #555;
+            text-anchor: middle;
+        }
+
+        .controls {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+             gap: 1rem;
+             margin-bottom: 1rem;
+        }
+
+        .control-group {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Specific styles for dispatch order visualization */
+        .dispatch-stack {
+            display: flex;
+            flex-direction: column-reverse; /* Stack from bottom */
+            border: 1px solid #ccc;
+            min-height: 200px;
+            position: relative;
+            background-color: #fff;
+            margin-top: 1rem;
+            overflow: hidden; /* Ensure bars stay within bounds */
+        }
+
+        .dispatch-bar {
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9em;
+            padding: 5px 0;
+            transition: height 0.3s ease, background-color 0.3s ease;
+            box-sizing: border-box;
+            border-top: 1px solid rgba(0,0,0,0.1);
+        }
+        .dispatch-bar.coal { background-color: #555; }
+        .dispatch-bar.cc { background-color: #007bff; }
+        .dispatch-bar.ct { background-color: #ffc107; color: #333;}
+
+        .dispatch-cost-label {
+            position: absolute;
+            right: 5px;
+            font-size: 0.8em;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        /* Specific styles for simulation results chart */
+        .bar {
+            transition: fill 0.3s ease, y 0.3s ease, height 0.3s ease;
+        }
+        /* Use distinct class names to avoid conflicts */
+        .bar-coal { fill: #555; }
+        .bar-gascc { fill: #007bff; }
+        .bar-gasct { fill: #ffc107; }
+
+        .line {
+            fill: none;
+            stroke-width: 2px;
+            transition: d 0.3s ease;
+        }
+        .line-pe { stroke: #28a745; }
+        .line-cost { stroke: #dc3545; }
+
+        .dot {
+             transition: cx 0.3s ease, cy 0.3s ease;
+             cursor: help; /* Indicate interactivity */
+        }
+        .dot-pe { fill: #28a745; }
+        .dot-cost { fill: #dc3545; }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #ccc;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-size: 0.8em;
+            fill: #555;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 5px; /* Spacing for wrapped items */
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 3px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <h1>Untangling the Wires: How Should We Give Out Pollution Permits?</h1>
+    <p>Climate change is a huge challenge, and one major contributor is the carbon dioxide (CO₂) released when we generate electricity, especially from fossil fuels. Many governments are trying to reduce these emissions using a system called <a href="https://en.wikipedia.org/wiki/Emissions_trading" target="_blank">"cap-and-trade"</a>.</p>
+    <p>Imagine the government sets a limit, or "cap," on the total amount of CO₂ the power sector can emit each year. To make this work, they issue a limited number of "allowances" or permits, where one allowance typically lets a company emit one ton of CO₂. Power plants must hold enough allowances to cover their emissions. The "trade" part means companies that need more allowances can buy them from companies that have spare ones. This creates a market price for emitting CO₂, encouraging companies to find the cheapest ways to reduce pollution.</p>
+    <p>But this system raises a critical question, explored in the paper "Long-Run Equilibrium Modeling of Emissions Allowance Allocation Systems in Electric Power Markets" by Zhao, Hobbs, and Pang: <strong>How should the government initially distribute these valuable allowances?</strong> The way allowances are handed out isn't just about fairness; it can significantly change how power companies operate, what kind of power plants they build, and ultimately, how much it costs us to fight climate change.</p>
+
+    <h2>The Allocation Puzzle: Giving Away or Selling?</h2>
+    <p>There are a few main ways to get allowances into the hands of power companies:</p>
+    <ol>
+        <li><strong>Auction:</strong> The government sells allowances to the highest bidders. This generates revenue that could be used for other purposes (like tax cuts or funding green projects).</li>
+        <li><strong>Grandfathering:</strong> Allowances are given away for free, often based on a company's historical emissions or activity *before* the cap-and-trade system started. This is often politically popular with existing industries.</li>
+        <li><strong>Contingent Allocation:</strong> Allowances are given away for free, but the amount a company receives depends on its *current or recent* decisions – things like how much electricity it produces, what type of power plant it builds, or its potential emissions.</li>
+    </ol>
+    <p>Auctioning and grandfathering (based on fixed, unchangeable history) are generally considered economically efficient. Since the number of allowances given out doesn't depend on what companies do *now*, they still face the full market price ($p_e$) for every ton of CO₂ they emit at the margin. Their decisions should focus purely on minimizing costs.</p>
+    <p>However, <strong>contingent allocation</strong> is different. If getting free allowances depends on your current actions, it can create strange incentives. It's like getting a discount on gasoline if you buy a bigger, less fuel-efficient car – it might change which car you choose! This paper focuses on understanding the potential distortions caused by these contingent rules.</p>
+
+    <h2>Modeling the Power Market: A Balancing Act</h2>
+    <p>To understand these effects, we need a simplified model of the electricity market. Let's consider a few key pieces:</p>
+
+    <div class="interactive-container">
+        <h3>Generators: The Power Suppliers</h3>
+        <p>Power plants differ in how they make electricity, how much it costs, and how much CO₂ they emit. Let's consider three common types:</p>
+        <ul>
+            <li><strong>Coal Plants:</strong> Relatively cheap fuel, but high CO₂ emissions. Often expensive to build.</li>
+            <li><strong>Combined Cycle (CC) Gas Plants:</strong> Use natural gas efficiently. Moderate build cost and CO₂ emissions.</li>
+            <li><strong>Combustion Turbine (CT) Gas Plants (Peakers):</strong> Use natural gas less efficiently but are cheap and quick to build. Often used only during high demand ("peak") times. Higher emissions per MWh than CC plants.</li>
+        </ul>
+        <p>Each plant type has two main costs:</p>
+        <ul>
+            <li><strong>Investment Cost ($F_f$):</strong> The upfront cost to build the plant, annualized over its lifetime (like a mortgage payment, $/MW/year).</li>
+            <li><strong>Marginal Cost ($MC_{ft}$):</strong> The cost to produce one extra Megawatt-hour (MWh) of electricity. This includes fuel and basic operating costs ($/MWh).</li>
+        </ul>
+        <p>And crucially, an <strong>Emission Rate ($E_f$)</strong>: Tons of CO₂ emitted per MWh produced (tons/MWh).</p>
+        <div class="explanation">
+            The paper uses specific values for these (see Section 5):
+            <ul>
+                <li>Coal: MC = $20/MWh, F = $120k/MW/yr, E = 1 ton/MWh</li>
+                <li>Gas CC: MC = $40/MWh, F = $75k/MW/yr, E = 0.35 ton/MWh</li>
+                <li>Gas CT: MC = $80/MWh, F = $50k/MW/yr, E = 0.6 ton/MWh</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="interactive-container">
+        <h3>The Cost of Carbon: Allowance Price ($p_e$)</h3>
+        <p>In a cap-and-trade system, emitting CO₂ has a cost – the market price of an allowance, let's call it $p_e$ ($/ton). This adds to the marginal cost for fossil fuel plants.</p>
+        <label for="allowancePriceSlider">Allowance Price ($p_e$, $/ton): <span id="allowancePriceValue" class="value-display">25</span></label>
+        <input type="range" id="allowancePriceSlider" min="0" max="50" value="25" step="1">
+
+        <p>The <strong>Total Marginal Cost</strong> for a plant becomes: $MC_{ft} + p_e \times E_f$</p>
+
+        <div id="dispatchOrderViz">
+            <h3>Dispatch Order: Who Runs When?</h3>
+            <p>Power grid operators generally turn on the cheapest plants first to meet demand. This "dispatch order" depends on the *total* marginal cost, including the carbon cost. Adjust the allowance price ($p_e$) to see how the order changes:</p>
+            <div class="dispatch-stack">
+                <!-- Bars will be added by JavaScript -->
+            </div>
+        </div>
+        <div class="explanation">
+            Notice how a higher allowance price makes coal (high $E_f$) relatively more expensive, potentially changing its position in the dispatch stack compared to cleaner gas plants. This is a key mechanism of cap-and-trade.
+        </div>
+    </div>
+
+    <div class="interactive-container">
+        <h3>Investment: Building for the Future</h3>
+        <p>In the long run, companies decide which types of power plants to build (or keep running). They'll invest in a plant type if the expected revenue from selling electricity covers *all* its costs: the investment cost ($F_f$) plus the total operating costs (including carbon costs) over the year. In a competitive market (as assumed in the paper), investment happens until profits are driven to zero – meaning revenue exactly covers total costs.</p>
+        <p>The decision depends on how many hours the plant is expected to run, which in turn depends on the demand for electricity and its place in the dispatch order.</p>
+    </div>
+
+    <h2>Contingent Allocation: The Twist</h2>
+    <p>Now, let's see how contingent allocation rules change the picture. These rules essentially give a discount to certain actions.</p>
+
+    <div class="interactive-container">
+        <h3>Rule I: Rewarding Potential Pollution (Capacity-Based, Input)</h3>
+        <p>Imagine allowances are given out based on the *potential* emissions of new power plants built (e.g., proportional to $E_f \times \text{Capacity}$). A company building a new 100 MW coal plant (high $E_f$) might get more free allowances than one building a 100 MW gas plant (lower $E_f$).</p>
+        <p>This acts like a discount on the <strong>Investment Cost ($F_f$)</strong>. If a plant gets $a_f$ free allowances per MW of capacity, worth $p_e \times a_f$ dollars, the *perceived* investment cost for the company becomes $F_f - p_e \times a_f$.</p>
+        <p>If the free allocation ($a_f$) is higher for dirtier plants (higher $E_f$), this rule might paradoxically make it cheaper to invest in high-emitting technology, even with a carbon price!</p>
+        <div class="explanation">
+            The paper models this where $a_f$ is proportional to a reference factor $R_f$ (which could be linked to $E_f$) for each plant type $f$. The total free allowances $E - E_A$ are distributed based on this factor and the built capacity $cap_f$.
+        </div>
+    </div>
+
+    <div class="interactive-container">
+        <h3>Rule III: Rewarding Actual Output (Sales-Based)</h3>
+        <p>Alternatively, imagine allowances are given out based on how much electricity a plant *actually* generates and sells ($s_{ft}$). If a plant gets $a_f$ free allowances per MWh produced, this effectively lowers its <strong>Marginal Cost</strong>.</p>
+        <p>The *perceived* marginal cost for the company becomes: $(MC_{ft} + p_e \times E_f) - p_e \times a_f$. This acts like an output subsidy.</p>
+        <p>If all plant types get the same $a_f$ per MWh (e.g., if $R_f=1$ for all $f$ in the paper's formula), this subsidizes generation across the board. It might lead to higher overall electricity consumption compared to an auction, but might distort the *choice* of technology less than Rule I if $a_f$ isn't tied to emissions rate $E_f$.</p>
+        <div class="explanation">
+            The paper models this where the total free allowances $E - E_A$ are distributed proportionally to sales $s_{ft}$ (possibly weighted by a factor $R_f$). The firm *knows* that producing more yields more allowances.
+        </div>
+    </div>
+
+    <p><strong>Rule II (Capacity-Based, Actual Emissions):</strong> The paper also considers a hybrid rule where allowances are allocated based on capacity, but the *proportion* ($a_f$) depends on the *average actual emissions* of that technology type across the market. This mixes incentives from Rule I and Rule III.</p>
+
+    <h2>Simulating the Effects: Distortions in Action</h2>
+    <p>The paper uses a complex <a href="https://en.wikipedia.org/wiki/Complementarity_theory" target="_blank">Nonlinear Complementarity Problem (NCP)</a> formulation to find the long-run market equilibrium under these rules. Solving that here is too complex, but we can use the paper's *results* (from Section 5 and Table 1) to simulate and visualize the *outcomes* under different scenarios.</p>
+    <p>Let's simulate the market with the three generator types (Coal, Gas CC, Gas CT) and see how the allocation rule and the generosity of free allowances affect the outcome. We'll compare contingent rules (Rule I and Rule III) to the baseline efficient case (Auction/Grandfathering, equivalent to 0% free contingent allocation).</p>
+
+    <div class="interactive-container">
+        <h3>Market Outcome Simulation</h3>
+        <div class="controls">
+            <div class="control-group">
+                <label for="co2CapSelect">CO₂ Cap (Severity):</label>
+                <select id="co2CapSelect">
+                    <option value="20">Tight (20 Mton/yr)</option>
+                    <option value="40">Mild (40 Mton/yr)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="allocationRuleSelect">Allocation Rule:</label>
+                <select id="allocationRuleSelect">
+                    <option value="Base">Auction / Grandfathering</option>
+                    <option value="RuleI">Rule I (Capacity-Potential)</option>
+                    <option value="RuleIII">Rule III (Sales-Based)</option>
+                </select>
+            </div>
+             <div class="control-group">
+                <label for="freeAllocationSlider">Free Allocation (%): <span id="freeAllocationValue" class="value-display">0</span>%</label>
+                <input type="range" id="freeAllocationSlider" min="0" max="100" value="0" step="10">
+                <div class="explanation" id="sliderExplanation">Baseline: No contingent free allocation.</div>
+            </div>
+        </div>
+
+        <div id="simulationResultsChart" class="chart-container">
+            <!-- Chart will be drawn by D3.js -->
+        </div>
+         <div class="legend" id="simulationLegend">
+             <!-- Legend items will be added by JS -->
+         </div>
+        <div class="explanation" id="simulationExplanation">
+            Adjust the controls above to see how different allocation rules and levels of free allowances impact the power market. Compare the capacity built, capacity factors (how much plants run), the allowance price, and the overall social cost increase relative to a market with no CO₂ limit.
+        </div>
+    </div>
+
+    <h2>Key Insights from the Simulation (and the Paper)</h2>
+    <ul>
+        <li><strong>Contingent Allocation Can Distort:</strong> Giving away allowances based on current actions (capacity or sales) can significantly change investment and operating decisions compared to an auction or fixed grandfathering.</li>
+        <li><strong>Capacity Rules (Rule I) Can Be Worse:</strong> Tying allowances to building capacity, especially if biased towards dirtier plants (as modeled for Rule I), can lead to large distortions. The simulation shows significant over-investment in coal under Rule I with high free allocation, even though it runs less efficiently (low capacity factor). It can even invert the dispatch order, making gas run more often than coal!</li>
+        <li><strong>Sales Rules (Rule III) Cause Less Distortion:</strong> Allocating based on actual generation (Rule III) generally causes smaller distortions in the investment mix, though it acts as an output subsidy which might increase overall demand and slightly shift the mix towards cleaner plants to meet the cap.</li>
+        <li><strong>Generosity Matters:</strong> The *percentage* of allowances given away contingently has a big impact. Distortions often increase sharply as the percentage approaches 100%.</li>
+        <li><strong>Higher Costs:</strong> These distortions aren't free. They lead to a higher overall cost (social cost) of achieving the emissions reduction target. Resources are wasted building or running the "wrong" mix of power plants.</li>
+        <li><strong>Allowance Price Effects:</strong> Contingent rules, especially capacity-based ones, can inflate the demand for allowances (as firms build more capacity partly just to get them), leading to higher allowance prices ($p_e$) than under an auction system for the same emissions cap.</li>
+        <li><strong>Other Factors:</strong> The paper also notes that things like separate <a href="https://en.wikipedia.org/wiki/Capacity_market" target="_blank">capacity markets</a> or operational constraints (like minimum run times for coal plants) can interact with these allocation rules, sometimes mitigating, sometimes exacerbating the effects, but the fundamental distortions remain.</li>
+    </ul>
+
+    <h2>Why Does This Matter?</h2>
+    <p>Designing a cap-and-trade system involves many choices. While giving away allowances for free based on current actions might seem like a way to cushion the blow for industry, this analysis shows it can backfire. It can lead to inefficient investments, perverse operating decisions, and ultimately make achieving our climate goals more expensive than necessary.</p>
+    <p>The seemingly dry, technical question of "how to allocate allowances" has significant real-world consequences for the cost of electricity, the types of power plants built, and the overall effectiveness of climate policy. Models like the one in this paper help policymakers understand these trade-offs before implementing rules that could lock in inefficiencies for decades.</p>
+
+    <!-- Tooltip Div -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <!-- JavaScript Code -->
+    <script>
+        // --- Dispatch Order Visualization ---
+        const allowancePriceSlider = document.getElementById('allowancePriceSlider');
+        const allowancePriceValue = document.getElementById('allowancePriceValue');
+        const dispatchStackDiv = document.querySelector('#dispatchOrderViz .dispatch-stack');
+
+        // Generator data (simplified from paper for visualization)
+        const generators = [
+            { id: 'coal', name: 'Coal', mc: 20, f: 120, e: 1.00, color: '#555' },
+            { id: 'cc', name: 'Gas CC', mc: 40, f: 75, e: 0.35, color: '#007bff' },
+            { id: 'ct', name: 'Gas CT', mc: 80, f: 50, e: 0.60, color: '#ffc107' }
+        ];
+
+        function calculateTotalMC(gen, pe) {
+            return gen.mc + pe * gen.e;
+        }
+
+        function updateDispatchOrder() {
+            const pe = parseFloat(allowancePriceSlider.value);
+            allowancePriceValue.textContent = pe.toFixed(0);
+
+            // Calculate total marginal cost for each generator
+            generators.forEach(gen => {
+                gen.totalMC = calculateTotalMC(gen, pe);
+            });
+
+            // Sort generators by total marginal cost (ascending)
+            const sortedGenerators = [...generators].sort((a, b) => a.totalMC - b.totalMC);
+
+            // Update visualization
+            dispatchStackDiv.innerHTML = ''; // Clear previous bars
+
+            sortedGenerators.forEach((gen, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('dispatch-bar', gen.id);
+                // Basic height allocation - equal for simplicity
+                bar.style.height = `${100 / sortedGenerators.length}%`;
+                bar.textContent = `${gen.name} ($${gen.totalMC.toFixed(2)}/MWh)`;
+                dispatchStackDiv.appendChild(bar);
+            });
+        }
+
+        allowancePriceSlider.addEventListener('input', updateDispatchOrder);
+        // Initial call
+        updateDispatchOrder();
+
+
+        // --- Simulation Results Visualization ---
+        const co2CapSelect = document.getElementById('co2CapSelect');
+        const allocationRuleSelect = document.getElementById('allocationRuleSelect');
+        const freeAllocationSlider = document.getElementById('freeAllocationSlider');
+        const freeAllocationValue = document.getElementById('freeAllocationValue');
+        const sliderExplanation = document.getElementById('sliderExplanation');
+        const simulationExplanation = document.getElementById('simulationExplanation');
+        const resultsChartDiv = document.getElementById('simulationResultsChart');
+        const legendDiv = document.getElementById('simulationLegend');
+        const tooltip = d3.select("#tooltip"); // Use the dedicated tooltip div
+
+        // Simplified data based on Table 1 (Capacity Market Runs: 1-18)
+        // Structure: { cap: { rule: { percent_free: { coal_cap, cc_cap, ct_cap, coal_cf, cc_cf, ct_cf, pe, social_cost_increase_pct } } } }
+        // Note: CFs are rough estimates/interpretations for visualization. Social cost increase % is relative to base *generation* cost ($2049 M) for simplicity here.
+        const simulationData = {
+            20: { // Tight Cap
+                Base: { // Auction / Grandfathering (Runs 3, 9, 15 @ 0%)
+                    0: { coal_cap: 852, cc_cap: 8084, ct_cap: 2064, coal_cf: 98, cc_cf: 51, ct_cf: 0.3, pe: 22.45, cost_pct: 17.6 }
+                },
+                RuleI: { // Runs 1-3
+                    0:   { coal_cap: 852, cc_cap: 8084, ct_cap: 2064, coal_cf: 98, cc_cf: 51, ct_cf: 0.3, pe: 22.45, cost_pct: 17.6 },
+                    50:  { coal_cap: 863, cc_cap: 7747, ct_cap: 2390, coal_cf: 98, cc_cf: 53, ct_cf: 0.9, pe: 29.54, cost_pct: 16.9 }, // Run 2 data point
+                    100: { coal_cap: 3088, cc_cap: 5540, ct_cap: 5361, coal_cf: 28, cc_cf: 73, ct_cf: 0.3, pe: 34.35, cost_pct: 28.7 }  // Run 1 data point
+                },
+                RuleIII: { // Runs 13-15
+                    0:   { coal_cap: 852, cc_cap: 8084, ct_cap: 2064, coal_cf: 98, cc_cf: 51, ct_cf: 0.3, pe: 22.45, cost_pct: 17.6 },
+                    50:  { coal_cap: 837, cc_cap: 8148, ct_cap: 2015, coal_cf: 98, cc_cf: 51, ct_cf: 0.3, pe: 22.45, cost_pct: 18.2 }, // Run 14 data point
+                    100: { coal_cap: 821, cc_cap: 8212, ct_cap: 1967, coal_cf: 98, cc_cf: 51, ct_cf: 0.3, pe: 22.45, cost_pct: 18.8 }  // Run 13 data point
+                }
+            },
+            40: { // Mild Cap
+                Base: { // Auction / Grandfathering (Runs 6, 12, 18 @ 0%)
+                     0: { coal_cap: 6076, cc_cap: 2871, ct_cap: 2053, coal_cf: 71, cc_cf: 24, ct_cf: 0.5, pe: 11.01, cost_pct: 0.1 }
+                },
+                RuleI: { // Runs 4-6
+                    0:   { coal_cap: 6076, cc_cap: 2871, ct_cap: 2053, coal_cf: 71, cc_cf: 24, ct_cf: 0.5, pe: 11.01, cost_pct: 0.1 },
+                    50:  { coal_cap: 6803, cc_cap: 1729, ct_cap: 2468, coal_cf: 64, cc_cf: 32, ct_cf: 1.0, pe: 30.77, cost_pct: -0.2 },// Run 5 data point (Note: negative cost % likely due to rounding/base definition mismatch, treat as ~0)
+                    100: { coal_cap: 8094, cc_cap: 559, ct_cap: 12155, coal_cf: 54, cc_cf: 99, ct_cf: 0.1, pe: 32.46, cost_pct: 26.5 } // Run 4 data point
+                },
+                 RuleIII: { // Runs 16-18
+                    0:   { coal_cap: 6076, cc_cap: 2871, ct_cap: 2053, coal_cf: 71, cc_cf: 24, ct_cf: 0.5, pe: 11.01, cost_pct: 0.1 },
+                    50:  { coal_cap: 6017, cc_cap: 2978, ct_cap: 2005, coal_cf: 72, cc_cf: 24, ct_cf: 0.5, pe: 11.01, cost_pct: 0.6 }, // Run 17 data point
+                    100: { coal_cap: 5958, cc_cap: 3084, ct_cap: 1958, coal_cf: 72, cc_cf: 25, ct_cf: 0.5, pe: 11.01, cost_pct: 1.1 }  // Run 16 data point
+                }
+            }
+        };
+
+        // Interpolation function (linear)
+        function interpolate(val1, val2, factor) {
+            // Handle potential non-numeric values gracefully (though data should be clean)
+            if (typeof val1 !== 'number' || typeof val2 !== 'number') return val1;
+            return val1 + (val2 - val1) * factor;
+        }
+
+        function getInterpolatedData(cap, rule, percentFree) {
+            const ruleKey = rule === 'Base' ? 'Base' : rule; // Use 'Base' key directly
+            const capData = simulationData[cap];
+            if (!capData) return null; // Should not happen with current UI
+
+            const ruleData = capData[ruleKey];
+            if (!ruleData) return capData['Base'][0]; // Fallback if rule somehow invalid
+
+            // If Base rule, always return the 0% data
+            if (rule === 'Base') {
+                return ruleData[0];
+            }
+
+            const percentages = Object.keys(ruleData).map(Number).sort((a, b) => a - b);
+
+            // Find surrounding data points for interpolation
+            let lowerPercent = percentages[0];
+            let upperPercent = percentages[percentages.length - 1];
+
+            if (percentFree <= lowerPercent) return ruleData[lowerPercent];
+            if (percentFree >= upperPercent) return ruleData[upperPercent];
+
+            for (let i = 0; i < percentages.length - 1; i++) {
+                if (percentFree >= percentages[i] && percentFree <= percentages[i + 1]) {
+                    lowerPercent = percentages[i];
+                    upperPercent = percentages[i + 1];
+                    break;
+                }
+            }
+
+            const lowerData = ruleData[lowerPercent];
+            const upperData = ruleData[upperPercent];
+            // Avoid division by zero if data points are the same
+            const factor = (upperPercent === lowerPercent) ? 0 : (percentFree - lowerPercent) / (upperPercent - lowerPercent);
+
+            const interpolated = {};
+            for (const key in lowerData) {
+                interpolated[key] = interpolate(lowerData[key], upperData[key], factor);
+            }
+            return interpolated;
+        }
+
+        // D3 Chart Setup
+        const containerWidth = resultsChartDiv.clientWidth;
+        const margin = { top: 20, right: 150, bottom: 60, left: 60 }; // Increased right margin for 3 axes
+        const width = containerWidth - margin.left - margin.right;
+        const height = 350 - margin.top - margin.bottom; // Fixed height
+
+        // Clear previous SVG if resizing or updating
+        d3.select("#simulationResultsChart svg").remove();
+
+        const svg = d3.select("#simulationResultsChart")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Scales
+        const x0 = d3.scaleBand().rangeRound([0, width]).paddingInner(0.2); // Group scale (Capacity, CF)
+        const x1 = d3.scaleBand().padding(0.1); // Bar scale within group (Coal, CC, CT)
+        const yCap = d3.scaleLinear().rangeRound([height, 0]); // Capacity scale (Left)
+        const yCF = d3.scaleLinear().rangeRound([height, 0]); // Capacity Factor scale (Right 1)
+        const yPe = d3.scaleLinear().rangeRound([height, 0]); // Allowance Price scale (Right 2)
+        const yCost = d3.scaleLinear().rangeRound([height, 0]); // Social Cost scale (Right 3)
+
+        // Axes definitions
+        const xAxis = svg.append("g")
+            .attr("class", "axis x-axis")
+            .attr("transform", `translate(0,${height})`);
+        const yAxisCap = svg.append("g")
+            .attr("class", "axis y-axis-cap");
+        const yAxisCF = svg.append("g") // Axis for Capacity Factor
+            .attr("class", "axis y-axis-cf")
+            .attr("transform", `translate(${width},0)`); // Position on the right
+        const yAxisPe = svg.append("g") // Axis for Pe
+            .attr("class", "axis y-axis-pe")
+            .attr("transform", `translate(${width + 50},0)`); // Position further right
+        const yAxisCost = svg.append("g") // Axis for Cost %
+            .attr("class", "axis y-axis-cost")
+            .attr("transform", `translate(${width + 100},0)`); // Position furthest right
+
+         // Axis Labels
+        svg.append("text")
+            .attr("transform", `translate(${width / 2},${height + margin.bottom - 15})`)
+            .attr("class", "axis-label")
+            .text("Metrics");
+
+        // Left Y Axis Label (Capacity)
+        yAxisCap.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left + 10) // Adjust position
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .attr("class", "axis-label")
+            .style("fill", "#333") // Match bar color group potentially?
+            .text("Capacity (MW)");
+
+        // Right Y Axis Label (CF)
+        yAxisCF.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 40) // Adjust position relative to its axis line
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .attr("class", "axis-label")
+            .style("fill", "#6c757d") // Distinct color for CF axis
+            .text("Capacity Factor (%)");
+
+        // Right Y Axis Label (Pe)
+        yAxisPe.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 40) // Adjust position relative to its axis line
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .attr("class", "axis-label")
+            .style("fill", "#28a745") // Match line color
+            .text("Allowance Price ($/ton)");
+
+         // Right Y Axis Label (Cost %)
+         yAxisCost.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 40) // Adjust position relative to its axis line
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .attr("class", "axis-label")
+            .style("fill", "#dc3545") // Match line color
+            .text("Social Cost Incr. (%)");
+
+
+        // Legend Data
+        const legendData = [
+            { key: 'coal_cap', name: 'Coal Cap.', color: '#555', type: 'bar' },
+            { key: 'cc_cap', name: 'Gas CC Cap.', color: '#007bff', type: 'bar' },
+            { key: 'ct_cap', name: 'Gas CT Cap.', color: '#ffc107', type: 'bar' },
+            { key: 'coal_cf', name: 'Coal CF', color: '#555', type: 'bar', dashed: true }, // Indicate CF visually?
+            { key: 'cc_cf', name: 'Gas CC CF', color: '#007bff', type: 'bar', dashed: true },
+            { key: 'ct_cf', name: 'Gas CT CF', color: '#ffc107', type: 'bar', dashed: true },
+            { key: 'pe', name: 'Allowance Price', color: '#28a745', type: 'line' },
+            { key: 'cost_pct', name: 'Social Cost % Incr.', color: '#dc3545', type: 'line'}
+        ];
+
+        // Add Legend Items
+        legendDiv.innerHTML = ''; // Clear existing
+        legendData.filter(item => !item.dashed).forEach(item => { // Only show primary items in legend for clarity
+            const legendItem = d3.create("div").attr("class", "legend-item");
+            legendItem.append("div")
+                .attr("class", "legend-color")
+                .style("background-color", item.color)
+                .style("border", item.type === 'line' ? 'none' : '1px solid #ccc'); // Style line vs bar
+            legendItem.append("span").text(item.name);
+            legendDiv.appendChild(legendItem.node());
+        });
+
+
+        function updateSimulationChart() {
+            const cap = parseInt(co2CapSelect.value);
+            const rule = allocationRuleSelect.value;
+            const percentFree = parseInt(freeAllocationSlider.value);
+
+            freeAllocationValue.textContent = percentFree;
+             if (rule === 'Base') {
+                freeAllocationSlider.disabled = true;
+                // Ensure value is 0 for Base case data lookup
+                freeAllocationValue.textContent = "N/A";
+                sliderExplanation.textContent = "Auction/Grandfathering - no contingent allocation.";
+            } else {
+                freeAllocationSlider.disabled = false;
+                sliderExplanation.textContent = `Rule ${rule === 'RuleI' ? 'I' : 'III'}: ${percentFree}% of allowances allocated contingently.`;
+            }
+
+            // Use 0% for Base case regardless of slider state
+            const currentPercentFree = rule === 'Base' ? 0 : percentFree;
+            const data = getInterpolatedData(cap, rule, currentPercentFree);
+            if (!data) return; // Exit if data is null
+
+            // Prepare data for D3 groups
+            const metrics = ["Capacity", "Capacity Factor"];
+            const techTypes = ["Coal", "Gas CC", "Gas CT"];
+            const techKeys = { "Coal": "coal", "Gas CC": "cc", "Gas CT": "ct" };
+
+            const barChartData = metrics.flatMap(metric =>
+                techTypes.map(type => ({
+                    metric: metric,
+                    type: type,
+                    value: data[`${techKeys[type]}_${metric === 'Capacity' ? 'cap' : 'cf'}`],
+                    key: `${techKeys[type]}_${metric === 'Capacity' ? 'cap' : 'cf'}`
+                }))
+            );
+
+            const lineChartData = {
+                pe: data.pe,
+                cost_pct: data.cost_pct
+            };
+
+            // Update domains
+            x0.domain(metrics);
+            x1.domain(techTypes).rangeRound([0, x0.bandwidth()]);
+            // Ensure domains cover baseline and potential peaks/troughs
+            yCap.domain([0, d3.max([13000, ...techTypes.map(t => data[`${techKeys[t]}_cap`])])]).nice();
+            yCF.domain([0, 100]).nice(); // CF is 0-100%
+            yPe.domain([0, d3.max([40, data.pe])]).nice();
+            yCost.domain([d3.min([-5, data.cost_pct]), d3.max([35, data.cost_pct])]).nice(); // Allow negative for cost %
+
+            // Update axes Ticks and Formatters
+            xAxis.transition().duration(300).call(d3.axisBottom(x0));
+            yAxisCap.transition().duration(300).call(d3.axisLeft(yCap).ticks(5).tickFormat(d3.format(".2s"))); // Use SI prefix like 12k
+            yAxisCF.transition().duration(300).call(d3.axisRight(yCF).ticks(5).tickFormat(d => d + "%")); // Add % sign
+            yAxisPe.transition().duration(300).call(d3.axisRight(yPe).ticks(5));
+            yAxisCost.transition().duration(300).call(d3.axisRight(yCost).ticks(5).tickFormat(d => d + "%")); // Add % sign
+
+
+            // --- Draw Bars (Capacity and CF) ---
+            const metricGroups = svg.selectAll(".metric-group")
+                .data(metrics)
+                .join("g")
+                .attr("class", "metric-group")
+                .attr("transform", d => `translate(${x0(d)},0)`);
+
+            metricGroups.selectAll(".bar")
+                .data(d => barChartData.filter(item => item.metric === d), d => d.key) // Use key function
+                .join(
+                    enter => enter.append("rect")
+                        .attr("class", d => `bar bar-${techKeys[d.type]}`)
+                        .attr("x", d => x1(d.type))
+                        .attr("width", x1.bandwidth())
+                        .attr("y", d => d.metric === "Capacity" ? yCap(0) : yCF(0)) // Start from bottom
+                        .attr("height", 0) // Start height 0
+                        .call(enter => enter.transition().duration(300)
+                            .attr("y", d => d.metric === "Capacity" ? yCap(d.value) : yCF(d.value))
+                            .attr("height", d => height - (d.metric === "Capacity" ? yCap(d.value) : yCF(d.value)))
+                        ),
+                    update => update
+                        .call(update => update.transition().duration(300)
+                            .attr("x", d => x1(d.type)) // Ensure x position is updated if needed
+                            .attr("width", x1.bandwidth()) // Ensure width is updated if needed
+                            .attr("y", d => d.metric === "Capacity" ? yCap(d.value) : yCF(d.value))
+                            .attr("height", d => height - (d.metric === "Capacity" ? yCap(d.value) : yCF(d.value)))
+                        ),
+                    exit => exit
+                        .call(exit => exit.transition().duration(300)
+                            .attr("y", d => d.metric === "Capacity" ? yCap(0) : yCF(0))
+                            .attr("height", 0)
+                            .remove()
+                        )
+                )
+                // Tooltip events for bars
+                .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    const unit = d.metric === "Capacity" ? "MW" : "%";
+                    const value = d.value.toFixed(d.metric === "Capacity" ? 0 : 1);
+                    tooltip.html(`${d.type} ${d.metric}:<br/>${value} ${unit}`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                });
+
+
+            // --- Draw Lines (Pe and Cost %) ---
+            // Define line generators using the appropriate scales
+            const linePe = d3.line()
+                .x(d => x0(d.metric) + x0.bandwidth() / 2) // Center line in metric group
+                .y(d => yPe(d.value));
+
+            const lineCost = d3.line()
+                .x(d => x0(d.metric) + x0.bandwidth() / 2) // Center line in metric group
+                .y(d => yCost(d.value));
+
+            // Prepare data for lines - needs points for each metric group to draw across
+            const peLineData = metrics.map(m => ({ metric: m, value: lineChartData.pe }));
+            const costLineData = metrics.map(m => ({ metric: m, value: lineChartData.cost_pct }));
+
+            // Pe Line
+            svg.selectAll(".line-pe")
+                .data([peLineData]) // Data needs to be array of arrays for line path
+                .join("path")
+                .attr("class", "line line-pe")
+                .transition()
+                .duration(300)
+                .attr("d", linePe);
+
+             // Cost Line
+            svg.selectAll(".line-cost")
+                .data([costLineData])
+                .join("path")
+                .attr("class", "line line-cost")
+                .transition()
+                .duration(300)
+                .attr("d", lineCost);
+
+             // Add/Update circles for line points
+             svg.selectAll(".dot-pe")
+                .data(peLineData)
+                .join("circle")
+                .attr("class", "dot dot-pe")
+                .attr("r", 5)
+                 .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`Allowance Price:<br/>$${d.value.toFixed(2)}/ton`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                })
+                .transition()
+                .duration(300)
+                .attr("cx", d => x0(d.metric) + x0.bandwidth() / 2)
+                .attr("cy", d => yPe(d.value));
+
+            svg.selectAll(".dot-cost")
+                .data(costLineData)
+                .join("circle")
+                .attr("class", "dot dot-cost")
+                .attr("r", 5)
+                 .on("mouseover", (event, d) => {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`Social Cost Incr.:<br/>${d.value.toFixed(1)}%`)
+                        .style("left", (event.pageX + 10) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    tooltip.transition().duration(500).style("opacity", 0);
+                })
+                .transition()
+                .duration(300)
+                .attr("cx", d => x0(d.metric) + x0.bandwidth() / 2)
+                .attr("cy", d => yCost(d.value));
+
+
+            // Update explanation text based on results
+            let explanationText = `Scenario: ${cap} Mton Cap, Rule: ${rule}, ${rule === 'Base' ? 'N/A' : percentFree + '% Free Allocation'}. `;
+            if (rule === 'RuleI' && percentFree > 50) {
+                explanationText += `Notice the high investment in ${data.coal_cap > data.cc_cap ? 'Coal' : 'Gas CT'} capacity, driven by the free allowances, even if capacity factors are distorted. The allowance price ($${data.pe.toFixed(2)}) and social cost (${data.cost_pct.toFixed(1)}%) are significantly inflated compared to the baseline.`;
+            } else if (rule === 'RuleIII' && percentFree > 0) {
+                 explanationText += `Rule III shows much less distortion in capacity mix compared to Rule I. The social cost increase (${data.cost_pct.toFixed(1)}%) is minimal, mainly reflecting the output subsidy effect. Allowance price ($${data.pe.toFixed(2)}) is stable.`;
+            } else { // Base case or low % free allocation
+                explanationText += `This represents the efficient baseline (or close to it for Rule III low %). Capacity mix reflects true costs. Allowance price is $${data.pe.toFixed(2)}/ton, social cost increase is ${data.cost_pct.toFixed(1)}%.`;
+            }
+            simulationExplanation.textContent = explanationText;
+
+        }
+
+        // Event Listeners for simulation controls
+        co2CapSelect.addEventListener('change', updateSimulationChart);
+        allocationRuleSelect.addEventListener('change', updateSimulationChart);
+        freeAllocationSlider.addEventListener('input', updateSimulationChart);
+
+        // Initial chart draw
+        updateSimulationChart();
+
+        // Optional: Redraw chart on window resize
+        // window.addEventListener('resize', updateSimulationChart);
+
+
+    </script>
+
+</body>
+
+</html>

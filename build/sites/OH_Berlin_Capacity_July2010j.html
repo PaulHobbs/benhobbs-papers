@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Exploration of Capacity Markets</title>
+    <!-- MathJax Configuration -->
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <!-- Load MathJax -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <!-- Load D3.js -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Basic Styling (Inlined) -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-top: 2em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .simulation-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+        input[type="range"], input[type="number"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        select, button {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .visualization {
+            margin-top: 20px;
+            min-height: 300px; /* Ensure space for D3 charts */
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font: 12px sans-serif;
+            background: lightsteelblue;
+            border: 0px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #aaa;
+            shape-rendering: crispEdges;
+        }
+        .axis text {
+            font-size: 11px;
+            fill: #555;
+        }
+        .line {
+            fill: none;
+            stroke-width: 2px;
+        }
+        .vertical-line {
+            stroke: black;
+            stroke-width: 1.5px;
+            stroke-dasharray: 4,4;
+        }
+        .target-line {
+            stroke: red;
+            stroke-width: 1px;
+            stroke-dasharray: 2,2;
+        }
+        code {
+            background-color: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin-top: 5px;
+            margin-bottom: 15px;
+        }
+        .output-display {
+            font-size: 0.95em;
+            background-color: #eef;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Keeping the Lights On: An Interactive Look at Capacity Markets</h1>
+
+    <p>Imagine the electric grid. We flip a switch, and the lights turn on. Simple, right? But ensuring there's *always* enough power available, especially during peak demand times (like hot summer afternoons when everyone runs air conditioning), is a complex challenge. This is the problem of <strong><a href="https://en.wikipedia.org/wiki/Resource_adequacy" target="_blank">resource adequacy</a></strong>.</p>
+
+    <p>Traditionally, regulated monopolies built power plants based on long-term forecasts. In modern, restructured electricity markets, generators primarily earn money by selling the energy ($\text{MWh}$) they produce in the "energy market". However, this can lead to a problem known as the "missing money" issue.</p>
+
+    <div class="container">
+        <h3>The "Missing Money" Problem</h3>
+        <p>Power plants, especially those that only run during peak demand times ("peakers"), have high fixed costs (construction, maintenance) but might not run often enough to recover these costs solely from energy sales. Price caps, often imposed for political reasons during high-demand periods, can further limit their revenue. If investors fear they won't recover their costs, they won't build enough capacity, potentially leading to shortages.</p>
+        <p>Think of it like this: building a power plant is expensive. If you only get paid when you actually produce electricity, and you might only be needed a few hours a year, would you build it? Maybe not, even if it's crucial for reliability during those few hours.</p>
+        <p>As the presentation notes (Slide 2), the cost of having too little capacity (shortages, blackouts) is generally considered much higher than the cost of having a bit too much.</p>
+    </div>
+
+    <h2>Enter Capacity Markets</h2>
+
+    <p>One solution is a <strong><a href="https://en.wikipedia.org/wiki/Capacity_market" target="_blank">Capacity Market</a></strong>. Instead of just paying for energy produced ($\text{MWh}$), these markets pay generators for being *available* to produce power, measured in capacity ($\text{MW}$). It's like paying an insurance premium to guarantee that generation resources will be there when needed.</p>
+
+    <p>The key questions in designing a capacity market are:</p>
+    <ol>
+        <li>How much capacity do we need?</li>
+        <li>How do we determine the price paid for that capacity?</li>
+    </ol>
+
+    <h2>Setting the Price: Vertical vs. Sloped Demand Curves</h2>
+
+    <p>Early capacity markets often used a "vertical demand curve" approach (referred to as ICAP - Installed Capacity - in the presentation, Slide 5). This means setting a fixed target quantity of capacity. If suppliers offer less than the target, they face a steep penalty (or the price goes very high); if they offer more, the price drops significantly (often to zero for the excess).</p>
+
+    <p>More recent designs, like the PJM <a href="https://learn.pjm.com/markets-and-operations/capacity-market" target="_blank">Reliability Pricing Model (RPM)</a> discussed in the presentation (Slide 7), use a "sloped demand curve". This approach recognizes that the value of additional capacity gradually decreases. We're willing to pay a lot for the capacity needed to meet basic reliability, but less for extra "cushion".</p>
+
+    <h3>Visualizing Demand Curves</h3>
+    <p>Let's visualize these two approaches. The demand curve shows the price the market operator is willing to pay for different quantities of available capacity.</p>
+
+    <div class="container">
+        <div id="demand-curve-vis"></div>
+        <div class="simulation-controls" style="grid-template-columns: 1fr 1fr; margin-top: 15px;">
+             <div class="control-group">
+                <label for="curve-type-selector">Demand Curve Type:</label>
+                <select id="curve-type-selector">
+                    <option value="vertical">Vertical</option>
+                    <option value="sloped" selected>Sloped (VRR)</option>
+                </select>
+            </div>
+             <div class="control-group">
+                <label for="target-capacity-slider">Target Capacity (MW): <span id="target-capacity-value">1000</span></label>
+                <input type="range" id="target-capacity-slider" min="800" max="1200" value="1000" step="10">
+            </div>
+        </div>
+        <div class="caption">Interact with the controls to see how the demand curve changes. The vertical line represents a hypothetical amount of capacity offered by suppliers. The intersection determines the clearing price.</div>
+    </div>
+
+    <p>The vertical curve creates a knife-edge situation: a small change in supply around the target can cause a massive swing in price. The sloped curve, often called a Variable Resource Requirement (VRR) curve, aims for smoother price adjustments.</p>
+
+    <h2>Dynamic Simulation: Why Slope Matters</h2>
+
+    <p>The presentation highlights a key finding from dynamic simulations (Slides 8-9): sloped demand curves tend to lead to more stable markets over time. Why? Because they provide smoother price signals to investors.</p>
+
+    <ul>
+        <li><strong>Vertical Curve Risk:</strong> Imagine you're deciding whether to build a new power plant. Under a vertical curve, the price could be extremely high one year (encouraging building) and crash to zero the next if slightly too much capacity gets built. This "boom/bust" cycle makes investment risky. Risk-averse investors might demand higher average prices to compensate, or simply avoid investing.</li>
+        <li><strong>Sloped Curve Stability:</strong> With a sloped curve, if supply increases slightly, the price decreases moderately, not catastrophically. If supply is tight, the price rises significantly but smoothly. This more predictable signal can encourage steadier investment and potentially lower overall costs for consumers.</li>
+    </ul>
+
+    <h3>Interactive Simulation: Market Dynamics Over Time</h3>
+    <p>Let's simulate a simplified capacity market over several years. We'll model generators making investment/retirement decisions based on expected profits, influenced by the capacity price and the <a href="https://www.iso-ne.com/static-assets/documents/2015/02/cone_whitepaper_2_13_15.pdf" target="_blank">Cost of New Entry (CONE)</a> - the estimated annualized cost of building a new reference power plant. The simulation incorporates some randomness to represent forecast errors and market volatility.</p>
+    <p><strong>Goal:</strong> Compare how market stability (price volatility, reserve margin consistency) differs between the vertical and sloped demand curve designs.</p>
+
+    <div class="container">
+        <h3>Simulation Controls</h3>
+        <div class="simulation-controls">
+            <div class="control-group">
+                <label for="sim-curve-type">Demand Curve Type:</label>
+                <select id="sim-curve-type">
+                    <option value="vertical">Vertical</option>
+                    <option value="sloped" selected>Sloped (VRR)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="sim-target-reserve">Target Reserve Margin (%): <span id="sim-target-reserve-value">15</span>%</label>
+                <input type="range" id="sim-target-reserve" min="5" max="25" value="15" step="1">
+            </div>
+             <div class="control-group">
+                <label for="sim-cone">Assumed CONE ($/MW-yr): <span id="sim-cone-value">100000</span></label>
+                <input type="range" id="sim-cone" min="50000" max="150000" value="100000" step="5000">
+            </div>
+             <div class="control-group">
+                <label for="sim-volatility">Market Volatility Factor: <span id="sim-volatility-value">0.1</span></label>
+                <input type="range" id="sim-volatility" min="0" max="0.5" value="0.1" step="0.05">
+            </div>
+             <div class="control-group">
+                <label for="sim-risk-aversion">Investor Risk Aversion (Profit Hurdle): <span id="sim-risk-aversion-value">1.1</span>x CONE</label>
+                <input type="range" id="sim-risk-aversion" min="1.0" max="1.5" value="1.1" step="0.05">
+            </div>
+             <div class="control-group">
+                <label for="sim-peak-demand">Base Peak Demand (MW): <span id="sim-peak-demand-value">50000</span></label>
+                <input type="range" id="sim-peak-demand" min="40000" max="60000" value="50000" step="1000">
+            </div>
+        </div>
+        <button id="run-sim-button">Run Simulation (20 Years)</button>
+        <button id="reset-sim-button">Reset</button>
+
+        <div id="simulation-output" class="visualization">
+             <div style="display: flex; justify-content: space-around; flex-wrap: wrap;">
+                 <div id="price-chart" style="width: 48%; min-width: 300px;"></div>
+                 <div id="reserve-chart" style="width: 48%; min-width: 300px;"></div>
+            </div>
+        </div>
+         <div id="sim-summary" class="output-display">Run the simulation to see results.</div>
+         <div class="caption">The simulation models capacity changes year-to-year. New capacity is added if the expected price (based on last year's price + noise) suggests profit above the risk-adjusted CONE. Capacity retires if prices are very low. Compare the stability of Price and Reserve Margin plots for Vertical vs. Sloped curves.</div>
+    </div>
+
+    <h3>Interpreting the Simulation</h3>
+    <p>Run the simulation with both the "Vertical" and "Sloped" demand curve settings. Observe:</p>
+    <ul>
+        <li><strong>Price Stability:</strong> Does the price ($/MW-yr) jump around wildly (high volatility) or stay relatively stable? The sloped curve typically shows much less volatility.</li>
+        <li><strong>Reserve Margin:</strong> How close does the actual installed capacity stay to the target reserve margin? The vertical curve often leads to larger swings (boom/bust cycles of over- and under-building), while the sloped curve tends to keep reserves closer to the target more consistently.</li>
+        <li><strong>Effect of Parameters:</strong> Try adjusting CONE, Volatility, and Risk Aversion. Higher volatility and risk aversion tend to exacerbate the problems with the vertical curve and highlight the benefits of the sloped curve's stability. Mis-estimating CONE (as mentioned on Slide 9) can also cause the market to consistently clear too high or too low.</li>
+    </ul>
+
+    <p>The simulation demonstrates the core argument presented: the shape of the demand curve significantly impacts market dynamics and investment signals. A sloped curve acts as a shock absorber, leading to potentially more efficient outcomes over the long run.</p>
+
+    <h2>Real-World Results and Challenges</h2>
+
+    <p>The presentation indicates that PJM's RPM, using a sloped demand curve, was successful in attracting new investment and retaining existing capacity (Slides 11-12). ISO New England also implemented a forward capacity market with similar goals (Slide 13).</p>
+
+    <p>However, capacity markets are not without challenges (Slide 13):</p>
+    <ul>
+        <li><strong>Administrative Complexity:</strong> Setting the right demand curve shape, accurately forecasting load, and determining the correct CONE are difficult and often contentious administrative decisions.</li>
+        <li><strong>Political Scrutiny:</strong> Capacity payments are explicit costs passed on to consumers, making them politically sensitive.</li>
+        <li><strong>Demand Response Integration:</strong> Effectively integrating and verifying <a href="https://en.wikipedia.org/wiki/Demand_response" target="_blank">demand response</a> (customers reducing consumption) as a capacity resource remains complex.</li>
+        <li><strong>Market Power:</strong> Ensuring suppliers don't exercise market power remains a concern.</li>
+    </ul>
+
+    <h2>Conclusion</h2>
+
+    <p>Capacity markets are a tool designed to address the "missing money" problem and ensure long-term resource adequacy in competitive electricity markets. The design of these markets, particularly the shape of the demand curve, has significant implications for market stability and investment efficiency.</p>
+
+    <p>As demonstrated through the simplified dynamic simulation, using a sloped demand curve (like PJM's RPM) can dampen boom/bust cycles, provide clearer investment signals, and potentially lead to more stable reserve margins and lower long-term costs compared to a vertical demand curve approach. While challenges remain, this design feature represents a key evolution in ensuring a reliable power supply.</p>
+
+    <hr>
+    <p style="font-size: 0.8em; color: #777;">This interactive explanation is based on the presentation "Capacity Markets: Principles & What's Happening in the US" by Benjamin F. Hobbs (July 2010). The simulation is a simplified model intended for illustrative purposes.</p>
+
+
+    <!-- Inlined Javascript -->
+    <script>
+        // --- Visualization 1: Demand Curve Shape ---
+        const dcVis = {}; // Namespace for demand curve visualization
+        dcVis.margin = {top: 20, right: 30, bottom: 40, left: 60};
+        dcVis.width = document.getElementById('demand-curve-vis').clientWidth - dcVis.margin.left - dcVis.margin.right;
+        // Ensure width is not negative if container is too small initially
+        dcVis.width = Math.max(dcVis.width, 300);
+        dcVis.height = 300 - dcVis.margin.top - dcVis.margin.bottom;
+
+        dcVis.svg = d3.select("#demand-curve-vis").append("svg")
+            .attr("width", dcVis.width + dcVis.margin.left + dcVis.margin.right)
+            .attr("height", dcVis.height + dcVis.margin.top + dcVis.margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${dcVis.margin.left},${dcVis.margin.top})`);
+
+        // Scales
+        dcVis.x = d3.scaleLinear().range([0, dcVis.width]);
+        dcVis.y = d3.scaleLinear().range([dcVis.height, 0]);
+
+        // Axes
+        dcVis.xAxis = dcVis.svg.append("g")
+            .attr("class", "axis axis--x")
+            .attr("transform", `translate(0,${dcVis.height})`);
+        dcVis.yAxis = dcVis.svg.append("g")
+            .attr("class", "axis axis--y");
+
+        // Axis labels
+        dcVis.svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", dcVis.width / 2 + dcVis.margin.left / 2)
+            .attr("y", dcVis.height + dcVis.margin.bottom - 5)
+            .style("font-size", "12px")
+            .text("Capacity (MW)");
+
+        dcVis.svg.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -dcVis.margin.left + 20)
+            .attr("x", -dcVis.height / 2 + dcVis.margin.top)
+            .style("font-size", "12px")
+            .text("Price ($/MW-yr)");
+
+        // Line generator
+        dcVis.line = d3.line()
+            .x(d => dcVis.x(d.capacity))
+            .y(d => dcVis.y(d.price));
+
+        // Path for demand curve
+        dcVis.path = dcVis.svg.append("path")
+            .attr("class", "line")
+            .style("stroke", "#3498db")
+            .style("stroke-width", 2.5);
+
+        // Vertical line for supply
+        dcVis.supplyLine = dcVis.svg.append("line")
+            .attr("class", "vertical-line")
+            .style("stroke", "orange")
+            .style("stroke-width", 2);
+
+        // Intersection point
+        dcVis.intersectionPoint = dcVis.svg.append("circle")
+            .attr("r", 5)
+            .attr("fill", "red");
+
+        // Tooltip
+         dcVis.tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Update function
+        dcVis.update = () => {
+            const curveType = document.getElementById('curve-type-selector').value;
+            const targetCapacity = +document.getElementById('target-capacity-slider').value;
+            document.getElementById('target-capacity-value').textContent = targetCapacity;
+
+            // Define parameters (simplified based on PJM curves conceptually)
+            const maxPrice = 150000; // Arbitrary max price / penalty
+            const conePrice = 100000; // Example CONE
+            const lowPrice = 1000;   // Price floor
+
+            // Define capacity range for plotting
+            const minCap = targetCapacity * 0.8;
+            const maxCap = targetCapacity * 1.2;
+            const capacityPoints = d3.range(minCap, maxCap, (maxCap - minCap) / 100);
+
+            let demandCurveData = [];
+            let supplyCapacity = targetCapacity * 0.95; // Example fixed supply for visualization
+
+            if (curveType === 'vertical') {
+                 demandCurveData = [
+                    { capacity: minCap, price: maxPrice },
+                    { capacity: targetCapacity - 0.1, price: maxPrice }, // Slightly less than target
+                    { capacity: targetCapacity + 0.1, price: lowPrice }, // Slightly more than target
+                    { capacity: maxCap, price: lowPrice }
+                ];
+            } else { // Sloped (VRR) - Simplified 3-segment curve
+                const point1_cap = targetCapacity * 0.98; // Start of high price plateau
+                const point2_cap = targetCapacity * 1.02; // Start of slope down from CONE
+                const point3_cap = targetCapacity * 1.08; // End of slope, start of floor
+
+                demandCurveData = capacityPoints.map(cap => {
+                    let price;
+                    if (cap <= point1_cap) {
+                        price = maxPrice * 0.8; // High plateau (below absolute max)
+                    } else if (cap <= point2_cap) {
+                         // Linear interpolation from high plateau down towards CONE level
+                         const slope = (conePrice - maxPrice * 0.8) / (point2_cap - point1_cap);
+                         price = maxPrice * 0.8 + slope * (cap - point1_cap);
+                    } else if (cap <= point3_cap) {
+                        // Linear interpolation from CONE down to floor
+                        const slope = (lowPrice - conePrice) / (point3_cap - point2_cap);
+                        price = conePrice + slope * (cap - point2_cap);
+                    } else {
+                        price = lowPrice;
+                    }
+                    return { capacity: cap, price: Math.max(lowPrice, price) }; // Ensure price doesn't go below floor
+                });
+                 // Add explicit points for better line drawing at kinks
+                 demandCurveData.unshift({ capacity: minCap, price: maxPrice * 0.8 });
+                 demandCurveData.push({ capacity: maxCap, price: lowPrice });
+            }
+
+            // Update scales
+            dcVis.x.domain([minCap, maxCap]);
+            dcVis.y.domain([0, maxPrice * 1.1]); // Add some headroom
+
+            // Update axes
+            dcVis.xAxis.call(d3.axisBottom(dcVis.x).ticks(5));
+            dcVis.yAxis.call(d3.axisLeft(dcVis.y).tickFormat(d3.format("~s"))); // Use SI prefix like 'k'
+
+            // Update demand curve path
+            dcVis.path.datum(demandCurveData).attr("d", dcVis.line);
+
+             // Find intersection price
+            let clearingPrice = lowPrice;
+             if (curveType === 'vertical') {
+                 clearingPrice = (supplyCapacity < targetCapacity) ? maxPrice : lowPrice;
+             } else {
+                 // Find price on the sloped curve for the given supplyCapacity
+                 // Simple interpolation search (or could use d3.bisect)
+                 for (let i = 0; i < demandCurveData.length - 1; i++) {
+                     if (supplyCapacity >= demandCurveData[i].capacity && supplyCapacity <= demandCurveData[i+1].capacity) {
+                         // Linear interpolation between points i and i+1
+                         const cap1 = demandCurveData[i].capacity;
+                         const price1 = demandCurveData[i].price;
+                         const cap2 = demandCurveData[i+1].capacity;
+                         const price2 = demandCurveData[i+1].price;
+                         if (cap2 > cap1) { // Avoid division by zero
+                             const t = (supplyCapacity - cap1) / (cap2 - cap1);
+                             clearingPrice = price1 + t * (price2 - price1);
+                         } else {
+                             clearingPrice = price1; // If points are identical
+                         }
+                         break; // Found the segment
+                     }
+                 }
+                 // Handle edge cases if supply is outside the plotted range
+                 if (supplyCapacity < demandCurveData[0].capacity) clearingPrice = demandCurveData[0].price;
+                 if (supplyCapacity > demandCurveData[demandCurveData.length - 1].capacity) clearingPrice = demandCurveData[demandCurveData.length - 1].price;
+                 clearingPrice = Math.max(lowPrice, clearingPrice); // Ensure floor
+             }
+
+            // Update supply line
+            dcVis.supplyLine
+                .attr("x1", dcVis.x(supplyCapacity))
+                .attr("y1", dcVis.y(0))
+                .attr("x2", dcVis.x(supplyCapacity))
+                .attr("y2", dcVis.y(maxPrice * 1.1));
+
+            // Update intersection point
+            dcVis.intersectionPoint
+                .attr("cx", dcVis.x(supplyCapacity))
+                .attr("cy", dcVis.y(clearingPrice))
+                .on("mouseover", (event) => {
+                    dcVis.tooltip.transition().duration(200).style("opacity", .9);
+                    dcVis.tooltip.html(`Supply: ${Math.round(supplyCapacity)} MW<br>Price: $${Math.round(clearingPrice)}/MW-yr`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", () => {
+                    dcVis.tooltip.transition().duration(500).style("opacity", 0);
+                });
+        };
+
+        // Initial draw
+        dcVis.update();
+
+        // Event listeners
+        document.getElementById('curve-type-selector').addEventListener('change', dcVis.update);
+        document.getElementById('target-capacity-slider').addEventListener('input', dcVis.update);
+        window.addEventListener('resize', () => { // Handle resize
+             dcVis.width = document.getElementById('demand-curve-vis').clientWidth - dcVis.margin.left - dcVis.margin.right;
+             dcVis.width = Math.max(dcVis.width, 300); // Ensure min width
+             dcVis.svg.attr("width", dcVis.width + dcVis.margin.left + dcVis.margin.right);
+             dcVis.x.range([0, dcVis.width]);
+             dcVis.xAxis.attr("transform", `translate(0,${dcVis.height})`);
+              dcVis.svg.select("text[x^='dcVis.width / 2']").attr("x", dcVis.width / 2 + dcVis.margin.left / 2); // Update x-axis label position
+             dcVis.update();
+         });
+
+
+        // --- Visualization 2: Dynamic Simulation ---
+        const sim = {}; // Namespace for simulation
+        sim.state = {};
+        sim.history = [];
+
+        // Chart setup
+        sim.margin = {top: 20, right: 30, bottom: 40, left: 60};
+        sim.chartWidth = document.getElementById('price-chart').clientWidth - sim.margin.left - sim.margin.right;
+        sim.chartWidth = Math.max(sim.chartWidth, 250); // Min width
+        sim.chartHeight = 250 - sim.margin.top - sim.margin.bottom;
+
+        // Price Chart
+        sim.priceSvg = d3.select("#price-chart").append("svg")
+            .attr("width", sim.chartWidth + sim.margin.left + sim.margin.right)
+            .attr("height", sim.chartHeight + sim.margin.top + sim.margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${sim.margin.left},${sim.margin.top})`);
+        sim.priceX = d3.scaleLinear().range([0, sim.chartWidth]);
+        sim.priceY = d3.scaleLinear().range([sim.chartHeight, 0]);
+        sim.priceXAxis = sim.priceSvg.append("g").attr("class", "axis axis--x").attr("transform", `translate(0,${sim.chartHeight})`);
+        sim.priceYAxis = sim.priceSvg.append("g").attr("class", "axis axis--y");
+        sim.priceLine = d3.line().x(d => sim.priceX(d.year)).y(d => sim.priceY(d.price));
+        sim.pricePath = sim.priceSvg.append("path").attr("class", "line").style("stroke", "steelblue");
+         sim.priceSvg.append("text").attr("x", sim.chartWidth/2).attr("y", -5).attr("text-anchor", "middle").style("font-size", "14px").text("Capacity Price");
+         sim.priceSvg.append("text").attr("text-anchor", "middle").attr("x", sim.chartWidth / 2).attr("y", sim.chartHeight + sim.margin.bottom - 5).style("font-size", "12px").text("Year");
+          sim.priceSvg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -sim.margin.left + 20).attr("x", -sim.chartHeight / 2).style("font-size", "12px").text("Price ($/MW-yr)");
+
+
+        // Reserve Margin Chart
+        sim.reserveSvg = d3.select("#reserve-chart").append("svg")
+            .attr("width", sim.chartWidth + sim.margin.left + sim.margin.right)
+            .attr("height", sim.chartHeight + sim.margin.top + sim.margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${sim.margin.left},${sim.margin.top})`);
+        sim.reserveX = d3.scaleLinear().range([0, sim.chartWidth]);
+        sim.reserveY = d3.scaleLinear().range([sim.chartHeight, 0]);
+        sim.reserveXAxis = sim.reserveSvg.append("g").attr("class", "axis axis--x").attr("transform", `translate(0,${sim.chartHeight})`);
+        sim.reserveYAxis = sim.reserveSvg.append("g").attr("class", "axis axis--y");
+        sim.reserveLine = d3.line().x(d => sim.reserveX(d.year)).y(d => sim.reserveY(d.reserveMargin * 100)); // Plot as percentage
+        sim.reservePath = sim.reserveSvg.append("path").attr("class", "line").style("stroke", "firebrick");
+        sim.reserveTargetLine = sim.reserveSvg.append("line").attr("class", "target-line");
+        sim.reserveSvg.append("text").attr("x", sim.chartWidth/2).attr("y", -5).attr("text-anchor", "middle").style("font-size", "14px").text("Reserve Margin");
+        sim.reserveSvg.append("text").attr("text-anchor", "middle").attr("x", sim.chartWidth / 2).attr("y", sim.chartHeight + sim.margin.bottom - 5).style("font-size", "12px").text("Year");
+         sim.reserveSvg.append("text").attr("text-anchor", "middle").attr("transform", "rotate(-90)").attr("y", -sim.margin.left + 20).attr("x", -sim.chartHeight / 2).style("font-size", "12px").text("Reserve Margin (%)");
+
+        // Tooltip for charts
+        sim.tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+
+        // Function to get parameters from UI
+        sim.getParams = () => {
+            return {
+                curveType: document.getElementById('sim-curve-type').value,
+                targetReserveMargin: +document.getElementById('sim-target-reserve').value / 100,
+                cone: +document.getElementById('sim-cone').value,
+                volatility: +document.getElementById('sim-volatility').value,
+                riskAversionFactor: +document.getElementById('sim-risk-aversion').value,
+                basePeakDemand: +document.getElementById('sim-peak-demand').value,
+                years: 20
+            };
+        };
+
+        // Update slider value display
+        document.getElementById('sim-target-reserve').addEventListener('input', (e) => {
+            document.getElementById('sim-target-reserve-value').textContent = e.target.value;
+        });
+        document.getElementById('sim-cone').addEventListener('input', (e) => {
+            document.getElementById('sim-cone-value').textContent = e.target.value;
+        });
+         document.getElementById('sim-volatility').addEventListener('input', (e) => {
+            document.getElementById('sim-volatility-value').textContent = e.target.value;
+        });
+        document.getElementById('sim-risk-aversion').addEventListener('input', (e) => {
+            document.getElementById('sim-risk-aversion-value').textContent = e.target.value;
+        });
+         document.getElementById('sim-peak-demand').addEventListener('input', (e) => {
+            document.getElementById('sim-peak-demand-value').textContent = e.target.value;
+        });
+
+
+        // Function to calculate clearing price based on demand curve
+        sim.getClearingPrice = (installedCapacity, params) => {
+            const targetCapacity = params.basePeakDemand * (1 + params.targetReserveMargin);
+            const cone = params.cone;
+            const maxPrice = cone * 1.75; // Higher penalty/max for vertical
+            const highPrice = cone * 1.5; // Plateau for sloped
+            const lowPrice = cone * 0.1;  // Floor price
+
+            if (params.curveType === 'vertical') {
+                return (installedCapacity < targetCapacity) ? maxPrice : lowPrice;
+            } else { // Sloped VRR curve (simplified)
+                const point1_cap = targetCapacity * 0.98;
+                const point2_cap = targetCapacity * 1.02;
+                const point3_cap = targetCapacity * 1.08;
+
+                let price;
+                 if (installedCapacity <= point1_cap) {
+                    price = highPrice;
+                } else if (installedCapacity <= point2_cap) {
+                    const slope = (cone - highPrice) / (point2_cap - point1_cap);
+                    price = highPrice + slope * (installedCapacity - point1_cap);
+                } else if (installedCapacity <= point3_cap) {
+                    const slope = (lowPrice - cone) / (point3_cap - point2_cap);
+                    price = cone + slope * (installedCapacity - point2_cap);
+                } else {
+                    price = lowPrice;
+                }
+                return Math.max(lowPrice, price); // Ensure floor
+            }
+        };
+
+        // Simulation step function
+        sim.runYear = (params) => {
+            const currentYear = sim.state.year;
+            const lastPrice = sim.state.lastPrice;
+            let installedCapacity = sim.state.installedCapacity;
+
+            // 1. Determine this year's clearing price
+            const clearingPrice = sim.getClearingPrice(installedCapacity, params);
+
+            // 2. Forecast next year's price (simple: last price + noise)
+            const noise = (Math.random() - 0.5) * 2 * params.volatility * params.cone; // Noise proportional to CONE and volatility
+            const forecastPrice = Math.max(0, clearingPrice + noise); // Price cannot be negative
+
+            // 3. Investment/Retirement Decision (Simplified Agent Logic)
+            const investmentThreshold = params.cone * params.riskAversionFactor;
+            const retirementThreshold = params.cone * 0.2; // Retire if price is very low
+            const buildSize = params.basePeakDemand * 0.02; // Build in chunks (e.g., 2% of peak demand)
+            const retireSize = params.basePeakDemand * 0.01; // Retire smaller chunks
+
+            let newCapacity = 0;
+            let retiredCapacity = 0;
+
+            // Investment: Build if expected profit > risk-adjusted hurdle
+            // Simplified profit = forecastPrice - actualCONE (assume actualCONE = params.cone)
+            if (forecastPrice > investmentThreshold) {
+                newCapacity = buildSize * ((forecastPrice - investmentThreshold) / params.cone + 1); // Build more if profit margin is high
+                newCapacity = Math.min(newCapacity, buildSize * 3); // Cap build rate
+            }
+
+            // Retirement: Retire if price is below threshold
+            if (clearingPrice < retirementThreshold && installedCapacity > params.basePeakDemand * 0.8) { // Don't retire if already very low capacity
+                retiredCapacity = retireSize;
+            }
+
+            installedCapacity = installedCapacity + newCapacity - retiredCapacity;
+            installedCapacity = Math.max(params.basePeakDemand * 0.8, installedCapacity); // Floor capacity
+
+            // 4. Calculate reserve margin
+            const targetCapacity = params.basePeakDemand * (1 + params.targetReserveMargin);
+            const reserveMargin = (installedCapacity / targetCapacity) - 1;
+
+            // 5. Store results
+            sim.history.push({
+                year: currentYear,
+                price: clearingPrice,
+                capacity: installedCapacity,
+                reserveMargin: reserveMargin,
+                newCapacity: newCapacity,
+                retiredCapacity: retiredCapacity
+            });
+
+            // 6. Update state for next year
+            sim.state.year += 1;
+            sim.state.installedCapacity = installedCapacity;
+            sim.state.lastPrice = clearingPrice;
+        };
+
+        // Function to update charts
+        sim.updateCharts = (params) => {
+            const history = sim.history;
+            if (history.length === 0) return;
+
+            // Update scales
+            sim.priceX.domain([0, d3.max(history, d => d.year)]);
+            sim.priceY.domain([0, d3.max(history, d => d.price) * 1.1]); // Add headroom
+            sim.reserveX.domain(sim.priceX.domain());
+            // Set reserve margin Y domain symmetrically around target if possible, or based on data range
+            const targetReservePercent = params.targetReserveMargin * 100;
+            const reserveExtents = d3.extent(history, d => d.reserveMargin * 100);
+            const reserveRange = Math.max(Math.abs(reserveExtents[1] - targetReservePercent), Math.abs(reserveExtents[0] - targetReservePercent));
+            sim.reserveY.domain([targetReservePercent - reserveRange * 1.5, targetReservePercent + reserveRange * 1.5]);
+
+
+            // Update axes
+            sim.priceXAxis.call(d3.axisBottom(sim.priceX).ticks(Math.min(10, history.length)));
+            sim.priceYAxis.call(d3.axisLeft(sim.priceY).tickFormat(d3.format("~s")));
+            sim.reserveXAxis.call(d3.axisBottom(sim.reserveX).ticks(Math.min(10, history.length)));
+            sim.reserveYAxis.call(d3.axisLeft(sim.reserveY));
+
+            // Update lines
+            sim.pricePath.datum(history).attr("d", sim.priceLine);
+            sim.reservePath.datum(history).attr("d", sim.reserveLine);
+
+             // Update target line
+            sim.reserveTargetLine
+                .attr("x1", 0)
+                .attr("x2", sim.chartWidth)
+                .attr("y1", sim.reserveY(targetReservePercent))
+                .attr("y2", sim.reserveY(targetReservePercent));
+
+            // Add tooltips to points (using invisible circles)
+            const updateTooltip = (event, d, type) => {
+                sim.tooltip.transition().duration(200).style("opacity", .9);
+                let text;
+                if (type === 'price') {
+                    text = `Year: ${d.year}<br>Price: $${Math.round(d.price)}/MW-yr`;
+                } else {
+                    text = `Year: ${d.year}<br>Reserve: ${d3.format(".1%")(d.reserveMargin)}`;
+                }
+                sim.tooltip.html(text)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            };
+
+            const hideTooltip = () => {
+                sim.tooltip.transition().duration(500).style("opacity", 0);
+            };
+
+            sim.priceSvg.selectAll(".dot")
+                .data(history)
+                .join("circle")
+                .attr("class", "dot")
+                .attr("cx", d => sim.priceX(d.year))
+                .attr("cy", d => sim.priceY(d.price))
+                .attr("r", 3)
+                .style("fill", "steelblue")
+                .style("opacity", 0) // Make them invisible but hoverable
+                 .style("pointer-events", "all") // Ensure they capture events
+                .on("mouseover", (e, d) => updateTooltip(e, d, 'price'))
+                .on("mouseout", hideTooltip);
+
+            sim.reserveSvg.selectAll(".dot")
+                .data(history)
+                .join("circle")
+                 .attr("class", "dot")
+                .attr("cx", d => sim.reserveX(d.year))
+                .attr("cy", d => sim.reserveY(d.reserveMargin * 100))
+                .attr("r", 3)
+                .style("fill", "firebrick")
+                .style("opacity", 0) // Make them invisible but hoverable
+                .style("pointer-events", "all") // Ensure they capture events
+                .on("mouseover", (e, d) => updateTooltip(e, d, 'reserve'))
+                .on("mouseout", hideTooltip);
+        };
+
+         // Function to calculate summary stats
+         sim.calculateSummary = (params) => {
+            if (sim.history.length < 2) return "Not enough data.";
+
+            const prices = sim.history.map(d => d.price);
+            const reserves = sim.history.map(d => d.reserveMargin);
+
+            const avgPrice = d3.mean(prices);
+            const stdDevPrice = d3.deviation(prices);
+            const priceVolatility = stdDevPrice / avgPrice; // Coefficient of Variation
+
+            const avgReserve = d3.mean(reserves);
+            const stdDevReserve = d3.deviation(reserves);
+            const reserveRMSE = Math.sqrt(d3.mean(reserves, d => Math.pow(d - params.targetReserveMargin, 2))); // RMSE from target
+
+            return `
+                Avg Price: $${Math.round(avgPrice)}/MW-yr<br>
+                Price Volatility (StdDev/Avg): ${d3.format(".2f")(priceVolatility)}<br>
+                Avg Reserve Margin: ${d3.format(".1%")(avgReserve)} (Target: ${d3.format(".1%")(params.targetReserveMargin)})<br>
+                Reserve Margin StdDev: ${d3.format(".1%")(stdDevReserve)}<br>
+                Reserve Deviation from Target (RMSE): ${d3.format(".1%")(reserveRMSE)}
+            `;
+        };
+
+        // Function to run the full simulation
+        sim.runSimulation = () => {
+            sim.history = [];
+            const params = sim.getParams();
+
+            // Initialize state
+            sim.state = {
+                year: 1,
+                installedCapacity: params.basePeakDemand * (1 + params.targetReserveMargin * 1.05), // Start slightly above target
+                lastPrice: sim.getClearingPrice(params.basePeakDemand * (1 + params.targetReserveMargin * 1.05), params) // Initial price
+            };
+
+            for (let i = 0; i < params.years; i++) {
+                sim.runYear(params);
+            }
+            sim.updateCharts(params);
+            document.getElementById('sim-summary').innerHTML = `<strong>Simulation Results (${params.curveType}):</strong><br>` + sim.calculateSummary(params);
+
+        };
+
+        // Reset function
+        sim.resetSimulation = () => {
+            sim.history = [];
+            sim.updateCharts(sim.getParams()); // Clears charts
+            document.getElementById('sim-summary').innerHTML = "Run the simulation to see results.";
+             // Clear dots
+            sim.priceSvg.selectAll(".dot").remove();
+            sim.reserveSvg.selectAll(".dot").remove();
+
+        };
+
+        // Event listeners for simulation controls
+        document.getElementById('run-sim-button').addEventListener('click', sim.runSimulation);
+        document.getElementById('reset-sim-button').addEventListener('click', sim.resetSimulation);
+
+         // Handle resize for simulation charts
+         window.addEventListener('resize', () => {
+             sim.chartWidth = document.getElementById('price-chart').clientWidth - sim.margin.left - sim.margin.right;
+             sim.chartWidth = Math.max(sim.chartWidth, 250); // Min width
+
+             // Update Price Chart SVG and scales
+             sim.priceSvg.attr("width", sim.chartWidth + sim.margin.left + sim.margin.right);
+             sim.priceX.range([0, sim.chartWidth]);
+             sim.priceXAxis.attr("transform", `translate(0,${sim.chartHeight})`);
+             sim.priceSvg.selectAll("text[x^='sim.chartWidth/2']").attr("x", sim.chartWidth/2); // Update labels
+
+
+             // Update Reserve Chart SVG and scales
+             sim.reserveSvg.attr("width", sim.chartWidth + sim.margin.left + sim.margin.right);
+             sim.reserveX.range([0, sim.chartWidth]);
+             sim.reserveXAxis.attr("transform", `translate(0,${sim.chartHeight})`);
+             sim.reserveSvg.selectAll("text[x^='sim.chartWidth/2']").attr("x", sim.chartWidth/2); // Update labels
+
+             sim.updateCharts(sim.getParams()); // Redraw with new dimensions
+         });
+
+
+        // Initial state for summary
+         document.getElementById('sim-summary').innerHTML = "Configure parameters and run the simulation.";
+
+    </script>
+
+</body>
+</html>

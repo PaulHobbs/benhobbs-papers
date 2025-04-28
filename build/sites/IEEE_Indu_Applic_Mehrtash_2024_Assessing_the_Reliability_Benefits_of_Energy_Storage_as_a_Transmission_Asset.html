@@ -3,816 +3,951 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wires vs. Batteries: Upgrading Our Electric Grid</title>
-    <!-- Bootstrap CSS (via CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Energy Storage vs. Transmission Lines: A Reliability Deep Dive</title>
+    <style>
+        /* General Styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 900px;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+        h1 { font-size: 2.2em; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        h2 { font-size: 1.8em; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        h3 { font-size: 1.4em; }
+        p, li {
+            font-size: 1.05em;
+            margin-bottom: 1em;
+        }
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        code {
+            background-color: #ecf0f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        blockquote {
+            border-left: 4px solid #3498db;
+            margin-left: 0;
+            padding-left: 15px;
+            font-style: italic;
+            color: #555;
+        }
+        .caption {
+            font-size: 0.9em;
+            color: #777;
+            text-align: center;
+            margin-top: -0.5em;
+            margin-bottom: 1.5em;
+        }
+
+        /* Interactive Elements & Simulation Styling */
+        .interactive-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .controls { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; text-align: center;}
+        .controls label, .controls button { margin: 5px 10px; font-size: 0.95em; }
+        .controls button { padding: 8px 15px; cursor: pointer; background-color: #3498db; color: white; border: none; border-radius: 4px; transition: background-color 0.2s; }
+        .controls button:hover { background-color: #2980b9; }
+        .controls button.active { background-color: #2ecc71; }
+        .controls input[type=range] { vertical-align: middle; width: 150px;}
+
+        .simulation-container { display: flex; justify-content: space-around; align-items: flex-start; width: 100%; margin-top: 20px; flex-wrap: wrap; } /* Added flex-wrap */
+        .zone { border: 1px solid #aaa; padding: 15px; width: 38%; text-align: center; background-color: #fff; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); position: relative; height: 400px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 10px; min-width: 250px;} /* Added margin-bottom, min-width */
+        .transmission { width: 18%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 50px; min-width: 100px; margin-bottom: 10px;} /* Added margin-bottom, min-width */
+        .line { height: 10px; background-color: #666; width: 100%; margin: 10px 0; position: relative; overflow: hidden; border: 1px solid #333; }
+        .flow-dots { position: absolute; top: 0; left: -10px; width: 10px; height: 10px; background-color: cyan; border-radius: 50%; animation: flow 1s linear infinite; opacity: 0; }
+        @keyframes flow { 0% { left: -10px; } 100% { left: 100%; } }
+        .bar-container { display: flex; justify-content: space-around; align-items: flex-end; height: 180px; border: 1px solid #eee; margin-top: 10px; padding: 5px; position: relative; }
+        .bar { width: 35px; background-color: lightblue; margin: 0 5px; position: relative; transition: height 0.3s ease-out, background-color 0.3s ease-out; display: flex; align-items: flex-end; justify-content: center;}
+        .bar-label { font-size: 10px; writing-mode: vertical-rl; text-orientation: mixed; white-space: nowrap; position: absolute; bottom: 5px; color: rgba(0,0,0,0.7); }
+        .gen-bar { background-color: lightgreen; }
+        .load-bar { background-color: salmon; }
+        .storage-bar { background-color: gold; }
+        .shed-bar { background-color: red; opacity: 0.8; }
+        .storage-soc { width: 80%; height: 20px; border: 1px solid #ccc; margin: 10px auto; background: linear-gradient(to right, orange 0%, orange 100%, #eee 100%, #eee 100%); position: relative; }
+        .soc-label { font-size: 10px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: black; mix-blend-mode: difference; filter: grayscale(1) contrast(9); }
+        .metrics, .cost-metrics { margin-top: 15px; text-align: center; border: 1px solid #ccc; padding: 10px; width: 95%; background-color: #eee; border-radius: 4px; margin-left: auto; margin-right: auto; }
+        .metric-display { font-weight: bold; color: darkblue; }
+        .congestion-indicator { color: orangered; font-weight: bold; display: none; font-size: 0.9em; }
+        .outage-indicator { color: #e74c3c; font-weight: bold; display: none; font-size: 0.9em; margin-top: 5px; }
+        .tooltip { position: absolute; background-color: rgba(0,0,0,0.75); color: white; padding: 5px 8px; border-radius: 3px; font-size: 12px; display: none; white-space: nowrap; z-index: 10; pointer-events: none; }
+
+        /* MathJax Styling */
+        mjx-container { margin: 1em 0 !important; }
+
+    </style>
     <!-- MathJax Configuration -->
     <script>
         MathJax = {
           tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']],
-            processEscapes: true,
-            processEnvironments: true
+            inlineMath: [['\\(', '\\)']],
+            displayMath: [['$$', '$$']]
           },
-          options: {
-            skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          svg: {
+            fontCache: 'global'
           }
         };
-      </script>
-    <!-- MathJax Script -->
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
-    <!-- D3.js (via CDN) -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <!-- Custom CSS -->
-    <style>
-        body {
-            font-family: sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }
-        .container {
-            max-width: 900px;
-            margin-top: 2rem;
-            margin-bottom: 2rem;
-        }
-        h1, h2, h3 {
-            color: #2c3e50;
-            margin-top: 2em;
-            margin-bottom: 1em;
-        }
-        h1 { margin-top: 0; }
-        code {
-            background-color: #f8f9fa;
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        .interactive-viz {
-            border: 1px solid #ddd;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-radius: 5px;
-            background-color: #fdfdfd;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        input[type="range"] {
-            width: 100%;
-        }
-        .value-display {
-            font-weight: bold;
-            color: #0d6efd; /* Bootstrap primary color */
-        }
-        .explanation {
-            background-color: #e9ecef;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            margin-bottom: 1rem;
-        }
-        .term-link {
-            font-weight: bold;
-            color: #198754; /* Bootstrap success color */
-            text-decoration: none;
-        }
-        .term-link:hover {
-            text-decoration: underline;
-        }
-        svg {
-            display: block;
-            margin: auto;
-            font-family: sans-serif;
-        }
-        .node { fill: #69b3a2; stroke: #333; stroke-width: 1px; }
-        .link { stroke: #aaa; stroke-opacity: 0.6; }
-        .link-label { font-size: 10px; fill: #555; }
-        .zone-label { font-size: 12px; font-weight: bold; text-anchor: middle; }
-        .bar { fill: steelblue; }
-        .bar-label { fill: white; text-anchor: middle; font-size: 10px; }
-        .load-shed { fill: red; }
-        .storage-soc { fill: orange; }
-        .tooltip {
-            position: absolute;
-            text-align: center;
-            padding: 6px;
-            font: 12px sans-serif;
-            background: lightsteelblue;
-            border: 0px;
-            border-radius: 8px;
-            pointer-events: none;
-            opacity: 0;
-        }
-    </style>
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
 </head>
 <body>
-    <div class="container">
-        <h1>Wires vs. Batteries: Upgrading Our Electric Grid</h1>
-        <p class="lead">How do we decide between building new power lines or installing large batteries to make our electricity supply more reliable? This article explores a new way to compare these options, inspired by the paper "Assessing the Reliability Benefits of Energy Storage as a Transmission Asset."</p>
 
-        <div class="alert alert-info">
-            <strong>Key Idea:</strong> Energy storage (like giant batteries) can sometimes do the job of traditional transmission lines ("wires") in keeping the lights on, potentially faster and cheaper. But figuring out *when* and *how much* reliability they add requires careful analysis.
+    <h1>Keeping the Lights On: Storage vs. Wires</h1>
+    <p class="caption">An interactive exploration of the paper "Assessing the Reliability Benefits of Energy Storage as a Transmission Asset"</p>
+
+    <p>Imagine the power grid as a network of highways (transmission lines) connecting power plants (generators) to cities and factories (loads). Sometimes, these highways get congested, or a major power plant unexpectedly shuts down. When this happens, some areas might not get enough electricity, leading to blackouts. This is a reliability problem.</p>
+
+    <p>Traditionally, when a power highway consistently gets overloaded, the solution is to build a bigger highway – upgrade the transmission line. But what if there was another option? What if we could place large batteries strategically near the congested areas? These batteries, known as <a href="https://www.energy.gov/gdo/articles/storage-transmission-only-asset-satoa" target="_blank">Storage as Transmission-Only Assets (SATOA)</a>, could absorb excess power when the highway is clear and inject power when it's congested or when local generation fails, effectively acting like a temporary bypass or backup generator.</p>
+
+    <p>This article explores the core ideas from a research paper by Sehloff et al. that investigates how to fairly compare the reliability benefits of building new transmission lines versus installing these SATOA batteries. The challenge lies in the fact that traditional grid planning often focuses on the <em>cheapest</em> solution, which might not always be the <em>most reliable</em>, especially when considering the unique capabilities of energy storage.</p>
+
+    <h2>The Two-Stage Puzzle: Cost vs. Reliability</h2>
+
+    <p>The paper proposes a two-stage approach to tackle this comparison:</p>
+    <ol>
+        <li><strong>Stage 1: Expansion Planning (Finding the Cheapest Mix):</strong> Use a sophisticated optimization model (<a href="https://en.wikipedia.org/wiki/Operations_research" target="_blank">Operations Research</a> folks call this a Mixed-Integer Linear Program or MILP) to figure out the least-cost combination of new transmission lines and/or storage systems needed to meet future energy demands, considering investment costs and estimated operational costs. [2, 7, 13, 16, 17]</li>
+        <li><strong>Stage 2: Reliability Testing (Simulating the Storm):</strong> Take the grid design chosen in Stage 1 and put it through a rigorous stress test. Using <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method" target="_blank">Monte Carlo simulations</a>, model thousands of possible scenarios, including random power plant failures (outages), to see how often and how badly the system fails to deliver power. This calculates key reliability metrics. [4, 5, 8, 9, 10]</li>
+    </ol>
+    <p>Why two stages? Stage 1 is good at finding economically efficient plans based on <em>expected</em> conditions. But Stage 2 is crucial because reliability is about handling the <em>unexpected</em>. A plan that looks cheap on paper might crumble during rare but critical events (like multiple power plants failing during a heatwave). Storage, in particular, might offer unique reliability benefits during such events that aren't fully captured by simpler economic models.</p>
+
+    <h2>Stage 1: Minimizing the Bill</h2>
+    <p>The goal of the first stage is to minimize the total system cost over the planning horizon. This cost includes building new assets and operating the system. The optimization model, called JHSMINE in the paper, considers many factors, but the core idea is captured by this objective function:</p>
+
+    $$ \min \text{Total Cost} = \sum_{\text{years, scenarios}} (\text{Discounted Investment Cost} + \text{Discounted Operation Cost}) $$
+
+    Where:
+    <ul>
+        <li><strong>Investment Cost:</strong> The upfront cost of building new transmission lines or installing storage batteries.</li>
+        <li><strong>Operation Cost:</strong> The cost of running the power plants (fuel, maintenance), potentially including costs for load shedding if demand can't be met. [6, 11, 12, 14, 15]</li>
+        <li><strong>Discounting:</strong> Accounts for the time value of money (a dollar today is worth more than a dollar in the future).</li>
+    </ul>
+
+    <p>The model has to obey physical laws (power flow equations) and operational limits (line capacities, generator outputs, storage charge/discharge rates). It decides <em>which</em> candidate lines or storage units to build and <em>how large</em> they should be to minimize the total cost.</p>
+
+    <div class="interactive-section">
+        <h3>Interactive Cost Trade-off (Conceptual)</h3>
+        <p>While the real model is complex, let's explore the basic trade-off. Imagine we have a congested transmission path. We can either upgrade the transmission line (TEP) or install storage (SATOA). Adjust the sliders to see how relative costs might influence the cheapest decision. (Note: This is a simplified illustration; the real model considers operational savings too).</p>
+        <div class="controls" id="cost-tradeoff-controls">
+             <label for="line-cost-slider">Transmission Upgrade Cost ($M/MW):</label>
+             <input type="range" id="line-cost-slider" min="0.01" max="0.1" step="0.005" value="0.054"> <!-- Approx 80M / 1500MW -->
+             <span id="line-cost-display">$0.054 M/MW</span>
+             <br>
+             <label for="storage-cost-slider">Storage Cost ($M/MWh):</label>
+             <input type="range" id="storage-cost-slider" min="0.1" max="0.6" step="0.05" value="0.35">
+             <span id="storage-cost-display">$0.35 M/MWh</span>
+             <br>
+             <button onclick="updateCostComparison()">Recalculate Costs</button>
+        </div>
+         <div id="cost-comparison-chart" style="display: flex; justify-content: space-around; align-items: flex-end; height: 150px; border: 1px solid #eee; padding: 10px; background: white;">
+             <!-- Bars will be added here by JS -->
+         </div>
+         <p class="caption">Conceptual total cost comparison for addressing a 100 MW congestion issue with either a 100 MW line upgrade or a 100 MW / 400 MWh storage system. Assumes some fixed operational benefit for simplicity.</p>
+    </div>
+
+
+    <h2>Stage 2: Will It Hold Up? The Reliability Test</h2>
+    <p>Once Stage 1 proposes a potentially cost-effective grid design (e.g., "Upgrade line X" or "Install storage Y"), Stage 2 asks the critical question: How reliable is this design in the face of real-world uncertainty?</p>
+
+    <p>This stage uses a detailed simulation model (A-LEAF in the paper). It simulates the grid hour-by-hour for an entire year, many times over (Monte Carlo trials). In each simulated hour of each trial, key generators might randomly fail (go offline), mimicking real-world outages. The simulation then tries to operate the grid, respecting all limits:</p>
+    <ul>
+        <li>Can the remaining online generators meet the demand?</li>
+        <li>Are the transmission lines overloaded?</li>
+        <li>If storage is present (like SATOA), can it discharge to help meet demand or alleviate congestion? (Crucially, SATOA is modeled to <em>only</em> operate for transmission/reliability purposes, not for profiting from energy price differences).</li>
+        <li>If demand still cannot be met after using all available resources, how much <a href="https://en.wikipedia.org/wiki/Load_shedding" target="_blank">load shedding</a> (forced blackout) is required? [6, 11, 12, 14, 15]</li>
+    </ul>
+
+    <p>By running thousands of these simulated years, we get a statistical picture of the grid's reliability. Key metrics calculated include:</p>
+    <ul>
+        <li><strong><a href="https://en.wikipedia.org/wiki/Loss_of_load_expectation" target="_blank">Expected Unserved Energy (EUE)</a>:</strong> The average amount of energy (in Megawatt-hours, MWh) that couldn't be delivered to customers over a year due to system failures. Lower is better. [1, 3, 19, 20]</li>
+        <li><strong>Loss of Load Hours (LOLH):</strong> The average number of hours per year during which some customer load had to be shed. Lower is better. [1]</li>
+    </ul>
+
+    <div class="interactive-section">
+        <h3>Interactive Reliability Simulation</h3>
+        <p>Let's simulate a simplified two-zone system, similar to the paper's case study where Zone A has excess renewable generation potential and Zone B is a high-load area. We'll introduce a generator outage in Zone B during peak hours and see how different expansion plans perform.</p>
+        <p>Choose a scenario:
+            <ul>
+                <li><strong>Reference:</strong> The base grid with a potentially undersized transmission line.</li>
+                <li><strong>TEP (Transmission Expansion Planning):</strong> The transmission line between zones is upgraded (higher capacity).</li>
+                <li><strong>SATOA (Storage as Transmission-Only Asset):</strong> A large battery is installed in Zone B, usable only for reliability.</li>
+            </ul>
+        Watch the power flow, storage state (if present), and most importantly, the "Unserved Load" (load shedding) in Zone B. The cumulative "Total Unserved Energy" metric tracks the reliability performance over the simulated period.</p>
+
+        <div class="controls">
+          <h3>Scenario Selection & Simulation Control</h3>
+          <button id="btn-ref" onclick="setScenario('Reference')">Reference Case</button>
+          <button id="btn-tep" onclick="setScenario('TEP')">Transmission Upgrade (TEP)</button>
+          <button id="btn-satoa" onclick="setScenario('SATOA')">Storage (SATOA)</button>
+          <br>
+          <label>Current Scenario: <span id="current-scenario" class="metric-display">Reference</span></label>
+          <br>
+          <label>Simulation Time:</label>
+          <input type="range" id="time-slider" min="0" max="10" value="0" step="1" oninput="setTime(this.value)">
+          <span id="time-display">Hour 0</span>
+          <button onclick="togglePlay()">Play/Pause</button>
+          <span id="play-status">Paused</span>
+          <br>
+          <span class="outage-indicator" id="outage-indicator">MAJOR GENERATOR OUTAGE IN ZONE B!</span>
         </div>
 
-        <h2>The Grid Challenge: Bottlenecks and Blackouts</h2>
-        <p>Imagine the electric grid as a network of highways for electricity. Power plants generate electricity, and transmission lines carry it to cities and homes. Sometimes, just like highways during rush hour, transmission lines get congested. This happens when there's lots of cheap power (like wind or solar) in one area, but not enough line capacity to send it where it's needed.</p>
-        <p>This congestion can force us to use more expensive local power plants or even lead to <a href="https://en.wikipedia.org/wiki/Rolling_blackout" target="_blank" class="term-link">rolling blackouts</a> if demand is too high or if power plants unexpectedly fail (<a href="https://en.wikipedia.org/wiki/Forced_outage_(power_engineering)" target="_blank" class="term-link">forced outages</a>). To prevent this, grid planners need to upgrade the system.</p>
-
-        <h2>The Contenders: Wires vs. Batteries</h2>
-        <p>Traditionally, the solution to congestion is building more transmission lines – the "wires" approach. But this can be slow, expensive, and face public opposition.</p>
-        <p>Recently, large-scale battery storage has emerged as an alternative. A new concept called <strong class="term-link">SATOA (Storage as Transmission-Only Asset)</strong> allows batteries to be treated like transmission equipment. Instead of participating in energy markets, they specifically help relieve congestion or provide backup power during emergencies, acting *like* wires.</p>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Transmission Lines ("Wires")</h5>
-                        <p class="card-text">High-capacity pathways for electricity.</p>
-                        <ul>
-                            <li><strong>Pros:</strong> Move large amounts of power over long distances continuously.</li>
-                            <li><strong>Cons:</strong> Very expensive, take many years to build, require significant land.</li>
-                        </ul>
-                    </div>
-                </div>
+        <div class="simulation-container">
+          <div class="zone" id="zone-a">
+            <h3>Zone A (Exporting)</h3>
+            <div class="bar-container">
+              <div class="bar gen-bar" id="gen-a-local" data-label="Local Gen A"><span class="bar-label">Local Gen</span></div>
+              <div class="bar gen-bar" id="gen-a-export" data-label="Exporting Gen A"><span class="bar-label">Export</span></div>
+              <div class="bar load-bar" id="load-a" data-label="Load A"><span class="bar-label">Load</span></div>
+              <div class="tooltip" id="tooltip-a"></div>
             </div>
-            <div class="col-md-6">
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">Energy Storage ("Batteries" - SATOA)</h5>
-                        <p class="card-text">Store electricity for later use, specifically for grid support.</p>
-                        <ul>
-                            <li><strong>Pros:</strong> Faster deployment, flexible location, can provide quick power bursts.</li>
-                            <li><strong>Cons:</strong> Limited energy storage duration (e.g., 4 hours), cost, efficiency losses.</li>
-                        </ul>
-                    </div>
-                </div>
+            <div>Net Export: <span id="net-export-a" class="metric-display">0</span> MW</div>
+          </div>
+
+          <div class="transmission">
+            <h4>Transmission</h4>
+            <div class="line" id="transmission-line">
+              <div class="flow-dots" id="flow-dots"></div>
             </div>
+            <div>Capacity: <span id="line-capacity" class="metric-display">0</span> MW</div>
+            <div>Flow: <span id="line-flow" class="metric-display">0</span> MW</div>
+            <div class="congestion-indicator" id="congestion-indicator">CONGESTED!</div>
+          </div>
+
+          <div class="zone" id="zone-b">
+            <h3>Zone B (Importing)</h3>
+            <div class="bar-container">
+              <div class="bar gen-bar" id="gen-b-local" data-label="Local Gen B"><span class="bar-label">Local Gen</span></div>
+              <div class="bar load-bar" id="load-b" data-label="Load B"><span class="bar-label">Load</span></div>
+              <div class="bar storage-bar" id="storage-b-power" data-label="Storage Power"><span class="bar-label">Storage Discharge</span></div>
+              <div class="bar shed-bar" id="shed-b" data-label="Unserved Load"><span class="bar-label">Unserved</span></div>
+               <div class="tooltip" id="tooltip-b"></div>
+            </div>
+            <div id="storage-info" style="display: none;">
+              Storage SOC:
+              <div class="storage-soc" id="storage-b-soc">
+                  <span class="soc-label" id="soc-label-b">100%</span>
+              </div>
+              (<span id="storage-capacity-mwh">0</span> MWh Capacity)
+            </div>
+            <div>Net Import: <span id="net-import-b" class="metric-display">0</span> MW</div>
+            <div>Load Shed (This Hour): <span id="load-shed-b" class="metric-display">0</span> MW</div>
+          </div>
         </div>
 
-        <h2>How to Decide? A Two-Stage Approach</h2>
-        <p>Simply comparing the upfront cost isn't enough. We need to know how much each option *improves reliability* – its ability to prevent blackouts. The paper uses a sophisticated two-stage approach:</p>
-        <ol>
-            <li><strong>Stage 1: Least-Cost Expansion Planning (JHSMINE model).</strong> Find the cheapest mix of new wires and/or batteries needed to meet basic grid requirements, looking at simplified conditions (like the peak hour of each day).</li>
-            <li><strong>Stage 2: Probabilistic Reliability Assessment (A-LEAF model).</strong> Take the plan from Stage 1 and simulate its performance over a full year (8760 hours), hour by hour. This simulation includes *random* generator failures and detailed grid operations to see how often and how badly blackouts might occur.</li>
-        </ol>
-
-        <h3>Stage 1: Finding the Cheapest Plan</h3>
-        <p>The first stage uses a mathematical technique called <a href="https://en.wikipedia.org/wiki/Integer_programming" target="_blank" class="term-link">Mixed-Integer Linear Programming</a> (MILP) to find the lowest cost investment plan. The goal is to minimize the total system cost, which includes:</p>
-        <ul>
-            <li>Investment costs for new lines or storage.</li>
-            <li>Operational costs (fuel for power plants, maintenance).</li>
-        </ul>
-        <p>The model considers constraints like power flow physics (simplified DC power flow), limits on how much power lines can carry, and how storage operates (charging/discharging). The paper's objective function looks something like this (simplified):</p>
-        $$ \min \sum (\text{InvestmentCost} + \text{OperationalCost}) $$
-        <p>Subject to:</p>
-        <ul>
-            <li>Power Balance at each location (node): Power In = Power Out + Load</li>
-            <li>Line Flow Limits: Power flow $\le$ Line Capacity</li>
-            <li>Generation Limits: Power output $\le$ Generator Capacity</li>
-            <li>Storage Constraints: Energy stored, charge/discharge limits</li>
-        </ul>
-        <p>This stage identifies promising candidates for upgrades but doesn't capture the full picture of reliability under random events.</p>
-
-        <h3>Stage 2: Testing the Plan Under Stress</h3>
-        <p>This is where the real test happens. We take the grid design (with any new wires or batteries from Stage 1) and simulate its operation over thousands of hours. Crucially, this simulation uses a <a href="https://en.wikipedia.org/wiki/Monte_Carlo_method" target="_blank" class="term-link">Monte Carlo</a> approach:</p>
-        <ul>
-            <li><strong>Random Outages:</strong> In each hour, power plants have a chance of failing randomly (based on historical data and even weather conditions).</li>
-            <li><strong>Detailed Dispatch:</strong> The simulation figures out the cheapest way to generate power to meet demand, respecting line limits and storage capabilities *after* considering any outages. SATOA storage might only be used during these contingency events.</li>
-            <li><strong>Measuring Failure:</strong> If demand can't be met, the simulation records "unserved energy".</li>
-        </ul>
-        <p>By running many simulations (trials), we get statistical measures of reliability:</p>
-        <ul>
-            <li><strong class="term-link">EUE (Expected Unserved Energy):</strong> The average amount of energy (in Megawatt-hours, MWh) that couldn't be delivered over the year due to shortages. Lower is better.</li>
-            <li><strong class="term-link">LOLH (Loss of Load Hours):</strong> The average number of hours per year where *some* demand couldn't be met. Lower is better.</li>
-        </ul>
-
-        <h2>Interactive Simulation: The Bottleneck Problem</h2>
-        <p>Let's explore this with a simplified interactive simulation based on the paper's case study (a model of the Texas ERCOT grid). Imagine a scenario with three zones:</p>
-        <ul>
-            <li><strong>Zone 7 (Far West):</strong> Lots of cheap wind power, but limited transmission out.</li>
-            <li><strong>Zone 3 (Central):</strong> High demand (load) and the location for potential battery storage.</li>
-            <li><strong>Zone 4 (East):</strong> More demand and traditional power plants.</li>
-        </ul>
-        <p>The key bottleneck is the transmission line between Zone 7 and Zone 3. We can either upgrade this line (TEP - Transmission Expansion Planning) or add battery storage in Zone 3 (BEP - Battery Expansion Planning).</p>
-
-        <div class="interactive-viz">
-            <h4>Simplified Grid Reliability Simulation</h4>
-            <p>Adjust the upgrades and run the simulation to see the impact on reliability (preventing load shedding in Zone 3). The simulation runs for 24 hours, introducing random generator outages.</p>
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <label for="lineCapacitySlider">Line 7-3 Capacity (MW): <span id="lineCapacityValue" class="value-display">500</span> MW</label>
-                    <input type="range" id="lineCapacitySlider" min="200" max="2000" value="500" step="100">
-                    <small>(Base: 283 MW, TEP upgrade adds ~1500 MW)</small>
-                </div>
-                <div class="col-md-6">
-                    <label for="storageCapacitySlider">Storage in Zone 3 (MW): <span id="storageCapacityValue" class="value-display">0</span> MW</label>
-                    <input type="range" id="storageCapacitySlider" min="0" max="1500" value="0" step="100">
-                     <label for="storageDurationSlider">Storage Duration (Hours): <span id="storageDurationValue" class="value-display">4</span> h</label>
-                    <input type="range" id="storageDurationSlider" min="2" max="8" value="4" step="1">
-                </div>
-            </div>
-            <button id="runSimButton" class="btn btn-primary mb-3">Run 24hr Simulation</button>
-             <button id="resetSimButton" class="btn btn-secondary mb-3">Reset</button>
-            <div id="simulationGridViz"></div>
-            <div id="simulationOutput" class="mt-3">
-                <p>Simulation results will appear here.</p>
-                <div class="progress" style="height: 20px;">
-                  <div id="simProgressBar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-             <div class="explanation mt-3">
-                <strong>Simulation Notes:</strong> This is a highly simplified model. Real simulations involve many more zones, lines, generators, and complex operational rules. Outages are random. Storage (if added) primarily acts to reduce load shedding during high-demand/low-supply hours (simulating SATOA). It charges when Zone 3 has surplus cheap power.
-            </div>
+        <div class="metrics">
+           <h3>Reliability Metrics (Cumulative over simulation)</h3>
+           <label>Total Unserved Energy (Load Shed): <span id="total-unserved" class="metric-display">0</span> MWh</label>
         </div>
-
-        <h2>Case Study Results: What Did the Paper Find?</h2>
-        <p>The paper applied this two-stage method to the ERCOT-like system. Here's a summary of their findings when comparing the base case (no upgrades), upgrading the Zone 3-7 line (TEP), and adding different amounts of 4-hour storage in Zone 3 (BEP):</p>
-
-        <div class="interactive-viz">
-            <h4>Reliability Improvements (EUE & LOLH)</h4>
-            <p>Compare the Expected Unserved Energy (EUE) and Loss of Load Hours (LOLH) across different scenarios. Lower bars are better. Hover over bars for details. (Data based on paper Tables IV & V).</p>
-            <div class="row">
-                <div class="col-md-6">
-                    <h5>Expected Unserved Energy (EUE)</h5>
-                    <svg id="eueChart" width="400" height="300"></svg>
-                </div>
-                <div class="col-md-6">
-                    <h5>Loss of Load Hours (LOLH)</h5>
-                    <svg id="lolhChart" width="400" height="300"></svg>
-                </div>
-            </div>
-            <div class="tooltip" id="chartTooltip"></div>
+         <div class="cost-metrics">
+           <h3>Investment Costs (Illustrative Annualized)</h3>
+           <label>Scenario Cost: <span id="investment-cost" class="metric-display">$0</span> M</label>
+           <label>(Storage: <span id="storage-cost">$0</span> M, TEP: <span id="tep-cost">$0</span> M)</label>
+            <br>
+           <label>Cost per MWh Unserved Energy Reduced (vs Ref): <span id="cost-benefit" class="metric-display">N/A</span></label>
         </div>
-
-        <div class="interactive-viz">
-            <h4>Cost of Reliability</h4>
-            <p>How much does it cost to "buy" reliability? This chart shows the annualized investment cost divided by the reliability improvement (reduction in EUE) compared to the reference case. Lower bars indicate a more cost-effective improvement. (Data based on paper Fig 8 & Table VI).</p>
-             <svg id="costBenefitChart" width="800" height="350"></svg>
-             <div class="explanation mt-3">
-                <strong>Note:</strong> This only considers the *investment* cost. Transmission upgrades often provide additional *operational* cost savings (by allowing access to cheaper power) which SATOA typically doesn't, as it can't participate in energy markets. This comparison focuses purely on the cost to achieve the reliability benefit.
-            </div>
-        </div>
-
-        <h3>Key Takeaways from the Case Study:</h3>
-        <ul>
-            <li><strong>Transmission Wins (Overall):</strong> In this specific case, upgrading the transmission line (TEP) provided the largest reduction in both EUE and LOLH and was highly cost-effective. It completely eliminated unserved energy in the congested Zone 3.</li>
-            <li><strong>Storage is a Strong Contender:</strong> Large amounts of storage (e.g., 4h, 1500 MW) significantly improved reliability, approaching the benefits of the transmission line, although not quite matching it.</li>
-            <li><strong>Cost-Effectiveness Varies:</strong> While TEP was best overall, smaller storage installations offered comparable or even slightly better *cost per unit of reliability improvement* compared to the large transmission project. This suggests storage could be advantageous for smaller, targeted improvements or where large line projects are infeasible.</li>
-            <li><strong>Location Matters:</strong> The benefits are distributed differently. TEP helped Zone 3 significantly but slightly worsened reliability in other zones due to shifting power flows. Storage benefits were more localized.</li>
-        </ul>
-
-        <h2>Conclusion: A Sharper Tool for Grid Planning</h2>
-        <p>The paper demonstrates a valuable framework for comparing transmission lines and energy storage not just on upfront cost, but on their crucial contribution to grid reliability.</p>
-        <p>The key is the **two-stage approach**: using optimization to find good candidates (Stage 1) and then rigorously testing them with detailed, probabilistic simulations that account for random failures (Stage 2). This allows planners to quantify metrics like EUE and LOLH.</p>
-        <p>While traditional transmission upgrades might offer the biggest reliability bang in some cases, storage (especially SATOA) presents a viable, flexible, and potentially more cost-effective alternative for certain reliability needs. Having tools that accurately assess *both* economic and reliability dimensions is essential for building the resilient, clean energy grid of the future.</p>
 
     </div>
 
-    <!-- Inlined Javascript -->
+
+    <h2>Insights: The Value Proposition</h2>
+
+    <p>The paper's case study, based on a simplified Texas (ERCOT) grid model, revealed interesting findings:</p>
+    <ul>
+        <li>In their specific scenario with a major transmission bottleneck, the <strong>Transmission Expansion (TEP)</strong> provided the largest reduction in unserved energy (EUE) and was the most cost-effective overall solution identified by Stage 1.</li>
+        <li>However, large <strong>SATOA installations</strong> also significantly improved reliability, drastically reducing EUE compared to the reference case (doing nothing). In the simulation above, you likely observed SATOA preventing significant load shedding during the outage, albeit potentially at a higher investment cost than TEP in this example.</li>
+        <li>When considering the <strong>cost per unit of reliability improvement</strong> (e.g., dollars spent per MWh of EUE reduction), the paper found that while TEP was best overall, smaller storage installations offered improvements at costs that were becoming comparable to TEP. This suggests SATOA could be a very attractive option in situations where transmission upgrades are difficult, slow, or extremely expensive, or where incremental reliability improvements are needed.</li>
+    </ul>
+
+    <p>You can explore this cost-benefit trade-off in the simulation results above. Compare the "Total Unserved Energy" and "Investment Costs" for each scenario. The "Cost per MWh Unserved Energy Reduced" metric gives a direct comparison: how many dollars did we spend on the upgrade for each MWh of blackout we avoided, relative to doing nothing?</p>
+
+    <h2>Conclusion: A Fairer Comparison</h2>
+
+    <p>The core message is that evaluating energy storage purely on the basis of traditional, cost-focused transmission planning (like Stage 1 alone) can undervalue its contribution to grid reliability. By incorporating detailed probabilistic reliability assessments (Stage 2), planners can get a much clearer picture of how both transmission upgrades and storage solutions perform under stress.</p>
+
+    <p>This two-stage framework helps level the playing field, allowing for a quantitative comparison of the reliability benefits offered by wires and batteries. While the best solution depends heavily on the specific grid context (congestion severity, outage risks, costs), the research demonstrates that SATOA is a viable and potentially valuable tool for maintaining grid reliability, offering flexibility and potentially faster deployment compared to traditional transmission projects.</p>
+
+    <p>Future grids with higher amounts of variable renewables (like wind and solar) will likely need a diverse portfolio of solutions – including both robust transmission and strategically deployed energy storage – to keep the lights on reliably and affordably.</p>
+
+
+    <!-- JavaScript for Interactivity -->
     <script>
-        // --- Simulation Logic ---
-        const simulationGridViz = document.getElementById('simulationGridViz');
-        const simulationOutput = document.getElementById('simulationOutput');
-        const lineCapacitySlider = document.getElementById('lineCapacitySlider');
-        const storageCapacitySlider = document.getElementById('storageCapacitySlider');
-        const storageDurationSlider = document.getElementById('storageDurationSlider');
-        const lineCapacityValue = document.getElementById('lineCapacityValue');
-        const storageCapacityValue = document.getElementById('storageCapacityValue');
-        const storageDurationValue = document.getElementById('storageDurationValue');
-        const runSimButton = document.getElementById('runSimButton');
-        const resetSimButton = document.getElementById('resetSimButton');
-        const simProgressBar = document.getElementById('simProgressBar');
+      // --- Simulation Parameters ---
+      const PARAMS = {
+        zones: {
+          A: { baseLoad: 50, baseGen: 300 }, // Exporting zone
+          B: { baseLoad: 350, baseGen: 150, outageGenReduction: 100 } // Importing zone, loses 100MW in outage
+        },
+        transmission: {
+          baseCapacity: 150,
+          upgradeCapacity: 250 // TEP scenario increases capacity
+        },
+        storage: {
+          powerMW: 80, // SATOA scenario power capacity
+          energyMWh: 320 // 4-hour duration
+        },
+        costs: {
+          // Annualized illustrative costs
+          storagePerMWhAnnualized: 0.35 * 1000 / 8, // Example: 0.35M/MWh capital, 8 year life simple ann. -> ~44k / MWh-yr -> 0.044 M$/MWh-yr
+          tepFixedAnnualized: 10.0, // Example: ~80M capital / 8 year life -> 10 M$/yr
+          costBenefitBaselineUnserved: 0 // Will store reference case unserved energy here
+        },
+        simulation: {
+          durationHours: 10,
+          outageStartHour: 2,
+          outageEndHour: 7, // Outage lasts hours 2 through 6
+          timeStepMillis: 800 // Speed of simulation play
+        }
+      };
 
-        // Basic simulation parameters (highly simplified)
-        const zones = {
-            '7': { name: 'Zone 7 (West)', baseGen: 3000, baseLoad: 500, outageRate: 0.05, color: '#ff7f0e' }, // High Gen, Low Load
-            '3': { name: 'Zone 3 (Central)', baseGen: 1000, baseLoad: 2500, outageRate: 0.03, color: '#2ca02c' }, // Low Gen, High Load
-            '4': { name: 'Zone 4 (East)', baseGen: 2000, baseLoad: 1500, outageRate: 0.03, color: '#1f77b4' }  // Med Gen, Med Load
-        };
-        const links = {
-            '7-3': { source: '7', target: '3', baseCapacity: 283 }, // Bottleneck
-            '3-4': { source: '3', target: '4', baseCapacity: 3000 }
-        };
-        const hoursToSimulate = 24;
-        let simIntervalId = null;
-        let currentSimHour = 0;
-        let simResults = {};
+      // --- Simulation State ---
+      let state = {
+        currentTime: 0,
+        currentScenario: 'Reference', // Reference, TEP, SATOA
+        isPlaying: false,
+        intervalId: null,
+        generatorB_Online: true,
+        storageSOC_MWh: PARAMS.storage.energyMWh,
+        cumulativeUnservedEnergy: 0,
+        referenceUnservedEnergy: -1, // Store the reference case result
+        investmentCost: { storage: 0, tep: 0, total: 0 },
+        maxBarValue: 0 // Track max value for consistent bar scaling
+      };
 
-        // SVG setup for grid visualization
-        const svgWidth = 400;
-        const svgHeight = 250;
-        const nodeRadius = 20;
+      // --- DOM Elements ---
+      const DOMElements = {
+        timeSlider: document.getElementById('time-slider'),
+        timeDisplay: document.getElementById('time-display'),
+        playStatus: document.getElementById('play-status'),
+        currentScenario: document.getElementById('current-scenario'),
+        scenarioButtons: {
+            Reference: document.getElementById('btn-ref'),
+            TEP: document.getElementById('btn-tep'),
+            SATOA: document.getElementById('btn-satoa')
+        },
+        outageIndicator: document.getElementById('outage-indicator'),
+        // Zone A
+        genALocal: document.getElementById('gen-a-local'),
+        genAExport: document.getElementById('gen-a-export'),
+        loadA: document.getElementById('load-a'),
+        netExportA: document.getElementById('net-export-a'),
+        tooltipA: document.getElementById('tooltip-a'),
+        // Transmission
+        transmissionLine: document.getElementById('transmission-line'),
+        flowDots: document.getElementById('flow-dots'),
+        lineCapacity: document.getElementById('line-capacity'),
+        lineFlow: document.getElementById('line-flow'),
+        congestionIndicator: document.getElementById('congestion-indicator'),
+        // Zone B
+        genBLocal: document.getElementById('gen-b-local'),
+        loadB: document.getElementById('load-b'),
+        storageBPower: document.getElementById('storage-b-power'),
+        shedB: document.getElementById('shed-b'),
+        storageInfo: document.getElementById('storage-info'),
+        storageBSOC: document.getElementById('storage-b-soc'),
+        socLabelB: document.getElementById('soc-label-b'),
+        storageCapacityMWh: document.getElementById('storage-capacity-mwh'),
+        netImportB: document.getElementById('net-import-b'),
+        loadShedB: document.getElementById('load-shed-b'),
+        tooltipB: document.getElementById('tooltip-b'),
+        // Metrics
+        totalUnserved: document.getElementById('total-unserved'),
+        investmentCost: document.getElementById('investment-cost'),
+        storageCost: document.getElementById('storage-cost'),
+        tepCost: document.getElementById('tep-cost'),
+        costBenefit: document.getElementById('cost-benefit'),
+        // Cost tradeoff
+        lineCostSlider: document.getElementById('line-cost-slider'),
+        lineCostDisplay: document.getElementById('line-cost-display'),
+        storageCostSlider: document.getElementById('storage-cost-slider'),
+        storageCostDisplay: document.getElementById('storage-cost-display'),
+        costComparisonChart: document.getElementById('cost-comparison-chart')
+      };
 
-        const svg = d3.select("#simulationGridViz").append("svg")
-            .attr("width", svgWidth)
-            .attr("height", svgHeight);
+       // --- Tooltip Logic ---
+      function setupTooltips() {
+          const barContainers = document.querySelectorAll('.bar-container');
+          barContainers.forEach(container => {
+              const tooltip = container.querySelector('.tooltip'); // Find tooltip within the same zone/container
+              if (!tooltip) return;
 
-        // Tooltip for SVG
-        const vizTooltip = d3.select("body").append("div")
-            .attr("class", "tooltip")
-            .attr("id", "vizTooltip");
+              container.addEventListener('mousemove', (e) => {
+                  const bar = e.target.closest('.bar');
+                  if (bar && bar.dataset.label) {
+                      const value = parseFloat(bar.style.height) || 0; // Get height
+                      const maxValue = state.maxBarValue;
+                      // Avoid division by zero if maxValue is 0
+                      const actualValue = maxValue > 0 ? (value / 180) * maxValue : 0; // Convert height back to MW/MWh
+                      const unit = bar.id.includes("shed") ? "MW (Load Shed)" : "MW";
+                      tooltip.textContent = `${bar.dataset.label}: ${actualValue.toFixed(0)} ${unit}`;
+                      tooltip.style.display = 'block';
 
-        function drawInitialGrid() {
-             svg.selectAll("*").remove(); // Clear previous drawing
+                      // Position tooltip near mouse, adjusted for container bounds
+                      const rect = container.getBoundingClientRect();
+                      // const bodyRect = document.body.getBoundingClientRect(); // Not needed if positioning relative to container
+                      let x = e.clientX - rect.left + 10;
+                      let y = e.clientY - rect.top - 30; // Position above cursor
 
-            const nodePositions = {
-                '7': { x: svgWidth * 0.2, y: svgHeight / 2 },
-                '3': { x: svgWidth * 0.5, y: svgHeight / 2 },
-                '4': { x: svgWidth * 0.8, y: svgHeight / 2 }
-            };
+                      // Prevent tooltip from going off container edges
+                      if (x + tooltip.offsetWidth > rect.width) {
+                          x = rect.width - tooltip.offsetWidth - 5;
+                      }
+                      if (y < 0) { y = 5; }
+                      if (x < 0) { x = 5; }
 
-            // Draw links first
-            svg.append("g").selectAll("line")
-                .data(Object.keys(links))
-                .enter().append("line")
-                .attr("class", "link")
-                .attr("id", d => `link-${d}`)
-                .attr("x1", d => nodePositions[links[d].source].x)
-                .attr("y1", d => nodePositions[links[d].source].y)
-                .attr("x2", d => nodePositions[links[d].target].x)
-                .attr("y2", d => nodePositions[links[d].target].y)
-                .attr("stroke-width", 3); // Initial width
+                      tooltip.style.left = `${x}px`;
+                      tooltip.style.top = `${y}px`;
+                  } else {
+                      tooltip.style.display = 'none'; // Hide if not hovering over a bar
+                  }
+              });
 
-            // Draw nodes
-            const nodeGroup = svg.append("g").selectAll("g")
-                .data(Object.keys(zones))
-                .enter().append("g")
-                 .attr("transform", d => `translate(${nodePositions[d].x},${nodePositions[d].y})`);
-
-            nodeGroup.append("circle")
-                .attr("class", "node")
-                .attr("id", d => `node-${d}`)
-                .attr("r", nodeRadius)
-                .attr("fill", d => zones[d].color)
-                 .on("mouseover", (event, d) => {
-                    const nodeData = simResults.hourly?.[currentSimHour]?.zones[d];
-                    if (!nodeData) return;
-                    vizTooltip.transition().duration(200).style("opacity", .9);
-                    vizTooltip.html(`<strong>${zones[d].name}</strong><br/>
-                                     Load: ${nodeData.load.toFixed(0)} MW<br/>
-                                     Gen Avail: ${nodeData.availableGen.toFixed(0)} MW<br/>
-                                     Gen Dispatch: ${nodeData.dispatchedGen.toFixed(0)} MW<br/>
-                                     Shed: ${nodeData.loadShed.toFixed(0)} MW<br/>
-                                     ${nodeData.storageSoC !== undefined ? `Storage: ${nodeData.storageSoC.toFixed(0)} MWh` : ''}`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", () => {
-                    vizTooltip.transition().duration(500).style("opacity", 0);
-                });
+              container.addEventListener('mouseleave', () => {
+                  tooltip.style.display = 'none'; // Hide when mouse leaves container
+              });
+          });
+      }
 
 
-            nodeGroup.append("text")
-                .attr("dy", "0.3em")
-                .attr("class", "zone-label")
-                .attr("fill", "white")
-                .text(d => d);
+      // --- Simulation Logic ---
+      function runSimulationStep() {
+        // 1. Determine current conditions
+        const hour = state.currentTime;
+        const isOutage = hour >= PARAMS.simulation.outageStartHour && hour < PARAMS.simulation.outageEndHour;
+        state.generatorB_Online = !isOutage;
 
-            // Add initial status text
-             svg.append("text")
-                .attr("id", "simStatusText")
-                .attr("x", 10)
-                .attr("y", 20)
-                .attr("font-size", "12px")
-                .text("Status: Ready");
+        // Simple load variation (cosine peak during outage period)
+        const peakTime = (PARAMS.simulation.outageStartHour + PARAMS.simulation.outageEndHour) / 2;
+        const loadFactor = 1 + 0.3 * Math.cos(Math.PI * (hour - peakTime) / (PARAMS.simulation.durationHours / 1.5));
+        const currentLoadA = PARAMS.zones.A.baseLoad * loadFactor;
+        const currentLoadB = PARAMS.zones.B.baseLoad * loadFactor;
 
-            svg.append("text")
-                .attr("id", "simHourText")
-                .attr("x", svgWidth - 50)
-                .attr("y", 20)
-                .attr("font-size", "12px")
-                .attr("text-anchor", "middle")
-                .text("Hour: 0");
+        // Available Generation
+        const availableGenA = PARAMS.zones.A.baseGen;
+        const availableGenB = state.generatorB_Online ? PARAMS.zones.B.baseGen : (PARAMS.zones.B.baseGen - PARAMS.zones.B.outageGenReduction);
+
+        // Transmission Capacity based on scenario
+        let currentLineCapacity = PARAMS.transmission.baseCapacity;
+        if (state.currentScenario === 'TEP') {
+          currentLineCapacity = PARAMS.transmission.upgradeCapacity;
+        }
+
+        // Storage Availability (SATOA scenario only)
+        let storageDischargeMW = 0;
+        if (state.currentScenario === 'SATOA') {
+            // SATOA Logic: Only discharge if needed for reliability *after* maximizing imports
+            // Calculate Zone B deficit *before* considering storage
+            let deficitB_before_storage = Math.max(0, currentLoadB - availableGenB);
+            let maxPossibleImport = Math.min(deficitB_before_storage, availableGenA - Math.min(availableGenA, currentLoadA), currentLineCapacity);
+            let deficitB_after_import = Math.max(0, deficitB_before_storage - maxPossibleImport);
+
+            if (deficitB_after_import > 0 && state.storageSOC_MWh > 0) {
+                const maxDischargeFromPower = PARAMS.storage.powerMW;
+                const maxDischargeFromEnergy = state.storageSOC_MWh; // Can discharge max 1hr energy content in one step
+                storageDischargeMW = Math.min(deficitB_after_import, maxDischargeFromPower, maxDischargeFromEnergy);
+
+                // Update SOC
+                state.storageSOC_MWh -= storageDischargeMW; // Assuming 1-hour step
+                state.storageSOC_MWh = Math.max(0, state.storageSOC_MWh);
+            }
+             // SATOA does not charge from grid in this simple model
+        }
+
+        // 2. Dispatch Calculation (Simplified Balancing)
+        let genA_LocalUse = Math.min(availableGenA, currentLoadA);
+        let genA_AvailableForExport = availableGenA - genA_LocalUse;
+
+        // Zone B needs: Load - Local Gen - Storage Discharge
+        let netLoadB = currentLoadB - storageDischargeMW; // Storage helps meet load locally first
+        let neededImportB = Math.max(0, netLoadB - availableGenB);
+
+        // Actual import is limited by export availability and line capacity
+        let actualImportB = Math.min(neededImportB, genA_AvailableForExport, currentLineCapacity);
+
+        // Remaining deficit in B is load shedding
+        let loadShedB = Math.max(0, neededImportB - actualImportB);
+
+        // Final Generation assignments
+        let genA_ExportUse = actualImportB;
+        let genB_LocalUse = availableGenB; // Assume all available local gen is used
+
+        // Update cumulative metrics (assuming 1-hour steps)
+        // Only add if this is part of a continuous run or the initial calculation for setTime
+        if (state.isPlaying || (state.currentTime > 0 && state.currentTime === parseInt(DOMElements.timeSlider.value))) {
+             state.cumulativeUnservedEnergy += loadShedB;
+        } else if (state.currentTime === 0) { // Reset cumulative for the very first step of setTime
+             state.cumulativeUnservedEnergy = loadShedB;
         }
 
 
-        function updateSimulationViz(hourData) {
-            if (!hourData) return;
+        // Update max value for bar scaling dynamically
+        state.maxBarValue = Math.max(state.maxBarValue, availableGenA, currentLoadA, availableGenB + currentLineCapacity + (state.currentScenario === 'SATOA' ? PARAMS.storage.powerMW : 0), currentLoadB );
 
-            // Update node appearance (e.e.g., indicate load shedding)
-            Object.keys(zones).forEach(zoneId => {
-                const node = svg.select(`#node-${zoneId}`);
-                const zoneData = hourData.zones[zoneId];
-                node.attr("stroke", zoneData.loadShed > 1 ? "red" : "#333") // Thicker red border if load shed
-                   .attr("stroke-width", zoneData.loadShed > 1 ? 3 : 1);
-            });
+        // 3. Update Visuals
+        updateVisuals({
+          hour, isOutage, currentLoadA, currentLoadB,
+          genA_LocalUse, genA_ExportUse, availableGenA,
+          genB_LocalUse, availableGenB,
+          actualImportB, currentLineCapacity,
+          storageDischargeMW, loadShedB,
+          socMWh: state.storageSOC_MWh,
+          maxBarValue: state.maxBarValue
+        });
+      }
 
-             // Update link appearance (loading)
-            Object.keys(links).forEach(linkId => {
-                const link = svg.select(`#link-${linkId}`);
-                const linkData = hourData.links[linkId];
-                const capacity = linkData.capacity;
-                const flow = Math.abs(linkData.flow);
-                const loading = capacity > 0 ? Math.min(flow / capacity, 1.0) : 0; // Cap at 100%
+      // --- Visual Update Logic ---
+     function updateVisuals(data) {
+        DOMElements.timeDisplay.textContent = `Hour ${data.hour}`;
+        DOMElements.outageIndicator.style.display = data.isOutage ? 'inline' : 'none';
 
-                link.attr("stroke-width", 2 + loading * 6) // Width indicates loading
-                    .attr("stroke", loading > 0.95 ? "orange" : (loading > 0.8 ? "#d62728" : "#aaa")); // Color indicates high loading
-            });
+        // Scaling - use dynamic max value for consistent bar height across steps/scenarios
+        const maxBarHeight = 180; // px in CSS bar-container height
+        const scaleFactor = data.maxBarValue > 0 ? maxBarHeight / data.maxBarValue : 0;
 
-            // Update status text
-             svg.select("#simStatusText").text(`Status: Running`);
-             svg.select("#simHourText").text(`Hour: ${currentSimHour + 1}`);
+        // Zone A Bars
+        DOMElements.genALocal.style.height = `${Math.max(0, data.genA_LocalUse * scaleFactor)}px`;
+        DOMElements.genAExport.style.height = `${Math.max(0, data.genA_ExportUse * scaleFactor)}px`;
+        DOMElements.loadA.style.height = `${Math.max(0, data.currentLoadA * scaleFactor)}px`;
+        DOMElements.netExportA.textContent = data.genA_ExportUse.toFixed(0);
+
+        // Transmission Visuals
+        DOMElements.lineCapacity.textContent = data.currentLineCapacity.toFixed(0);
+        DOMElements.lineFlow.textContent = data.actualImportB.toFixed(0);
+        const isCongested = data.actualImportB >= data.currentLineCapacity * 0.999; // Check for congestion
+        DOMElements.congestionIndicator.style.display = isCongested ? 'block' : 'none';
+        DOMElements.transmissionLine.style.backgroundColor = isCongested ? 'orangered' : '#666';
+        // Flow animation dots
+        DOMElements.flowDots.style.opacity = data.actualImportB > 5 ? '1' : '0';
+        if (data.currentLineCapacity > 0) {
+            DOMElements.flowDots.style.animationDuration = `${Math.max(0.2, 1.5 - (data.actualImportB / data.currentLineCapacity) * 1.3)}s`;
+        } else {
+             DOMElements.flowDots.style.opacity = '0';
         }
 
 
-        function runSimulationStep() {
-            if (currentSimHour >= hoursToSimulate) {
-                clearInterval(simIntervalId);
-                simIntervalId = null;
-                finalizeSimulation();
-                runSimButton.disabled = false;
+        // Zone B Bars
+        DOMElements.genBLocal.style.height = `${Math.max(0, data.genB_LocalUse * scaleFactor)}px`;
+        DOMElements.genBLocal.style.backgroundColor = data.isOutage ? 'lightcoral' : 'lightgreen'; // Indicate outage visually
+        DOMElements.loadB.style.height = `${Math.max(0, data.currentLoadB * scaleFactor)}px`;
+        DOMElements.storageBPower.style.height = `${Math.max(0, data.storageDischargeMW * scaleFactor)}px`;
+        DOMElements.shedB.style.height = `${Math.max(0, data.loadShedB * scaleFactor)}px`;
+        DOMElements.netImportB.textContent = data.actualImportB.toFixed(0);
+        DOMElements.loadShedB.textContent = data.loadShedB.toFixed(0);
+
+        // Storage Visuals (only if SATOA)
+        const isSATOA = state.currentScenario === 'SATOA';
+        DOMElements.storageInfo.style.display = isSATOA ? 'block' : 'none';
+        DOMElements.storageBPower.style.display = isSATOA ? 'flex' : 'none'; // Use flex for label alignment
+        if (isSATOA) {
+            const socPercent = (data.socMWh / PARAMS.storage.energyMWh) * 100;
+            DOMElements.storageBSOC.style.background = `linear-gradient(to right, orange ${socPercent}%, #eee ${socPercent}%)`;
+            DOMElements.socLabelB.textContent = `${socPercent.toFixed(0)}%`;
+            DOMElements.storageCapacityMWh.textContent = PARAMS.storage.energyMWh;
+        }
+
+        // Metrics Update
+        DOMElements.totalUnserved.textContent = state.cumulativeUnservedEnergy.toFixed(1);
+        DOMElements.investmentCost.textContent = `$${state.investmentCost.total.toFixed(1)}`;
+        DOMElements.storageCost.textContent = `$${state.investmentCost.storage.toFixed(1)}`;
+        DOMElements.tepCost.textContent = `$${state.investmentCost.tep.toFixed(1)}`;
+
+        // Cost-Benefit Calculation (only update at the end of simulation or when changing scenario)
+        if(state.currentTime === PARAMS.simulation.durationHours || state.referenceUnservedEnergy >= 0) {
+             updateCostBenefit();
+        } else {
+            DOMElements.costBenefit.textContent = "Calculating...";
+        }
+     }
+
+      // --- Control Functions ---
+      function setTime(value) {
+        const targetTime = parseInt(value);
+        if (state.isPlaying) {
+            togglePlay(); // Pause if playing
+        }
+        state.currentTime = targetTime;
+        DOMElements.timeSlider.value = targetTime;
+
+        // Rerun simulation from start up to this point to update cumulative metrics correctly
+        resetSimulationState(false); // Soft reset: keep scenario, reset metrics/SOC
+        for (let i = 0; i <= targetTime; i++) {
+            const tempCurrentTime = state.currentTime; // Store target time
+            state.currentTime = i; // Set time for the step calculation
+            runSimulationStep(); // Run step i
+            // Accumulate unserved energy correctly during this recalculation loop
+            if (i > 0) {
+                // Get the load shed calculated in the *current* step (i)
+                const currentShed = parseFloat(DOMElements.loadShedB.textContent);
+                state.cumulativeUnservedEnergy += currentShed;
+            } else {
+                 // For step 0, initialize cumulative energy
+                 state.cumulativeUnservedEnergy = parseFloat(DOMElements.loadShedB.textContent);
+            }
+            state.currentTime = tempCurrentTime; // Restore target time
+        }
+        // Final visual update for the selected time step (runSimulationStep already called in loop)
+        // Need to manually update the cumulative display one last time after the loop
+        DOMElements.totalUnserved.textContent = state.cumulativeUnservedEnergy.toFixed(1);
+        updateCostBenefit(); // Update cost benefit based on final cumulative value
+      }
+
+
+      function togglePlay() {
+        if (state.isPlaying) {
+          clearInterval(state.intervalId);
+          state.isPlaying = false;
+          DOMElements.playStatus.textContent = 'Paused';
+        } else {
+          if (state.currentTime >= PARAMS.simulation.durationHours) { // Use >= to handle edge case
+              setTime(0); // Restart if at the end
+          }
+          state.isPlaying = true;
+          DOMElements.playStatus.textContent = 'Playing';
+          // Run first step immediately
+          advanceTimeStep();
+          // Then set interval
+          state.intervalId = setInterval(advanceTimeStep, PARAMS.simulation.timeStepMillis);
+        }
+      }
+
+       function advanceTimeStep() {
+            let nextTime = state.currentTime + 1;
+            if (nextTime > PARAMS.simulation.durationHours) {
+              // Reached end
+              clearInterval(state.intervalId);
+              state.isPlaying = false;
+              DOMElements.playStatus.textContent = 'Finished';
+              updateCostBenefit(); // Final cost-benefit calc
+              return; // Stop interval
+            }
+            // Don't use setTime as it recalculates everything from scratch
+            state.currentTime = nextTime;
+            DOMElements.timeSlider.value = state.currentTime;
+            // Get previous cumulative energy before running the step
+            const prevCumulative = state.cumulativeUnservedEnergy;
+            runSimulationStep(); // Run simulation for the new step
+            // Add the newly calculated shed for *this* step to the previous total
+            const currentShed = parseFloat(DOMElements.loadShedB.textContent);
+            state.cumulativeUnservedEnergy = prevCumulative + currentShed;
+            DOMElements.totalUnserved.textContent = state.cumulativeUnservedEnergy.toFixed(1); // Update display
+       }
+
+
+     function resetSimulationState(fullReset = true) {
+         state.currentTime = 0;
+         state.generatorB_Online = true;
+         state.storageSOC_MWh = PARAMS.storage.energyMWh; // Reset SOC fully
+         state.cumulativeUnservedEnergy = 0;
+         state.maxBarValue = 0; // Reset max scale value
+
+         // Update investment costs based on current scenario
+         state.investmentCost = { storage: 0, tep: 0, total: 0 };
+         if (state.currentScenario === 'SATOA') {
+             state.investmentCost.storage = PARAMS.storage.energyMWh * PARAMS.costs.storagePerMWhAnnualized;
+         } else if (state.currentScenario === 'TEP') {
+             state.investmentCost.tep = PARAMS.costs.tepFixedAnnualized;
+         }
+         state.investmentCost.total = state.investmentCost.storage + state.investmentCost.tep;
+
+         // If it's a full reset (changing scenario), clear the reference energy
+         // Otherwise (soft reset for setTime), keep the reference energy if it exists
+         if (fullReset) {
+             state.referenceUnservedEnergy = -1;
+         }
+     }
+
+      function setScenario(scenarioName) {
+        if (state.isPlaying) {
+            togglePlay(); // Pause before changing scenario
+        }
+        state.currentScenario = scenarioName;
+        DOMElements.currentScenario.textContent = scenarioName;
+
+        // Update button styles
+        Object.values(DOMElements.scenarioButtons).forEach(btn => btn.classList.remove('active'));
+        DOMElements.scenarioButtons[scenarioName].classList.add('active');
+
+        resetSimulationState(true); // Full reset when changing scenario
+
+        // If setting to Reference, run the full simulation silently to get baseline EUE
+        if (scenarioName === 'Reference') {
+            runFullSimulationForReference(() => {
+                 setTime(0); // Go back to start and update visuals *after* reference calc is done
+                 console.log(`Scenario set to: ${scenarioName}`);
+            });
+        } else {
+             // For other scenarios, just reset to time 0 and update visuals
+             setTime(0);
+             console.log(`Scenario set to: ${scenarioName}`);
+             // Ensure cost-benefit is updated relative to known reference (if available)
+             updateCostBenefit();
+        }
+      }
+
+      function runFullSimulationForReference(callback) {
+          if (state.currentScenario !== 'Reference') {
+              if(callback) callback();
+              return;
+          }
+          console.log("Running full simulation for Reference baseline...");
+          // Temporarily store current time and reset state for calculation
+          const originalTime = state.currentTime;
+          resetSimulationState(true); // Ensure clean state for calculation
+
+          let tempCumulativeUnserved = 0;
+          for (let i = 0; i <= PARAMS.simulation.durationHours; i++) {
+              state.currentTime = i; // Set time for the step calculation
+              runSimulationStep(); // Run step i
+              // Accumulate unserved energy correctly during this calculation loop
+              const currentShed = parseFloat(DOMElements.loadShedB.textContent);
+              tempCumulativeUnserved += currentShed;
+          }
+          state.referenceUnservedEnergy = tempCumulativeUnserved;
+          console.log(`Reference Unserved Energy: ${state.referenceUnservedEnergy.toFixed(1)} MWh`);
+
+          // Restore original time and state (but keep reference value)
+          state.currentTime = originalTime;
+          resetSimulationState(false); // Soft reset to keep reference value
+
+          // Execute the callback (e.g., setTime(0))
+          if(callback) callback();
+      }
+
+       function updateCostBenefit() {
+            // Ensure the cumulative energy for the *current* state is up-to-date
+            // This might be slightly off if called right after setTime before the final update
+            // Let's recalculate it just to be safe, based on the current time slider value
+            let currentCumulative = 0;
+            const targetTime = state.currentTime;
+            const tempSOC = state.storageSOC_MWh; // Store SOC
+            const tempGenB = state.generatorB_Online; // Store Gen B state
+            const tempMaxBar = state.maxBarValue; // Store max bar value
+
+            // Recalculate cumulative energy up to current time without modifying state permanently
+            for (let i = 0; i <= targetTime; i++) {
+                // Simulate step i without altering main state's SOC etc. beyond this loop
+                const hour = i;
+                const isOutage = hour >= PARAMS.simulation.outageStartHour && hour < PARAMS.simulation.outageEndHour;
+                const generatorB_Online_temp = !isOutage;
+
+                const peakTime = (PARAMS.simulation.outageStartHour + PARAMS.simulation.outageEndHour) / 2;
+                const loadFactor = 1 + 0.3 * Math.cos(Math.PI * (hour - peakTime) / (PARAMS.simulation.durationHours / 1.5));
+                const currentLoadA = PARAMS.zones.A.baseLoad * loadFactor;
+                const currentLoadB = PARAMS.zones.B.baseLoad * loadFactor;
+                const availableGenA = PARAMS.zones.A.baseGen;
+                const availableGenB = generatorB_Online_temp ? PARAMS.zones.B.baseGen : (PARAMS.zones.B.baseGen - PARAMS.zones.B.outageGenReduction);
+                let currentLineCapacity = PARAMS.transmission.baseCapacity;
+                if (state.currentScenario === 'TEP') {
+                  currentLineCapacity = PARAMS.transmission.upgradeCapacity;
+                }
+                let storageDischargeMW_temp = 0;
+                // Simplified SOC tracking for this calculation only
+                let tempSOC_MWh_calc = (i === 0) ? PARAMS.storage.energyMWh : state.storageSOC_MWh; // Use actual state SOC as starting point if i>0? No, needs full recalc. Let's skip storage impact in this quick recalc for simplicity, it's mainly for getting shed.
+                // Or better: just use the displayed shed value if possible? No, run the calc.
+
+                let genA_LocalUse = Math.min(availableGenA, currentLoadA);
+                let genA_AvailableForExport = availableGenA - genA_LocalUse;
+                let netLoadB = currentLoadB; // Ignore storage discharge for this simple recalc
+                let neededImportB = Math.max(0, netLoadB - availableGenB);
+                let actualImportB = Math.min(neededImportB, genA_AvailableForExport, currentLineCapacity);
+                let loadShedB_calc = Math.max(0, neededImportB - actualImportB);
+                // Re-introduce storage impact (approximate) - if SATOA, reduce shed by storage power if needed
+                 if (state.currentScenario === 'SATOA' && loadShedB_calc > 0) {
+                     // This needs proper SOC tracking, making this recalc complex.
+                     // Let's rely on state.cumulativeUnservedEnergy being updated correctly by setTime and advanceTimeStep instead.
+                     // If issues persist, a more robust state snapshot/restore mechanism or event-based update is needed.
+                     // For now, assume state.cumulativeUnservedEnergy is correct.
+                     loadShedB_calc = parseFloat(DOMElements.loadShedB.textContent); // Fallback: use last displayed value for this hour
+                 }
+
+
+                currentCumulative += loadShedB_calc; // Use the calculated shed for this step
+            }
+             // Restore state variables that might have been touched if we ran full runSimulationStep
+             state.storageSOC_MWh = tempSOC;
+             state.generatorB_Online = tempGenB;
+             state.maxBarValue = tempMaxBar;
+             // Use the properly tracked state value
+             currentCumulative = state.cumulativeUnservedEnergy;
+
+
+            if (state.currentScenario === 'Reference') {
+                DOMElements.costBenefit.textContent = "N/A (Baseline)";
+                // Store reference value if not already stored (should be done by setScenario)
+                if(state.referenceUnservedEnergy < 0 && targetTime === PARAMS.simulation.durationHours) {
+                     state.referenceUnservedEnergy = currentCumulative;
+                     console.log(`Stored Reference Unserved Energy (fallback): ${state.referenceUnservedEnergy.toFixed(1)} MWh`);
+                }
                 return;
             }
 
-            const hour = currentSimHour;
-            const lineCapacity73 = parseFloat(lineCapacitySlider.value);
-            const storageCapacity = parseFloat(storageCapacitySlider.value);
-            const storageDuration = parseFloat(storageDurationSlider.value);
-            const storageMaxEnergy = storageCapacity * storageDuration;
-
-            let currentHourData = { zones: {}, links: {} };
-
-            // 1. Determine available generation (random outages) & load
-            let totalAvailableGen = 0;
-            let totalLoad = 0;
-            Object.keys(zones).forEach(id => {
-                const zone = zones[id];
-                // Simple load variation (e.g., sine wave)
-                const loadFactor = 0.7 + 0.3 * Math.sin((hour / hoursToSimulate) * 2 * Math.PI + Math.PI * 1.5);
-                 const actualLoad = zone.baseLoad * loadFactor * (1 + (Math.random() - 0.5) * 0.1); // Add some noise
-                const isOutage = Math.random() < zone.outageRate;
-                const availableGen = isOutage ? 0 : zone.baseGen * (0.9 + Math.random() * 0.1); // Slight variation if online
-                totalAvailableGen += availableGen;
-                totalLoad += actualLoad;
-
-                currentHourData.zones[id] = {
-                    load: actualLoad,
-                    availableGen: availableGen,
-                    dispatchedGen: 0, // To be determined
-                    loadShed: 0,
-                    storageSoC: (id === '3' && storageCapacity > 0) ? simResults.hourly[hour - 1]?.zones['3'].storageSoC ?? storageMaxEnergy / 2 : undefined, // Start storage at 50% or carry over
-                    storageCharge: 0,
-                    storageDischarge: 0
-                };
-            });
-
-             // Add link capacities for this hour
-             Object.keys(links).forEach(id => {
-                 currentHourData.links[id] = {
-                     capacity: id === '7-3' ? lineCapacity73 : links[id].baseCapacity,
-                     flow: 0 // To be determined
-                 };
-             });
-
-
-            // 2. Simplified Dispatch & Flow Calculation (Greedy approach)
-            // This is VERY simplified compared to real Unit Commitment / Economic Dispatch
-
-            // Meet local load first
-            Object.keys(zones).forEach(id => {
-                const zoneData = currentHourData.zones[id];
-                const dispatch = Math.min(zoneData.load, zoneData.availableGen);
-                zoneData.dispatchedGen += dispatch;
-                zoneData.netLoad = zoneData.load - dispatch; // Remaining load
-                zoneData.availableGen -= dispatch; // Remaining available gen
-            });
-
-            // Try to export surplus / import deficit using links (prioritize bottleneck 7-3 if needed)
-            // Simplified: Try to push Zone 7 surplus to Zone 3
-            let flow73 = 0;
-            if (currentHourData.zones['7'].availableGen > 0 && currentHourData.zones['3'].netLoad > 0) {
-                 flow73 = Math.min(
-                    currentHourData.zones['7'].availableGen,
-                    currentHourData.zones['3'].netLoad,
-                    currentHourData.links['7-3'].capacity
-                );
-                currentHourData.zones['7'].dispatchedGen += flow73;
-                currentHourData.zones['7'].availableGen -= flow73;
-                currentHourData.zones['3'].netLoad -= flow73; // Reduce Zone 3 need
-            } else if (currentHourData.zones['3'].availableGen > 0 && currentHourData.zones['7'].netLoad > 0) {
-                 // Flow 3 -> 7 (less likely in scenario)
-                 flow73 = -Math.min(
-                    currentHourData.zones['3'].availableGen,
-                    currentHourData.zones['7'].netLoad,
-                    currentHourData.links['7-3'].capacity
-                 );
-                 currentHourData.zones['3'].dispatchedGen -= flow73; // Negative flow means export
-                 currentHourData.zones['3'].availableGen += flow73;
-                 currentHourData.zones['7'].netLoad += flow73;
-            }
-             currentHourData.links['7-3'].flow = flow73;
-
-
-            // Try to use 3-4 link
-             let flow34 = 0;
-             if (currentHourData.zones['3'].availableGen > 0 && currentHourData.zones['4'].netLoad > 0) {
-                 // Flow 3 -> 4
-                 flow34 = Math.min(
-                    currentHourData.zones['3'].availableGen,
-                    currentHourData.zones['4'].netLoad,
-                    currentHourData.links['3-4'].capacity
-                 );
-                 currentHourData.zones['3'].dispatchedGen += flow34;
-                 currentHourData.zones['3'].availableGen -= flow34;
-                 currentHourData.zones['4'].netLoad -= flow34;
-             } else if (currentHourData.zones['4'].availableGen > 0 && currentHourData.zones['3'].netLoad > 0) {
-                 // Flow 4 -> 3
-                 flow34 = -Math.min(
-                    currentHourData.zones['4'].availableGen,
-                    currentHourData.zones['3'].netLoad,
-                    currentHourData.links['3-4'].capacity
-                 );
-                 currentHourData.zones['4'].dispatchedGen -= flow34;
-                 currentHourData.zones['4'].availableGen += flow34;
-                 currentHourData.zones['3'].netLoad += flow34;
-             }
-             currentHourData.links['3-4'].flow = flow34;
-
-            // 3. Use Storage (Zone 3) if needed (SATOA logic: primarily for deficit)
-            const zone3Data = currentHourData.zones['3'];
-            if (zone3Data.netLoad > 0 && storageCapacity > 0 && zone3Data.storageSoC > 0) {
-                const dischargeNeeded = zone3Data.netLoad;
-                const maxDischargePower = storageCapacity; // Assume power rating = capacity rating
-                const maxDischargeEnergy = zone3Data.storageSoC / 0.9; // Account for discharge efficiency (90%)
-                const actualDischarge = Math.min(dischargeNeeded, maxDischargePower, maxDischargeEnergy * 0.9);
-
-                zone3Data.storageDischarge = actualDischarge;
-                zone3Data.netLoad -= actualDischarge;
-                zone3Data.storageSoC -= actualDischarge / 0.9; // Decrease SoC based on energy drawn
-            }
-            // Simplified charging: If Zone 3 has surplus *local* generation after meeting local load and exports
-            else if (zone3Data.availableGen > 0 && storageCapacity > 0 && zone3Data.storageSoC < storageMaxEnergy) {
-                 const maxChargePower = storageCapacity;
-                 const energyRoom = (storageMaxEnergy - zone3Data.storageSoC) / 0.9; // Account for charge efficiency (90%)
-                 const actualCharge = Math.min(zone3Data.availableGen, maxChargePower, energyRoom * 0.9);
-
-                 zone3Data.storageCharge = actualCharge;
-                 zone3Data.dispatchedGen += actualCharge; // Gen goes to charging
-                 zone3Data.availableGen -= actualCharge;
-                 zone3Data.storageSoC += actualCharge * 0.9; // Increase SoC
+            if (state.referenceUnservedEnergy < 0) {
+                DOMElements.costBenefit.textContent = "Run Reference first";
+                return;
             }
 
+            const unservedReduced = state.referenceUnservedEnergy - currentCumulative;
+            const cost = state.investmentCost.total;
 
-            // 4. Calculate Load Shed
-            Object.keys(zones).forEach(id => {
-                const zoneData = currentHourData.zones[id];
-                if (zoneData.netLoad > 0) {
-                    zoneData.loadShed = zoneData.netLoad; // Any remaining net load is shed
-                    simResults.totalEUE += zoneData.loadShed;
-                    if (zoneData.loadShed > 0.1) { // Count hour if shedding > 0.1 MW
-                         simResults.hourly[hour].hasLoadShed = true;
-                    }
+            if (unservedReduced <= 0.01) { // Avoid division by zero or near-zero
+                if (cost > 0 && currentCumulative >= state.referenceUnservedEnergy) {
+                     DOMElements.costBenefit.textContent = "No Improvement / Higher Cost";
+                } else if (cost <= 0 && unservedReduced > 0) {
+                     DOMElements.costBenefit.textContent = "Improvement / Lower Cost"; // Should not happen with positive costs
+                } else if (cost > 0 && unservedReduced < 0) {
+                     DOMElements.costBenefit.textContent = "Worse Reliability / Higher Cost";
                 }
-                 // Ensure dispatched generation doesn't exceed initial available
-                 zoneData.dispatchedGen = Math.max(0, Math.min(zones[id].baseGen, zoneData.dispatchedGen + zoneData.storageCharge));
-            });
-
-            simResults.hourly[hour] = currentHourData;
-            updateSimulationViz(currentHourData);
-
-            // Update progress bar
-            const progress = ((hour + 1) / hoursToSimulate) * 100;
-            simProgressBar.style.width = `${progress}%`;
-            simProgressBar.setAttribute('aria-valuenow', progress);
-
-
-            currentSimHour++;
-        }
-
-        function finalizeSimulation() {
-             // Calculate total LOLH
-             simResults.totalLOLH = simResults.hourly.filter(h => h.hasLoadShed).length;
-
-             simulationOutput.innerHTML = `
-                <h4>Simulation Complete</h4>
-                <p>Total Expected Unserved Energy (EUE): <strong class="value-display">${simResults.totalEUE.toFixed(1)} MWh</strong></p>
-                <p>Total Loss of Load Hours (LOLH): <strong class="value-display">${simResults.totalLOLH} hours</strong></p>
-            `;
-             svg.select("#simStatusText").text(`Status: Complete`);
-        }
-
-        function startSimulation() {
-            if (simIntervalId) {
-                clearInterval(simIntervalId); // Clear existing interval if any
+                 else {
+                     DOMElements.costBenefit.textContent = "No Cost / No Improvement";
+                }
+            } else {
+                const costPerMWhReduced = cost / unservedReduced;
+                // Use M$ for millions
+                DOMElements.costBenefit.textContent = `$${costPerMWhReduced.toFixed(2)} M / MWh reduced`;
             }
-            runSimButton.disabled = true;
-            currentSimHour = 0;
-            simResults = {
-                totalEUE: 0,
-                totalLOLH: 0,
-                hourly: Array(hoursToSimulate).fill(null).map(() => ({ zones: {}, links: {}, hasLoadShed: false }))
-            };
-            simulationOutput.innerHTML = '<p>Simulation running...</p>';
-            simProgressBar.style.width = `0%`;
-            simProgressBar.setAttribute('aria-valuenow', 0);
+       }
 
-            drawInitialGrid(); // Redraw grid in case parameters changed
 
-            // Run simulation steps with a short delay
-            simIntervalId = setInterval(runSimulationStep, 100); // Adjust speed as needed
+      // --- Cost Tradeoff Visualization ---
+        function updateCostComparison() {
+            // *** FIX: Use DOMElements instead of DOMEElements ***
+            const lineCostPerMW = parseFloat(DOMElements.lineCostSlider.value);
+            const storageCostPerMWh = parseFloat(DOMElements.storageCostSlider.value);
+            DOMElements.lineCostDisplay.textContent = `$${lineCostPerMW.toFixed(3)} M/MW`;
+            DOMElements.storageCostDisplay.textContent = `$${storageCostPerMWh.toFixed(2)} M/MWh`;
+
+            // Example parameters for comparison
+            const capacityNeededMW = 100;
+            const storageDuration = 4; // hours
+            const storageEnergyMWh = capacityNeededMW * storageDuration;
+
+            const tepTotalCost = lineCostPerMW * capacityNeededMW;
+            const satoaTotalCost = storageCostPerMWh * storageEnergyMWh;
+            // Add a hypothetical operational cost/benefit (higher benefit for TEP assumed here)
+            // Representing this as a *reduction* from a base penalty
+            const basePenalty = 10; // Arbitrary units (e.g., M$) representing operational cost/losses without investment
+            const operationalBenefitTEP = 5; // M$ reduction in penalty
+            const operationalBenefitSATOA = 2; // M$ reduction in penalty
+
+            const netCostTEP = tepTotalCost + (basePenalty - operationalBenefitTEP);
+            const netCostSATOA = satoaTotalCost + (basePenalty - operationalBenefitSATOA);
+
+            const costs = [
+                { label: 'No Build', value: basePenalty, color: '#bdc3c7' }, // Base operational cost penalty
+                { label: 'TEP', value: netCostTEP, color: '#3498db'},
+                { label: 'SATOA', value: netCostSATOA, color: '#f1c40f'}
+            ];
+
+            // *** FIX: Use DOMElements instead of DOMEElements ***
+            const chart = DOMElements.costComparisonChart;
+            chart.innerHTML = ''; // Clear previous bars
+            const maxValue = Math.max(...costs.map(c => c.value), 1); // Ensure maxValue is at least 1
+            const chartHeight = 130; // px available height for bars
+
+            costs.forEach(cost => {
+                const barWrapper = document.createElement('div'); // Wrapper for positioning labels
+                barWrapper.style.display = 'flex';
+                barWrapper.style.flexDirection = 'column';
+                barWrapper.style.alignItems = 'center';
+                barWrapper.style.margin = '0 10px';
+                barWrapper.style.position = 'relative'; // Needed for absolute positioning of labels relative to wrapper
+                barWrapper.style.height = `${chartHeight + 35}px`; // Total height including space for labels
+
+                const bar = document.createElement('div');
+                const barHeightValue = Math.max(0,(cost.value / maxValue) * chartHeight);
+                bar.style.height = `${barHeightValue}px`;
+                bar.style.width = '50px';
+                bar.style.backgroundColor = cost.color;
+                // bar.style.margin = '0 10px'; // Margin applied to wrapper now
+                // bar.style.position = 'relative'; // Not needed on bar itself
+                bar.style.display = 'flex';
+                // bar.style.flexDirection = 'column'; // Not needed
+                bar.style.justifyContent = 'flex-end'; // Align content (if any) to bottom
+                bar.style.alignItems = 'center';
+                bar.style.border = '1px solid #ccc';
+                bar.style.position = 'absolute'; // Position bar at the bottom of the wrapper
+                bar.style.bottom = '20px'; // Leave space for bottom label
+
+                const valueLabel = document.createElement('span');
+                valueLabel.textContent = `$${cost.value.toFixed(1)}M`;
+                valueLabel.style.fontSize = '10px';
+                valueLabel.style.color = '#333';
+                valueLabel.style.position = 'absolute';
+                valueLabel.style.top = `${chartHeight - barHeightValue - 15}px`; // Position above the bar top
+                valueLabel.style.left = '50%'; // Center horizontally
+                valueLabel.style.transform = 'translateX(-50%)'; // Adjust centering
+
+                const nameLabel = document.createElement('span');
+                nameLabel.textContent = cost.label;
+                nameLabel.style.fontSize = '11px';
+                // nameLabel.style.marginTop = '5px'; // Use absolute positioning
+                 nameLabel.style.position = 'absolute';
+                 nameLabel.style.bottom = '0px'; // Position below bar
+                 nameLabel.style.left = '50%'; // Center horizontally
+                 nameLabel.style.transform = 'translateX(-50%)'; // Adjust centering
+                 nameLabel.style.whiteSpace = 'nowrap';
+
+
+                barWrapper.appendChild(valueLabel);
+                barWrapper.appendChild(bar); // Add bar inside wrapper
+                barWrapper.appendChild(nameLabel);
+                chart.appendChild(barWrapper); // Add wrapper to chart
+            });
         }
 
-         function resetSimulation() {
-             if (simIntervalId) {
-                 clearInterval(simIntervalId);
-                 simIntervalId = null;
-             }
-             currentSimHour = 0;
-             simResults = {};
-             lineCapacitySlider.value = 500;
-             storageCapacitySlider.value = 0;
-             storageDurationSlider.value = 4;
-             lineCapacityValue.textContent = lineCapacitySlider.value;
-             storageCapacityValue.textContent = storageCapacitySlider.value;
-             storageDurationValue.textContent = storageDurationSlider.value;
-             simulationOutput.innerHTML = '<p>Simulation results will appear here.</p>';
-             simProgressBar.style.width = `0%`;
-             simProgressBar.setAttribute('aria-valuenow', 0);
-             drawInitialGrid(); // Redraw initial state
-              svg.select("#simStatusText").text(`Status: Ready`);
-              svg.select("#simHourText").text(`Hour: 0`);
-             runSimButton.disabled = false;
+
+      // --- Initialization ---
+      function initialize() {
+        DOMElements.timeSlider.max = PARAMS.simulation.durationHours;
+        setupTooltips(); // Initialize tooltips
+        updateCostComparison(); // Initial cost comparison display
+        // Add event listeners for cost sliders
+        // *** FIX: Use DOMElements instead of DOMEElements ***
+        DOMElements.lineCostSlider.addEventListener('input', () => {
+            // Update display immediately on input
+            DOMElements.lineCostDisplay.textContent = `$${parseFloat(DOMElements.lineCostSlider.value).toFixed(3)} M/MW`;
+            // Optionally recalculate chart on input, or only on button click
+            // updateCostComparison(); // Uncomment for live update
+        });
+        DOMElements.storageCostSlider.addEventListener('input', () => {
+             // Update display immediately on input
+            DOMElements.storageCostDisplay.textContent = `$${parseFloat(DOMElements.storageCostSlider.value).toFixed(2)} M/MWh`;
+            // Optionally recalculate chart on input, or only on button click
+            // updateCostComparison(); // Uncomment for live update
+        });
+         // Button listener remains as defined in HTML: onclick="updateCostComparison()"
+
+        // Start simulation in reference mode and calculate baseline
+        // Make sure the DOM is fully ready, especially MathJax if it affects layout significantly (though unlikely here)
+         if (document.readyState === "loading") {
+            document.addEventListener('DOMContentLoaded', () => setScenario('Reference'));
+         } else {
+            setScenario('Reference');
          }
+      }
 
-
-        // Event Listeners
-        lineCapacitySlider.addEventListener('input', (e) => {
-            lineCapacityValue.textContent = e.target.value;
-        });
-        storageCapacitySlider.addEventListener('input', (e) => {
-            storageCapacityValue.textContent = e.target.value;
-        });
-         storageDurationSlider.addEventListener('input', (e) => {
-            storageDurationValue.textContent = e.target.value;
-        });
-        runSimButton.addEventListener('click', startSimulation);
-        resetSimButton.addEventListener('click', resetSimulation);
-
-
-        // --- D3 Charts ---
-        const chartTooltip = d3.select("#chartTooltip");
-
-        // Data based on paper (approximated/simplified)
-        const reliabilityData = [
-            { scenario: "Reference", eue: 5864, lolh: 6.16 },
-            { scenario: "TEP (Line)", eue: 926, lolh: 1.49 },
-            { scenario: "BEP 2h 600MW", eue: 4407, lolh: 4.33 },
-            { scenario: "BEP 4h 600MW", eue: 3558, lolh: 3.97 },
-            { scenario: "BEP 4h 1500MW", eue: 1661, lolh: 1.93 },
-        ];
-
-        const costData = [
-             { scenario: "TEP (Line)", cost: 80.7, eue_redux: 5864 - 926, lolh_redux: 6.16 - 1.49 },
-             { scenario: "BEP 2h 300MW", cost: 19.8, eue_redux: 5864 - 5000, lolh_redux: 6.16 - 5.5 }, // Approx EUE/LOLH for smaller storage
-             { scenario: "BEP 2h 600MW", cost: 39.6, eue_redux: 5864 - 4407, lolh_redux: 6.16 - 4.33 },
-             { scenario: "BEP 4h 300MW", cost: 39.6, eue_redux: 5864 - 4800, lolh_redux: 6.16 - 5.0 }, // Approx
-             { scenario: "BEP 4h 600MW", cost: 79.3, eue_redux: 5864 - 3558, lolh_redux: 6.16 - 3.97 },
-             { scenario: "BEP 4h 1500MW", cost: 198.2, eue_redux: 5864 - 1661, lolh_redux: 6.16 - 1.93 },
-        ].map(d => ({
-            ...d,
-            cost_per_eue: d.eue_redux > 0 ? (d.cost * 1000 / d.eue_redux) : Infinity, // Cost in k$ per MWh EUE reduced
-            cost_per_lolh: d.lolh_redux > 0 ? (d.cost / d.lolh_redux) : Infinity // Cost in M$ per LOLH reduced
-        }));
-
-
-        function drawBarChart(svgId, data, yValue, yLabel) {
-            const svg = d3.select(svgId);
-            const margin = {top: 20, right: 30, bottom: 60, left: 60};
-            const width = +svg.attr("width") - margin.left - margin.right;
-            const height = +svg.attr("height") - margin.top - margin.bottom;
-
-            const x = d3.scaleBand()
-                .range([0, width])
-                .domain(data.map(d => d.scenario))
-                .padding(0.2);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d[yValue]) * 1.1]) // Add 10% padding
-                .range([height, 0]);
-
-            const g = svg.append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
-
-            // X axis
-            g.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
-                .selectAll("text")
-                .attr("transform", "translate(-10,0)rotate(-30)")
-                .style("text-anchor", "end");
-
-            // Y axis
-            g.append("g")
-                .call(d3.axisLeft(y).ticks(5)); // Limit number of ticks
-
-             // Y axis label
-             g.append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 0 - margin.left)
-                .attr("x", 0 - (height / 2))
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .style("font-size", "12px")
-                .text(yLabel);
-
-
-            // Bars
-            g.selectAll(".bar")
-                .data(data)
-                .enter().append("rect")
-                .attr("class", "bar")
-                .attr("x", d => x(d.scenario))
-                .attr("y", d => y(d[yValue]))
-                .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d[yValue]))
-                .on("mouseover", function(event, d) {
-                    d3.select(this).style("fill", "lightblue");
-                    chartTooltip.transition().duration(200).style("opacity", .9);
-                    chartTooltip.html(`<strong>${d.scenario}</strong><br/>${yLabel}: ${d[yValue].toFixed(1)}`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                     d3.select(this).style("fill", "steelblue");
-                    chartTooltip.transition().duration(500).style("opacity", 0);
-                });
-        }
-
-         function drawCostBenefitChart(svgId, data) {
-            const svg = d3.select(svgId);
-            const margin = {top: 20, right: 30, bottom: 80, left: 80}; // Increased bottom/left margin
-            const width = +svg.attr("width") - margin.left - margin.right;
-            const height = +svg.attr("height") - margin.top - margin.bottom;
-
-             // Filter out infinite costs for scaling
-             const finiteData = data.filter(d => isFinite(d.cost_per_eue));
-
-            const x = d3.scaleBand()
-                .range([0, width])
-                .domain(finiteData.map(d => d.scenario))
-                .padding(0.2);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(finiteData, d => d.cost_per_eue) * 1.1]) // Scale based on finite data
-                .range([height, 0]);
-
-            const g = svg.append("g")
-                .attr("transform", `translate(${margin.left},${margin.top})`);
-
-            // X axis
-            g.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
-                .selectAll("text")
-                .attr("transform", "translate(-10,0)rotate(-45)")
-                .style("text-anchor", "end");
-
-            // Y axis
-            g.append("g")
-                .call(d3.axisLeft(y));
-
-             // Y axis label
-             g.append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("y", 0 - margin.left + 10) // Adjust position
-                .attr("x", 0 - (height / 2))
-                .attr("dy", "1em")
-                .style("text-anchor", "middle")
-                .style("font-size", "12px")
-                .text("Cost per EUE Reduction (k$/MWh)");
-
-            // Bars
-            g.selectAll(".bar")
-                .data(finiteData) // Use filtered data for bars
-                .enter().append("rect")
-                .attr("class", "bar")
-                 .attr("fill", d => d.scenario.includes("TEP") ? "#ff7f0e" : "#1f77b4") // Different color for TEP
-                .attr("x", d => x(d.scenario))
-                .attr("y", d => y(d.cost_per_eue))
-                .attr("width", x.bandwidth())
-                .attr("height", d => height - y(d.cost_per_eue))
-                .on("mouseover", function(event, d) {
-                    d3.select(this).style("opacity", 0.7);
-                    chartTooltip.transition().duration(200).style("opacity", .9);
-                    chartTooltip.html(`<strong>${d.scenario}</strong><br/>Cost/EUE: ${d.cost_per_eue.toFixed(1)} k$/MWh<br/>Cost/LOLH: ${d.cost_per_lolh.toFixed(1)} M$/h<br/>Annual Cost: ${d.cost.toFixed(1)} M$`)
-                        .style("left", (event.pageX + 5) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on("mouseout", function() {
-                    d3.select(this).style("opacity", 1.0);
-                    chartTooltip.transition().duration(500).style("opacity", 0);
-                });
-        }
-
-
-        // Initial draws
-        drawInitialGrid();
-        drawBarChart("#eueChart", reliabilityData, 'eue', 'EUE (MWh/year)');
-        drawBarChart("#lolhChart", reliabilityData, 'lolh', 'LOLH (hours/year)');
-        drawCostBenefitChart("#costBenefitChart", costData);
+      // --- Run ---
+      initialize(); // Call initialization function
 
     </script>
 

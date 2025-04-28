@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimizing Dam Removals in Lake Erie</title>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 20px;
+            color: #333;
+            background-color: #fdfdfd;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+            margin-top: 2em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; }
+        p, li {
+            font-size: 1.05em;
+            color: #444;
+        }
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            background-color: #f6f8fa;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+        pre code {
+            display: block;
+            padding: 1em;
+            overflow-x: auto;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .visualization {
+            border: 1px solid #eaecef;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .interactive-controls {
+            margin-bottom: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .interactive-controls label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .interactive-controls input[type="range"] {
+            vertical-align: middle;
+            cursor: pointer;
+            flex-grow: 1;
+            min-width: 100px;
+        }
+        .interactive-controls span, .interactive-controls button {
+            font-weight: bold;
+            min-width: 50px; /* Ensure consistent width for value displays */
+            text-align: right;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .dam-vis-container {
+            position: relative;
+            height: 150px;
+            background-color: #e0f7fa; /* Light blue for water */
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .river-bed {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background-color: #8d6e63; /* Brown for river bed */
+        }
+        .dam-structure {
+            position: absolute;
+            bottom: 20px; /* Sits on river bed */
+            left: 40%;
+            width: 5%;
+            height: 80px;
+            background-color: #757575; /* Grey for dam */
+            border: 2px solid #424242;
+            transition: height 0.5s ease, opacity 0.5s ease;
+            cursor: pointer;
+        }
+        .dam-structure.removed {
+            height: 0px;
+            opacity: 0;
+        }
+        .fish {
+            position: absolute;
+            bottom: 30px;
+            width: 20px;
+            height: 10px;
+            border-radius: 50% 50% 0 0;
+            transition: left 1s ease-in-out;
+        }
+        .walleye { background-color: #ffeb3b; left: 10%; } /* Yellow */
+        .lamprey { background-color: #f44336; left: 15%; } /* Red */
+        .walleye.upstream { left: 70%; }
+        .lamprey.upstream { left: 75%; }
+        .cost-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .dam-network-vis svg {
+            display: block;
+            margin: auto;
+        }
+        .dam-node {
+            cursor: pointer;
+            transition: fill 0.2s;
+        }
+        .dam-node.candidate { fill: #ffcc80; /* Orange */ stroke: #e65100; }
+        .dam-node.removed { fill: #c8e6c9; /* Green */ stroke: #2e7d32; }
+        .dam-node.blocked { fill: #ef9a9a; /* Red */ stroke: #c62828; }
+        .river-link {
+            stroke: #90caf9; /* Light blue */
+            stroke-width: 3px;
+        }
+        .error-message {
+            color: #c62828;
+            font-weight: bold;
+            margin-top: 5px;
+            height: 1em; /* Reserve space */
+        }
+
+        /* Specific styles for MVA calculator */
+        .mva-criteria { margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .mva-criteria label { min-width: 150px; text-align: right;}
+        .mva-criteria input[type="range"] { flex-grow: 1; }
+        .mva-criteria span { min-width: 40px; text-align: right; font-weight: normal;}
+        .mva-criteria .weight-slider { max-width: 100px;}
+        .mva-criteria .weight-value { font-style: italic;}
+        #mva-total-score { font-size: 1.2em; font-weight: bold; color: #1a237e; }
+
+        /* Specific styles for Cost Estimator */
+        .cost-estimator-controls { display: flex; flex-direction: column; gap: 10px;}
+        .cost-estimator-controls > div { display: flex; align-items: center; gap: 10px;}
+        .cost-estimator-controls label { min-width: 100px; text-align: right;}
+        .cost-estimator-controls input[type="range"] { flex-grow: 1; }
+        .cost-estimator-controls span { min-width: 60px; text-align: right; font-weight: normal;}
+        #estimated-cost { font-size: 1.2em; font-weight: bold; color: #1a237e; }
+
+        /* Specific styles for Tradeoff Curve */
+        #tradeoff-chart .axis path,
+        #tradeoff-chart .axis line {
+            fill: none;
+            stroke: #333;
+            shape-rendering: crispEdges;
+        }
+        #tradeoff-chart .axis text {
+            font-size: 11px;
+            fill: #333;
+        }
+        #tradeoff-chart .dot {
+            fill: #0366d6;
+            opacity: 0.7;
+            cursor: pointer;
+        }
+         #tradeoff-chart .dot:hover, #tradeoff-chart .dot.highlighted {
+            fill: #e65100; /* Orange highlight */
+            r: 6; /* Slightly larger on hover/highlight */
+        }
+        #tradeoff-info { margin-top: 10px; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Optimizing Dam Removals: Balancing Ecology and Economy in Lake Erie</h1>
+
+    <p>Lake Erie, the shallowest and warmest of the Great Lakes, is incredibly productive biologically. However, it's also faced significant environmental challenges due to dense population and industrial activity. One major stressor has been the construction of dams on the rivers and streams that flow into the lake. While dams served purposes like power generation or water supply, many now block fish from reaching historical spawning grounds, contributing to the decline of important native species.</p>
+
+    <p>Efforts to restore Lake Erie have shown some success, but the recovery of key fish like <a href="https://en.wikipedia.org/wiki/Walleye" target="_blank">walleye</a> (<em>Sander vitreus</em>) has slowed. Restoring access to tributary habitats by removing dams is a potential solution. However, deciding *which* dams to remove is complex. There are thousands of dams, removal is costly, and it can have unintended consequences.</p>
+
+    <p>This article explores the core ideas from the paper "Optimizing multiple dam removals under multiple objectives: Linking tributary habitat and the Lake Erie ecosystem" by Zheng, Hobbs, and Koonce (2009). The paper presents a mathematical approach to help managers select the *best portfolio* of dams to remove, considering ecological benefits, economic costs, and complex ecosystem interactions.</p>
+
+    <h2>The Balancing Act: Walleye, Lamprey, and Costs</h2>
+
+    <p>Removing a dam seems simple: let the river flow freely. But the consequences ripple outwards. On the plus side, desirable native fish like walleye gain access to upstream spawning areas, potentially boosting their populations – good for the ecosystem and for recreational fishing.</p>
+
+    <p>However, dam removal isn't all positive. It costs significant money, not just for demolition but potentially for replacing services the dam provided. Furthermore, removing a dam can also open up habitat for invasive species. In the Great Lakes, a major concern is the parasitic <a href="https://en.wikipedia.org/wiki/Sea_lamprey" target="_blank">sea lamprey</a> (<em>Petromyzon marinus</em>), which preys on large fish like trout and walleye. Removing a dam might help walleye spawn, but if it also lets lamprey access new nursery areas, the net effect could be negative.</p>
+
+    <div class="visualization">
+        <h3>Interactive Dam Removal</h3>
+        <p>Click the dam structure below to simulate its removal. Observe how fish access changes and the associated cost.</p>
+        <div class="dam-vis-container" id="dam-vis1">
+            <div class="river-bed"></div>
+            <div class="dam-structure" id="dam-structure1" title="Click to remove"></div>
+            <div class="fish walleye" id="walleye1"></div>
+            <div class="fish lamprey" id="lamprey1"></div>
+            <div class="cost-display" id="cost-display1">Cost: $0 M</div>
+        </div>
+    </div>
+
+    <p>So, the decision involves trade-offs:
+        <ul>
+            <li>More walleye habitat (<strong>Good!</strong>)</li>
+            <li>More sea lamprey habitat (<strong>Bad!</strong>)</li>
+            <li>Dam removal costs (<strong>Bad!</strong>)</li>
+            <li>Potential costs for controlling newly accessible lamprey (<strong>Bad!</strong>)</li>
+        </ul>
+    Finding the right balance requires a systematic approach.
+    </p>
+
+    <h2>Measuring "Goodness": How Healthy is the Lake?</h2>
+
+    <p>With multiple competing factors, how do we define the "best" outcome? The paper uses <a href="https://en.wikipedia.org/wiki/Multiple-criteria_decision_analysis" target="_blank">Multiple Criteria Decision Analysis (MCDA)</a>, specifically a form called Multicriteria Value Analysis (MVA). The idea is to define several measurable criteria that represent different aspects of ecosystem health and socioeconomic benefit, and then combine them into a single score.</p>
+
+    <p>The researchers identified nine key criteria (Figure 1 in the paper), including:</p>
+    <ul>
+        <li><strong>Ecological Structure:</strong> Ratio of walleye biomass to other perch-like fish ($x_1$).</li>
+        <li><strong>Ecological Function:</strong> Ratio of predator fish biomass to plankton-eating fish biomass ($x_2$).</li>
+        <li><strong>Ecological Productivity:</strong> Total fish community productivity ($x_3$).</li>
+        <li><strong>Native Species:</strong> Ratio of native fish biomass to total fish biomass ($x_4$).</li>
+        <li><strong>Recreation/Walleye Focus:</strong> Lake-wide walleye biomass ($x_5$) and sport harvest ($x_6$).</li>
+        <li><strong>Commercial Harvest:</strong> Yellow perch harvest ($x_7$) and smelt harvest ($x_8$).</li>
+        <li><strong>Economic Cost:</strong> Total cost of dam removal and lamprey control ($x_9$).</li>
+    </ul>
+
+    <p>The MVA combines the first eight ecological/socioeconomic criteria into an overall "Ecological Health Index" ($z_1$). This is done using an additive value function:</p>
+    $$ V(x_1, ..., x_8) = \sum_{i=1}^{8} W_i V_i(x_i) $$
+    <p>Where:
+        <ul>
+            <li>$x_i$ is the level of the $i$-th criterion.</li>
+            <li>$V_i(x_i)$ is a "value function" that scales the desirability of criterion $i$ from 0 (worst acceptable) to 1 (best acceptable). For simplicity, the paper assumes these are linear.</li>
+            <li>$W_i$ is the weight assigned to criterion $i$, reflecting its relative importance. These weights sum to 1.</li>
+        </ul>
+    </p>
+    <p>The weights ($W_i$) are crucial as they represent stakeholder preferences. Changing the weights changes how "good" a particular outcome is considered. For example, heavily weighting walleye criteria ($W_5, W_6$) would favor dam removals that benefit walleye, even if other factors suffer slightly.</p>
+
+    <div class="visualization">
+        <h3>Interactive MVA Score Calculator (Simplified)</h3>
+        <p>Adjust the levels of simplified criteria and their importance weights to see how the overall "Ecological Health" score changes. (Note: Actual model uses 8 criteria and more complex linkages).</p>
+        <div id="mva-calculator">
+            <div class="mva-criteria">
+                <label for="crit1-level">Walleye Biomass:</label>
+                <input type="range" id="crit1-level" min="0" max="100" value="50">
+                <span id="crit1-level-val">50</span>
+                <label for="crit1-weight">Weight:</label>
+                <input type="range" class="weight-slider" id="crit1-weight" min="0" max="100" value="40">
+                <span class="weight-value" id="crit1-weight-val">0.40</span>
+            </div>
+            <div class="mva-criteria">
+                <label for="crit2-level">Native Species Ratio:</label>
+                <input type="range" id="crit2-level" min="0" max="100" value="60">
+                <span id="crit2-level-val">60</span>
+                <label for="crit2-weight">Weight:</label>
+                <input type="range" class="weight-slider" id="crit2-weight" min="0" max="100" value="30">
+                <span class="weight-value" id="crit2-weight-val">0.30</span>
+            </div>
+            <div class="mva-criteria">
+                <label for="crit3-level">Lamprey Impact (Inverted):</label>
+                <input type="range" id="crit3-level" min="0" max="100" value="70">
+                <span id="crit3-level-val">70</span>
+                <label for="crit3-weight">Weight:</label>
+                <input type="range" class="weight-slider" id="crit3-weight" min="0" max="100" value="30">
+                <span class="weight-value" id="crit3-weight-val">0.30</span>
+            </div>
+            <div><strong>Total Weighted Score:</strong> <span id="mva-total-score">...</span></div>
+        </div>
+    </div>
+
+    <h2>Predicting the Impact: From Habitat to Ecosystem</h2>
+
+    <p>Okay, we have a way to score the outcome ($z_1$). But how do we predict the levels of $x_1, ..., x_8$ that result from removing a specific set of dams? This involves a chain of models:</p>
+
+    <ol>
+        <li><strong>Habitat Change:</strong> Removing dam $j$ opens up a certain amount of upstream river habitat. The *quality* of this habitat for walleye spawning and lamprey nursery is estimated using a <a href="https://en.wikipedia.org/wiki/Habitat_suitability_index" target="_blank">Habitat Suitability Index (HSI)</a>. HSI models score habitat from 0 (unsuitable) to 1 (optimal) based on physical factors like water depth, velocity, and substrate (river bottom type). GIS data is used to calculate the total *area* ($H_{jk}^{walleye}$) or *length* ($H_{jk}^{lamprey}$) of suitable habitat opened by removing dam $j$.</li>
+        <li><strong>Fish Recruitment:</strong> Increased suitable spawning habitat for walleye is expected to increase the number of eggs produced ($EP_j$) and ultimately the number of Young-Of-Year (YOY) walleye recruited into the lake population ($\Delta YOY_j^{walleye}$). The paper uses empirical relationships for this link (Eq 13).</li>
+        <li><strong>Ecosystem Response:</strong> The change in walleye YOY ($\Delta YOY^{walleye}$) from *all* removed dams is then fed into the **Lake Erie Ecological Model (LEEM)**. LEEM is a complex simulation model representing the lake's food web (17 fish species, predator-prey interactions, nutrient cycles). LEEM predicts how the initial pulse of extra walleye YOY ripples through the ecosystem, ultimately changing the levels of the criteria $x_1, ..., x_8$. The paper uses "Impulse Response" (IR) functions derived from LEEM, assuming a linear response for small changes: $x_i = x_i^{base} + IR_{x_i} \times \Delta YOY^{walleye}$.</li>
+    </ol>
+
+    <p>This chain links the physical act of removing a dam to its ultimate impact on the lake's ecological health score.</p>
+
+    <h2>Counting the Cost: Dollars and Cents</h2>
+
+    <p>The economic side ($x_9$) also needs quantification. The total cost has two main components:</p>
+
+    <ol>
+        <li><strong>Dam Removal Cost ($C_j^{dam}$):</strong> This varies greatly depending on the dam. The paper developed a regression model (Eq 14) based on historical data from ~100 dam removals. Key factors increasing cost are:
+            <ul>
+                <li>Dam Height</li>
+                <li>Dam Length (less impact than height)</li>
+                <li>Dam Purpose (higher cost if it serves an important function like water supply)</li>
+                <li>Dam Type (earthen dams are generally cheaper to remove than concrete)</li>
+            </ul>
+        </li>
+        <li><strong>Sea Lamprey Control Cost ($C_j^{lamprey}$):</strong> If removing dam $j$ opens up significant lamprey nursery habitat ($H_j^{lamprey}$), additional control measures are needed. The primary method is applying a lampricide called TFM. The cost is estimated based on the *length* of river needing treatment and the frequency of application (Eq 15).</li>
+    </ol>
+
+    <div class="visualization">
+        <h3>Interactive Dam Removal Cost Estimator (Simplified)</h3>
+        <p>Adjust dam characteristics to see how the estimated removal cost changes, based on a simplified version of the paper's regression model (Eq 14). (Note: Actual model is logarithmic).</p>
+        <div id="cost-estimator">
+             <div class="cost-estimator-controls">
+                <div>
+                    <label for="dam-height">Height (ft):</label>
+                    <input type="range" id="dam-height" min="5" max="50" value="20" step="1">
+                    <span id="dam-height-val">20 ft</span>
+                </div>
+                 <div>
+                    <label for="dam-length">Length (ft):</label>
+                    <input type="range" id="dam-length" min="50" max="500" value="150" step="10">
+                    <span id="dam-length-val">150 ft</span>
+                </div>
+                 <div>
+                    <label for="dam-type">Type:</label>
+                    <select id="dam-type">
+                        <option value="earthen">Earthen</option>
+                        <option value="concrete">Concrete/Other</option>
+                    </select>
+                 </div>
+                <div>
+                    <label for="dam-purpose">Purpose:</label>
+                     <select id="dam-purpose">
+                        <option value="less_important">Less Important (Recreation, etc.)</option>
+                        <option value="important">Important (Water Supply, etc.)</option>
+                    </select>
+                </div>
+            </div>
+            <div><strong>Estimated Removal Cost:</strong> <span id="estimated-cost">$... M</span></div>
+        </div>
+    </div>
+
+     <p>The total economic cost for a portfolio of removals is the sum of individual dam removal costs and any necessary lamprey control costs: $x_9 = \sum_{j \in \text{Removed}} (C_j^{dam} + C_j^{lamprey})$.</p>
+
+
+    <h2>Putting it All Together: The Optimization Model</h2>
+
+    <p>With ways to predict ecological benefits ($z_1$) and economic costs ($x_9$) for any set of removed dams, the final step is to find the *best* set. The paper formulates this as a <a href="https://en.wikipedia.org/wiki/Integer_programming#Mixed-integer_linear_programming" target="_blank">Mixed Integer Linear Program (MILP)</a>.</p>
+
+    <p>The core of the MILP is:</p>
+
+    <p><strong>Objective:</strong> Maximize the Ecological Health Index ($z_1$)</p>
+    $$ \text{Maximize } z_1 = \sum_{i=1}^{8} W_i V_i(x_i) $$
+
+    <p><strong>Subject to Constraints:</strong></p>
+    <ol>
+        <li><strong>Budget Constraint:</strong> The total cost ($x_9$) must not exceed the available budget ($B$).
+        $$ x_9 = \sum_{j \in J} (C_j^{dam} + C_j^{lamprey}) d_j \le B $$
+        Here, $J$ is the set of all candidate dams, and $d_j$ is the crucial **decision variable**:
+        $d_j = 1$ if dam $j$ is removed, $d_j = 0$ if it is kept.</li>
+
+        <li><strong>Ecological Score Calculation:</strong> Equations linking the decision variables ($d_j$) to the criteria ($x_1, ..., x_8$) via habitat changes, YOY recruitment, and LEEM impulse responses (Eq 5, 6 in the paper).
+        $$ x_i = x_i^{base} + IR_{x_i} \left( \sum_{j \in J} \Delta YOY_j^{walleye} d_j \right) $$
+        (This is a simplified representation; the actual model accounts for recruitment probabilities $V^{walleye}_j$).</li>
+
+        <li><strong>Upstream/Downstream Logic:</strong> A dam cannot be removed ($d_j=1$) unless any dam immediately downstream of it ($n$) is also removed ($d_n=1$). This ensures physical feasibility.
+        $$ d_n \le d_j \quad \text{for all } n \text{ directly upstream of } j $$
+        This constraint prevents trying to remove an upstream dam while leaving a downstream one blocking access.</li>
+
+        <li><strong>Binary Decisions:</strong> Each dam is either removed or not.
+        $$ d_j \in \{0, 1\} \quad \text{for all } j \in J $$
+        This "integer" part makes it an MILP, which can be harder to solve than purely linear problems but accurately reflects the yes/no nature of dam removal.</li>
+    </ol>
+
+     <div class="visualization">
+        <h3>Interactive Upstream/Downstream Constraint</h3>
+        <p>Try selecting dams (orange circles) for removal by clicking them. Dams turn green if selected validly. If you try to remove an upstream dam without removing its downstream neighbor, it will turn red (invalid selection).</p>
+        <div class="dam-network-vis">
+            <svg id="dam-network" width="400" height="200"></svg>
+            <div id="network-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <p>Solving this MILP finds the specific set of dams ($d_j=1$) that gives the highest possible ecological score ($z_1$) for a given budget ($B$).</p>
+
+    <h2>The Solution: Finding Efficient Portfolios</h2>
+
+    <p>Because cost and ecological benefit are competing objectives, there isn't one single "best" answer. Instead, there's a set of <strong>efficient</strong> or <strong>Pareto optimal</strong> solutions. An efficient portfolio is one where you cannot increase the ecological score further without spending more money, and you cannot decrease the cost without lowering the ecological score.</p>
+
+    <p>By running the MILP model repeatedly with different budget levels ($B$), the researchers traced out the <strong>trade-off curve</strong> (also known as the Pareto frontier) between cost and ecological health (Figure 4a in the paper).</p>
+
+    <div class="visualization">
+        <h3>Interactive Cost vs. Ecological Health Trade-off</h3>
+        <p>This chart shows the efficient frontier. Each point represents an optimal portfolio of dam removals for a given budget. Use the slider to set a budget and see the corresponding optimal ecological health score. Hover over points for details.</p>
+        <div class="interactive-controls">
+            <label for="budget-slider">Budget ($M):</label>
+            <input type="range" id="budget-slider" min="0" max="45" value="15" step="0.5">
+            <span id="budget-value">$15.0 M</span>
+        </div>
+        <div id="tradeoff-chart"></div>
+        <div id="tradeoff-info">Hover over a point or use the slider.</div>
+    </div>
+
+    <p>Key findings from the trade-off analysis:</p>
+    <ul>
+        <li><strong>Diminishing Returns:</strong> Initially, spending more money yields significant gains in ecological health. However, as the budget increases, the additional benefit gained per dollar spent tends to decrease. The curve flattens out.</li>
+        <li><strong>Portfolio Composition:</strong> The specific dams included in the optimal portfolio change with the budget. Small, strategically located dams often provide good value at lower budgets. Higher budgets allow for the removal of larger, more expensive dams.</li>
+        <li><strong>Trade-offs Within Ecology:</strong> Improving overall ecological health often involves trade-offs among the individual criteria. For example, boosting walleye populations ($x_5, x_6$) might come at the expense of overall fish productivity ($x_3$) or negatively impact commercial perch/smelt fisheries ($x_7, x_8$) due to increased predation by walleye.</li>
+    </ul>
+
+    <h3>What if We Really Dislike Lamprey?</h3>
+    <p>The model can also explore how different priorities affect the results. The paper includes a sensitivity analysis where the decision-makers might be particularly averse to increasing sea lamprey habitat. They introduced a weight ($WL$) representing the importance of *minimizing* potential lamprey habitat increase.</p>
+    <p>As the weight $WL$ increases (meaning lamprey avoidance becomes more important), the optimization favors removing dams that open up little or no lamprey habitat, even if they offer less benefit for walleye. This leads to different portfolios being selected (compare Figure 3 and Figure 5 in the paper) and generally lower overall ecological health scores (as defined by the original weights) but achieves the goal of minimal lamprey expansion (Table 3).</p>
+
+    <h2>Conclusion: A Tool for Complex Decisions</h2>
+
+    <p>The work by Zheng, Hobbs, and Koonce provides a powerful framework for tackling the complex problem of multiple dam removals. By explicitly linking dam removal actions to habitat changes, ecosystem responses (via LEEM), economic costs, and stakeholder objectives (via MVA), the MILP model can identify potentially cost-effective portfolios.</p>
+
+    <p>Key strengths of this approach include:</p>
+    <ul>
+        <li>Handling multiple, conflicting objectives.</li>
+        <li>Considering ecosystem-wide interactions, not just local habitat.</li>
+        <li>Accounting for upstream/downstream dependencies.</li>
+        <li>Generating a range of efficient solutions (the trade-off curve) to inform decision-making under different budgets.</li>
+        <li>Allowing exploration of different stakeholder priorities (e.g., weighting lamprey aversion).</li>
+    </ul>
+
+    <p>However, the authors caution that such models are screening tools. They rely on assumptions and data that have uncertainties (e.g., exact removal costs, precise ecosystem responses). The model helps narrow down the options, but site-specific studies are essential before actually removing any dams.</p>
+
+    <p>Ultimately, this research demonstrates how mathematical optimization and simulation modeling can provide valuable insights for managing complex environmental systems like the Lake Erie basin, helping stakeholders navigate difficult trade-offs to achieve restoration goals.</p>
+
+    <hr>
+    <p><em>Reference: Zheng, P. Q., B. F. Hobbs, and J. F. Koonce (2009), Optimizing multiple dam removals under multiple objectives: Linking tributary habitat and the Lake Erie ecosystem, Water Resour. Res., 45, W12417, doi:10.1029/2008WR007589.</em></p>
+
+
+    <script>
+        // --- Visualization 1: Simple Dam Removal ---
+        const damStructure = document.getElementById('dam-structure1');
+        const walleye = document.getElementById('walleye1');
+        const lamprey = document.getElementById('lamprey1');
+        const costDisplay = document.getElementById('cost-display1');
+        let damRemoved = false;
+        const removalCost = 5; // Example cost in $M
+
+        damStructure.addEventListener('click', () => {
+            damRemoved = !damRemoved;
+            if (damRemoved) {
+                damStructure.classList.add('removed');
+                walleye.classList.add('upstream');
+                lamprey.classList.add('upstream');
+                costDisplay.textContent = `Cost: $${removalCost} M`;
+                 damStructure.title = "Click to restore dam";
+            } else {
+                damStructure.classList.remove('removed');
+                walleye.classList.remove('upstream');
+                lamprey.classList.remove('upstream');
+                costDisplay.textContent = `Cost: $0 M`;
+                 damStructure.title = "Click to remove";
+            }
+        });
+
+        // --- Visualization 2: MVA Calculator ---
+        const crit1Level = document.getElementById('crit1-level');
+        const crit1Weight = document.getElementById('crit1-weight');
+        const crit2Level = document.getElementById('crit2-level');
+        const crit2Weight = document.getElementById('crit2-weight');
+        const crit3Level = document.getElementById('crit3-level');
+        const crit3Weight = document.getElementById('crit3-weight');
+
+        const crit1LevelVal = document.getElementById('crit1-level-val');
+        const crit1WeightVal = document.getElementById('crit1-weight-val');
+        const crit2LevelVal = document.getElementById('crit2-level-val');
+        const crit2WeightVal = document.getElementById('crit2-weight-val');
+        const crit3LevelVal = document.getElementById('crit3-level-val');
+        const crit3WeightVal = document.getElementById('crit3-weight-val');
+        const mvaTotalScore = document.getElementById('mva-total-score');
+
+        function updateMVA() {
+            const l1 = parseFloat(crit1Level.value) / 100; // Value function V(x) assumed linear 0-1
+            const w1 = parseFloat(crit1Weight.value) / 100;
+            const l2 = parseFloat(crit2Level.value) / 100;
+            const w2 = parseFloat(crit2Weight.value) / 100;
+            const l3 = parseFloat(crit3Level.value) / 100;
+            const w3 = parseFloat(crit3Weight.value) / 100;
+
+            // Normalize weights (optional, but good practice)
+            const totalWeight = w1 + w2 + w3;
+            const norm_w1 = totalWeight > 0 ? w1 / totalWeight : 0;
+            const norm_w2 = totalWeight > 0 ? w2 / totalWeight : 0;
+            const norm_w3 = totalWeight > 0 ? w3 / totalWeight : 0;
+
+            const score = (l1 * norm_w1 + l2 * norm_w2 + l3 * norm_w3) * 100; // Scale to 0-100
+
+            crit1LevelVal.textContent = crit1Level.value;
+            crit1WeightVal.textContent = norm_w1.toFixed(2);
+            crit2LevelVal.textContent = crit2Level.value;
+            crit2WeightVal.textContent = norm_w2.toFixed(2);
+            crit3LevelVal.textContent = crit3Level.value;
+            crit3WeightVal.textContent = norm_w3.toFixed(2);
+            mvaTotalScore.textContent = score.toFixed(1);
+        }
+
+        [crit1Level, crit1Weight, crit2Level, crit2Weight, crit3Level, crit3Weight].forEach(input => {
+            input.addEventListener('input', updateMVA);
+        });
+        updateMVA(); // Initial calculation
+
+        // --- Visualization 4: Cost Estimator ---
+        const damHeight = document.getElementById('dam-height');
+        const damLength = document.getElementById('dam-length');
+        const damType = document.getElementById('dam-type');
+        const damPurpose = document.getElementById('dam-purpose');
+        const damHeightVal = document.getElementById('dam-height-val');
+        const damLengthVal = document.getElementById('dam-length-val');
+        const estimatedCost = document.getElementById('estimated-cost');
+
+        function updateCost() {
+            const height = parseFloat(damHeight.value);
+            const length = parseFloat(damLength.value);
+            const type = damType.value; // 'earthen' or 'concrete'
+            const purpose = damPurpose.value; // 'important' or 'less_important'
+
+            // Simplified linear approximation based on the log-linear model's direction
+            // ln(Cost) = 7.79 + 0.80*ln(H) + 0.33*ln(L) + 1.49*(FuncW=1) - 0.44*(TypeE=1)
+            // These coefficients are just illustrative placeholders for a linear version
+            let baseCost = 0.1; // Base cost in $M
+            let heightFactor = 0.05;
+            let lengthFactor = 0.001;
+            let purposeFactor = (purpose === 'important') ? 1.5 : 0;
+            let typeFactor = (type === 'earthen') ? -0.5 : 0;
+
+            let cost = baseCost + (height * heightFactor) + (length * lengthFactor) + purposeFactor + typeFactor;
+            cost = Math.max(0.1, cost); // Ensure minimum cost
+
+            damHeightVal.textContent = `${height} ft`;
+            damLengthVal.textContent = `${length} ft`;
+            estimatedCost.textContent = `$${cost.toFixed(2)} M`;
+        }
+
+        [damHeight, damLength, damType, damPurpose].forEach(input => {
+            input.addEventListener('input', updateCost);
+            input.addEventListener('change', updateCost); // For select elements
+        });
+        updateCost(); // Initial calculation
+
+
+        // --- Visualization 5: Dam Network Logic ---
+        const networkSvg = d3.select("#dam-network");
+        const networkError = d3.select("#network-error");
+        const networkWidth = 400;
+        const networkHeight = 200;
+
+        // Define dam data: id, position (x, y), downstream neighbor id (null if none)
+        const dams = [
+            { id: 'D1', x: 50, y: 100, downstream: null, selected: false },
+            { id: 'D2', x: 150, y: 50, downstream: 'D1', selected: false },
+            { id: 'D3', x: 150, y: 150, downstream: 'D1', selected: false },
+            { id: 'D4', x: 250, y: 50, downstream: 'D2', selected: false },
+            { id: 'D5', x: 350, y: 100, downstream: 'D3', selected: false } // Added another dam
+        ];
+
+        // Draw river links
+        networkSvg.selectAll(".river-link")
+            .data(dams.filter(d => d.downstream))
+            .enter()
+            .append("line")
+            .attr("class", "river-link")
+            .attr("x1", d => dams.find(ds => ds.id === d.downstream).x)
+            .attr("y1", d => dams.find(ds => ds.id === d.downstream).y)
+            .attr("x2", d => d.x)
+            .attr("y2", d => d.y);
+
+        // Draw dam nodes
+        const damNodes = networkSvg.selectAll(".dam-node")
+            .data(dams)
+            .enter()
+            .append("circle")
+            .attr("class", "dam-node candidate") // Start as candidates
+            .attr("id", d => d.id)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("r", 15)
+            .on("click", function(event, d) {
+                toggleDamSelection(d);
+            });
+
+         // Add labels to dams
+        networkSvg.selectAll(".dam-label")
+            .data(dams)
+            .enter()
+            .append("text")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y + 5) // Adjust vertical position
+            .attr("text-anchor", "middle")
+            .attr("font-size", "12px")
+            .attr("fill", "#333")
+             .attr("pointer-events", "none") // Make text non-interactive
+            .text(d => d.id);
+
+
+        function toggleDamSelection(clickedDam) {
+            clickedDam.selected = !clickedDam.selected;
+            validateNetwork(); // Check validity after every click
+            updateNetworkVisuals();
+        }
+
+        function validateNetwork() {
+            let isValid = true;
+            networkError.text(""); // Clear previous error
+            dams.forEach(dam => {
+                if (dam.selected && dam.downstream) {
+                    const downstreamDam = dams.find(ds => ds.id === dam.downstream);
+                    if (downstreamDam && !downstreamDam.selected) {
+                        isValid = false;
+                        dam.blocked = true; // Mark as blocked for visual feedback
+                        networkError.text(`Error: Cannot remove ${dam.id} unless downstream ${downstreamDam.id} is also removed.`);
+                    } else {
+                         dam.blocked = false;
+                    }
+                } else {
+                     dam.blocked = false;
+                }
+            });
+            return isValid;
+        }
+
+        function updateNetworkVisuals() {
+            damNodes.attr("class", d => {
+                if (d.blocked) return "dam-node blocked";
+                if (d.selected) return "dam-node removed";
+                return "dam-node candidate";
+            });
+        }
+
+        // --- Visualization 6: Trade-off Curve ---
+        const tradeoffData = [
+            { budget: 0, health: 0, dams: 0 },
+            { budget: 1, health: 10, dams: 2 },
+            { budget: 5, health: 35.18, dams: 9 },
+            { budget: 10, health: 55, dams: 20 },
+            { budget: 14.94, health: 68.31, dams: 31 },
+            { budget: 20, health: 80, dams: 45 },
+            { budget: 25, health: 90, dams: 55 },
+            { budget: 30, health: 96.35, dams: 66 },
+            { budget: 35, health: 98, dams: 80 },
+            { budget: 40, health: 99, dams: 100 },
+            { budget: 44.95, health: 99.92, dams: 130 },
+            // Add more points approximating Figure 4a if needed
+        ];
+
+        const tradeoffMargin = { top: 20, right: 30, bottom: 40, left: 50 };
+        const tradeoffWidth = 500 - tradeoffMargin.left - tradeoffMargin.right;
+        const tradeoffHeight = 300 - tradeoffMargin.top - tradeoffMargin.bottom;
+
+        const tradeoffSvg = d3.select("#tradeoff-chart")
+            .append("svg")
+            .attr("width", tradeoffWidth + tradeoffMargin.left + tradeoffMargin.right)
+            .attr("height", tradeoffHeight + tradeoffMargin.top + tradeoffMargin.bottom)
+            .append("g")
+            .attr("transform", `translate(${tradeoffMargin.left},${tradeoffMargin.top})`);
+
+        // Scales
+        const tradeoffX = d3.scaleLinear()
+            .domain([0, d3.max(tradeoffData, d => d.budget) * 1.05])
+            .range([0, tradeoffWidth]);
+
+        const tradeoffY = d3.scaleLinear()
+            .domain([0, 105]) // Health is %
+            .range([tradeoffHeight, 0]);
+
+        // Axes
+        tradeoffSvg.append("g")
+            .attr("class", "axis")
+            .attr("transform", `translate(0,${tradeoffHeight})`)
+            .call(d3.axisBottom(tradeoffX));
+
+        tradeoffSvg.append("g")
+            .attr("class", "axis")
+            .call(d3.axisLeft(tradeoffY));
+
+        // Axis Labels
+         tradeoffSvg.append("text")
+            .attr("text-anchor", "end")
+            .attr("x", tradeoffWidth / 2 + tradeoffMargin.left - 20)
+            .attr("y", tradeoffHeight + tradeoffMargin.top + 15) // Adjusted y position
+            .text("Economic Cost ($M)");
+
+        tradeoffSvg.append("text")
+            .attr("text-anchor", "end")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -tradeoffMargin.left + 15) // Adjusted y position
+            .attr("x", -tradeoffHeight / 2 + tradeoffMargin.top) // Adjusted x position
+            .text("Ecological Health Index (%)");
+
+
+        // Tooltip
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip");
+
+        // Dots
+        const dots = tradeoffSvg.selectAll(".dot")
+            .data(tradeoffData)
+            .enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("cx", d => tradeoffX(d.budget))
+            .attr("cy", d => tradeoffY(d.health))
+            .attr("r", 5)
+            .on("mouseover", function(event, d) {
+                tooltip.transition().duration(200).style("opacity", .9);
+                tooltip.html(`Budget: $${d.budget.toFixed(1)}M<br/>Health: ${d.health.toFixed(1)}%<br/>Dams: ${d.dams}`)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+                d3.select(this).classed("highlighted", true);
+                 updateTradeoffInfo(d); // Update info text on hover
+            })
+            .on("mouseout", function(event, d) {
+                tooltip.transition().duration(500).style("opacity", 0);
+                 if (!d.selectedBySlider) { // Only remove highlight if not selected by slider
+                    d3.select(this).classed("highlighted", false);
+                 }
+                 // Optionally clear info text or leave the last hovered one
+                 // updateTradeoffInfo(null);
+            });
+
+        const budgetSlider = document.getElementById('budget-slider');
+        const budgetValueDisplay = document.getElementById('budget-value');
+        const tradeoffInfo = document.getElementById('tradeoff-info');
+
+         function updateTradeoffInfo(d) {
+            if (d) {
+                tradeoffInfo.textContent = `Selected: Budget $${d.budget.toFixed(1)}M, Health ${d.health.toFixed(1)}%, Dams ${d.dams}`;
+            } else {
+                tradeoffInfo.textContent = "Hover over a point or use the slider.";
+            }
+        });
+
+        budgetSlider.addEventListener('input', function() {
+            const currentBudget = parseFloat(this.value);
+            budgetValueDisplay.textContent = `$${currentBudget.toFixed(1)} M`;
+
+            // Find the best point *at or below* the current budget
+            let selectedPoint = null;
+            let maxHealth = -1;
+            tradeoffData.forEach(d => {
+                if (d.budget <= currentBudget) {
+                    if (d.health > maxHealth) {
+                        maxHealth = d.health;
+                        selectedPoint = d;
+                    }
+                 }
+                 d.selectedBySlider = false; // Reset slider selection flag
+            });
+
+             // Highlight the selected point and update info
+            dots.classed("highlighted", false); // Clear previous highlights
+            if (selectedPoint) {
+                selectedPoint.selectedBySlider = true; // Mark the point selected by slider
+                dots.filter(d => d.budget === selectedPoint.budget && d.health === selectedPoint.health)
+                    .classed("highlighted", true);
+                updateTradeoffInfo(selectedPoint);
+            } else {
+                 updateTradeoffInfo(null); // No point selected (budget is too low)
+            }
+        });
+
+         // Initial update based on slider default value
+        budgetSlider.dispatchEvent(new Event('input'));
+
+
+    </script>
+
+</body>
+</html>
