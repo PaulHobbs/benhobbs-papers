@@ -30,3 +30,6 @@ vite.config.ts.timestamp-*
 
 # Papers
 papers
+# For agents wip progress
+static/papers-wip
+static/screenshots

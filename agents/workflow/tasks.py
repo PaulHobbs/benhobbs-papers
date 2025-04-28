@@ -111,7 +111,9 @@ def _parse_html(output: str) -> str:
 
 # --- Prefect Tasks ---
 
-@task(retries=2, retry_delay_seconds=5)
+from prefect.cache_policies import FLOW_PARAMETERS
+
+@task(retries=2, retry_delay_seconds=5, cache_policy=FLOW_PARAMETERS)
 def task_generate_initial_html(pdf_path: Path, papername: str) -> str:
     """
     Generates the initial HTML site explanation from a PDF using Gemini.
